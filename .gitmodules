@@ -1,0 +1,6 @@
+[submodule "repos/pypy"]
+	path = repos/pypy
+	url = https://github.com/sota/pypy
+[submodule "repos/ragel"]
+	path = repos/ragel
+	url = https://github.com/sota/ragel
