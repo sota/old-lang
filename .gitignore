@@ -56,5 +56,8 @@ target/
 # tup
 .tup
 
+# doit
+.doit.db
+
 # sota
 targetsota-c
