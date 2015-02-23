@@ -3,7 +3,7 @@
 import sys
 sys.dont_write_bytecode = True
 
-from subprocess import check_output, PIPE
+from subprocess import check_output, check_call
 
 def task_submod_update():
     output = check_output('git submodule', shell=True)
@@ -16,8 +16,12 @@ def task_submod_update():
         }
 
 def task_build_sota():
+    python = 'python' if check_call('which pypy', shell=True) else 'pypy'
+    python = 'python' # FIXME:  its slower; doing this for now ... -sai
+    sotasrc = 'targetsota.py'
+    rpython = 'repos/pypy/rpython/bin/rpython'
     return {
-        'actions': ['python repos/pypy/rpython/bin/rpython targetsota.py'],
-        'file_dep': ['repos/pypy/rpython/bin/rpython'],
+        'actions': ['%(python)s %(rpython)s %(sotasrc)s' % locals() ],
+        'file_dep': [rpython],
         'targets': ['targetsota-c'],
     }
