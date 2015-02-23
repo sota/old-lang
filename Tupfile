@@ -1,0 +1,1 @@
+: targetsota.py |> python repos/pypy/rpython/bin/rpython targetsota.py |> targetsota-c

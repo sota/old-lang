@@ -1,0 +1,9 @@
+#!/bin/bash
+
+repos="$@"
+echo "repos=$repos"
+if [ -n "$repos" ]; then
+    repos="*"
+fi
+
+git submodule update --init "$repos"

@@ -55,3 +55,6 @@ target/
 
 # tup
 .tup
+
+# sota
+targetsota-c
