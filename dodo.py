@@ -36,5 +36,13 @@ def task_build_sota():
     return {
         'actions': ['%(python)s %(rpython)s %(sotasrc)s' % env() ],
         'file_dep': [rpython],
-        'targets': ['targetsota-c'],
+        'teardown': ['mv targetsota-c sota'],
+        'targets': ['sota'],
     }
+
+#def task_rename():
+#    return {
+#        'actions': ['cp build/targetsota-c sota'],
+#        'file_dep': ['build/targetsota-c'],
+#        'targets': ['sota'],
+#    }
