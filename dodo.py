@@ -47,21 +47,21 @@ def task_submod_update():
 
 def task_tests_prebuild():
     return {
-        'actions': ['py.test -v tests/prebuild > tests.prebuild'],
+        'actions': ['py.test -v tests/pre > sota.pre-tests'],
         'file_dep': [dodo, rpython],
-        'targets': ['tests.prebuild'],
+        'targets': ['sota.pre-tests'],
     }
 
 def task_build_sota():
     return {
         'actions': ['%(python)s -B %(rpython)s %(sotasrc)s' % env(), 'mv targetsota-c sota'],
-        'file_dep': [dodo, 'tests.prebuild', 'targetsota.py'],
+        'file_dep': [dodo, 'sota.pre-tests', 'targetsota.py'],
         'targets': ['sota'],
     }
 
 def task_tests_postbuild():
     return {
-        'actions': ['py.test -v tests/postbuild > tests.postbuild'],
+        'actions': ['py.test -v tests/post > sota.post-tests'],
         'file_dep': [dodo, 'sota'],
-        'targets': ['tests.postbuild'],
+        'targets': ['sota.post-tests'],
     }
