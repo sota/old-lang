@@ -1,19 +1,16 @@
-"""
-A simple standalone target.
+'''
+sota: State of the Art
 
-The target below specifies None as the argument types list.
-This is a case treated specially in driver.py . If the list
-of input types is empty, it is meant to be a list of strings,
-actually implementing argv of the executable.
-"""
+The target below specifies the sota dynamic programming language.
+'''
 
 def debug(msg):
-    print "debug:", msg
+    print 'debug:', msg
 
 # __________  Entry point  __________
 
 def entry_point(argv):
-    debug("hello world")
+    debug('sota')
     return 0
 
 # _____ Define and setup target ___

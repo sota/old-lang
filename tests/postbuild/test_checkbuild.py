@@ -11,6 +11,5 @@ sys.path.insert(0, os.path.abspath(os.path.join(SCRIPT_PATH, '../common') ) )
 from common import cd, call
 
 def test_checkbuild():
-    with cd('../../'):
-        print os.getcwd()
-        assert call('./sota')[0] == 0
+    #with cd('../../'):
+    assert call('./sota')[0] == 0
