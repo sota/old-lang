@@ -1,14 +1,22 @@
 #!/usr/bin/env python
 
+import os
+import re
 import sys
 sys.dont_write_bytecode = True
 import inspect
 from subprocess import check_output, check_call
 
+SCRIPT_PATH, BASENAME = os.path.split(os.path.realpath(__file__) )
+SCRIPT_NAME, SCRIPT_EXT = os.path.splitext(os.path.basename(BASENAME) )
+sys.path.insert(0, os.path.abspath(os.path.join(SCRIPT_PATH, 'utils') ) )
+
+from common import cd, call
+
 dodo = 'dodo.py'
 sota = 'sota'
 sotasrc = 'targetsota.py'
-python = 'python' if check_call('which pypy', shell=True) else 'pypy'
+python = 'python' if call('which pypy')[0] else 'pypy'
 python = 'python' # FIXME:  its slower; doing this for now ... -sai
 rpython = 'repos/pypy/rpython/bin/rpython'
 
