@@ -32,7 +32,7 @@ def cd(*args, **kwargs):
             if verbose:
                 print 'cd %s' % prev
 
-def call(cmd, stdout=PIPE, stderr=PIPE, shell=True, nerf=False, verbose=False):
+def call(cmd, stdout=PIPE, stderr=PIPE, shell=True, nerf=False, throw=True, verbose=False):
     if verbose or nerf:
         print cmd
     if nerf:
@@ -45,7 +45,7 @@ def call(cmd, stdout=PIPE, stderr=PIPE, shell=True, nerf=False, verbose=False):
             print stdout
         if stderr:
             print stderr
-    if exitcode:
+    if throw and exitcode:
         raise CalledProcessError(exitcode, 'cmd=%(cmd)s; stdout=%(stdout)s; stderr=%(stderr)s' % locals() )
     return exitcode, stdout, stderr
 

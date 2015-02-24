@@ -16,7 +16,7 @@ from common import cd, call
 dodo = 'dodo.py'
 sota = 'sota'
 sotasrc = 'targetsota.py'
-python = 'python' if call('which pypy')[0] else 'pypy'
+python = 'python' if call('which pypy', throw=False)[0] else 'pypy'
 python = 'python' # FIXME:  its slower; doing this for now ... -sai
 rpython = 'repos/pypy/rpython/bin/rpython'
 
