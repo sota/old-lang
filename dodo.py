@@ -45,7 +45,7 @@ def task_tests_prebuild():
 
 def task_build_sota():
     return {
-        'actions': ['%(python)s %(rpython)s %(sotasrc)s' % env() ],
+        'actions': ['%(python)s -B %(rpython)s %(sotasrc)s' % env() ],
         'file_dep': [dodo, 'tests.prebuild', 'targetsota.py'],
         'teardown': ['mv targetsota-c sota'],
         'targets': ['sota'],
