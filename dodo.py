@@ -6,6 +6,7 @@ import inspect
 from subprocess import check_output, check_call
 
 dodo = 'dodo.py'
+sota = 'sota'
 sotasrc = 'targetsota.py'
 python = 'python' if check_call('which pypy', shell=True) else 'pypy'
 python = 'python' # FIXME:  its slower; doing this for now ... -sai
@@ -45,9 +46,9 @@ def task_tests_prebuild():
 
 def task_build_sota():
     return {
-        'actions': ['%(python)s -B %(rpython)s %(sotasrc)s' % env() ],
+        'actions': ['%(python)s -B %(rpython)s %(sotasrc)s' % env(), 'mv targetsota-c sota'],
         'file_dep': [dodo, 'tests.prebuild', 'targetsota.py'],
-        'teardown': ['mv targetsota-c sota'],
+        #'teardown': ['mv targetsota-c sota'],
         'targets': ['sota'],
     }
 
