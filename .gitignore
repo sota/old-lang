@@ -59,5 +59,8 @@ target/
 # doit
 .doit.db
 
+# py.test
+__pycache__
+
 # sota
 targetsota-c
