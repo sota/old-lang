@@ -29,7 +29,7 @@ def env():
 
 def task_pyflakes():
     return {
-        'actions': ['pyflakes %(sotasrc)s' % env() ],
+        'actions': ['pyflakes %(sotasrc)s || echo "pyflakes installed?"' % env() ],
         'file_dep': [dodo],
     }
 
@@ -56,7 +56,6 @@ def task_build_sota():
     return {
         'actions': ['%(python)s -B %(rpython)s %(sotasrc)s' % env(), 'mv targetsota-c sota'],
         'file_dep': [dodo, 'tests.prebuild', 'targetsota.py'],
-        #'teardown': ['mv targetsota-c sota'],
         'targets': ['sota'],
     }
 
