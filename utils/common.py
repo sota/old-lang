@@ -3,6 +3,7 @@
 import os
 import re
 import sys
+import inspect
 
 from subprocess import Popen, PIPE, CalledProcessError
 from contextlib import contextmanager
@@ -48,4 +49,11 @@ def call(cmd, stdout=PIPE, stderr=PIPE, shell=True, nerf=False, throw=True, verb
     if throw and exitcode:
         raise CalledProcessError(exitcode, 'cmd=%(cmd)s; stdout=%(stdout)s; stderr=%(stderr)s' % locals() )
     return exitcode, stdout, stderr
+
+def env():
+    try:
+        frame = inspect.currentframe().f_back
+        return dict(frame.f_globals.items() + frame.f_locals.items() )
+    finally:
+        del frame
 
