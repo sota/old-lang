@@ -13,7 +13,7 @@ from common import cd, call, env
 
 pipdeps = ['pyflakes', 'pytest']
 
-def task_install_pipdeps():
+def task_pip_install():
     for pipdep in pipdeps:
         yield {
             'name': pipdep,
