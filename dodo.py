@@ -20,7 +20,7 @@ rpython = 'repos/pypy/rpython/bin/rpython'
 
 def task_pyflakes():
     return {
-        'actions': ['pyflakes %(sotasrc)s || echo "pyflakes installed?"' % env() ],
+        'actions': ['pyflakes %(sotasrc)s' % env() ],
         'file_dep': [dodo],
     }
 
