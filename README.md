@@ -24,4 +24,4 @@ After a successful build there should be 3 files:
 - sota.pre-tests
 - sota.post-tests
 
-The program is obviously sota and the pre and post tests are captured text from running tests/pre and post pytests.
+The program is obviously sota and the pre and post tests are captured text from running pytest before and after the build..
