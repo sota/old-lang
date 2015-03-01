@@ -25,7 +25,7 @@ def task_pyflakes():
     }
 
 def task_submod_update():
-    _, stdout, _ = call('git submodule')
+    stdout = call('git submodule')[1]
     submods = [ line.split()[1] for line in stdout.strip().split('\n') ]
     for submod in submods:
         yield {
@@ -35,23 +35,30 @@ def task_submod_update():
             'targets': [submod],
         }
 
-def task_tests_prebuild():
+def task_prebuild():
     return {
-        'actions': ['py.test -v tests/pre > sota.pre-tests'],
+        'actions': ['py.test -v tests/pre > tests.prebuild'],
         'file_dep': [dodo, rpython],
-        'targets': ['sota.pre-tests'],
+        'targets': ['tests.prebuild'],
     }
 
 def task_build_sota():
     return {
         'actions': ['%(python)s -B %(rpython)s %(sotasrc)s' % env(), 'mv targetsota-c sota'],
-        'file_dep': [dodo, 'sota.pre-tests', 'targetsota.py'],
+        'file_dep': [dodo, 'tests.prebuild', 'targetsota.py'],
         'targets': ['sota'],
     }
 
-def task_tests_postbuild():
+def task_postbuild():
     return {
-        'actions': ['py.test -v tests/post > sota.post-tests'],
+        'actions': ['py.test -v tests/post > tests.postbuild'],
         'file_dep': [dodo, 'sota'],
-        'targets': ['sota.post-tests'],
+        'targets': ['tests.postbuild'],
+    }
+
+def task_sota_build_success():
+    return {
+        'actions': ['echo "sota build success!"'],
+        'file_dep': ['tests.postbuild'],
+        'verbosity': 2,
     }
