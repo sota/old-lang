@@ -73,5 +73,6 @@ def task_success():
 
 def task_tidy():
     return {
-        'actions': ['echo "done"'],
+        'actions': ['git clean -xfd'],
+        'verbosity': 2,
     }
