@@ -11,12 +11,17 @@ sys.path.insert(0, os.path.abspath(os.path.join(SCRIPT_PATH, 'utils') ) )
 
 from common import cd, call, env
 
+DOIT_CONFIG = { 'default_tasks': ['success'] }
+
 dodo = 'dodo.py'
 sota = 'sota'
 sotasrc = 'targetsota.py'
 python = 'python' if call('which pypy', throw=False)[0] else 'pypy'
 python = 'python' # FIXME:  its slower; doing this for now ... -sai
 rpython = 'repos/pypy/rpython/bin/rpython'
+
+PRE = 'tests/pre'
+POST = 'tests/post'
 
 def task_pyflakes():
     return {
@@ -30,35 +35,43 @@ def task_submod_update():
     for submod in submods:
         yield {
             'name': submod,
-            'actions': ['git submodule update --init %(submod)s' % env() ],
             'file_dep': [dodo],
+            'actions': ['git submodule update --init %(submod)s' % env() ],
             'targets': [submod],
         }
 
 def task_prebuild():
     return {
-        'actions': ['py.test -v tests/pre > tests.prebuild'],
         'file_dep': [dodo, rpython],
-        'targets': ['tests.prebuild'],
+        'actions': ['py.test -v %(PRE)s > %(PRE)s/results' % env()],
+        'targets': ['%(PRE)s/results' % env()],
     }
 
 def task_build_sota():
     return {
-        'actions': ['%(python)s -B %(rpython)s %(sotasrc)s' % env(), 'mv targetsota-c sota'],
-        'file_dep': [dodo, 'tests.prebuild', 'targetsota.py'],
+        'file_dep': [dodo, '%(PRE)s/results' % env(), 'targetsota.py'],
+        'actions': [
+            '%(python)s -B %(rpython)s %(sotasrc)s' % env(),
+            'mv targetsota-c sota'
+        ],
         'targets': ['sota'],
     }
 
 def task_postbuild():
     return {
-        'actions': ['py.test -v tests/post > tests.postbuild'],
         'file_dep': [dodo, 'sota'],
-        'targets': ['tests.postbuild'],
+        'actions': ['py.test -v %(POST)s > %(POST)s/results' % env()],
+        'targets': ['%(POST)s/results' % env()],
     }
 
-def task_sota_build_success():
+def task_success():
     return {
+        'file_dep': ['%(POST)s/results' % env()],
         'actions': ['echo "sota build success!"'],
-        'file_dep': ['tests.postbuild'],
         'verbosity': 2,
+    }
+
+def task_tidy():
+    return {
+        'actions': ['echo "done"'],
     }
