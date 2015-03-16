@@ -40,6 +40,13 @@ def task_submod_update():
             'targets': [submod],
         }
 
+def task_build_ragel():
+    return {
+        'file_dep': [dodo, 'repos/ragel/configure'],
+        'actions': ['cd repos/ragel && ./configure', 'cd repos/ragel && make'],
+        'targets': ['repos/ragel/ragel/ragel'],
+    }
+
 def task_prebuild():
     return {
         'file_dep': [dodo, rpython],
@@ -49,7 +56,12 @@ def task_prebuild():
 
 def task_build_sota():
     return {
-        'file_dep': [dodo, '%(PRE)s/results' % env(), 'targetsota.py'],
+        'file_dep': [
+            dodo,
+            '%(PRE)s/results' % env(),
+            'targetsota.py',
+            'repos/ragel/ragel/ragel',
+        ],
         'actions': [
             '%(python)s -B %(rpython)s %(sotasrc)s' % env(),
             'mv targetsota-c sota'
@@ -73,6 +85,10 @@ def task_success():
 
 def task_tidy():
     return {
-        'actions': ['git clean -xfd'],
+        'actions': [
+            'git clean -xfd',
+            'cd repos/pypy && git clean -xfd',
+            'cd repos/ragel && git clean -xfd',
+        ],
         'verbosity': 2,
     }
