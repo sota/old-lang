@@ -37,12 +37,13 @@ def task_submod_update():
             'name': submod,
             'file_dep': [dodo],
             'actions': ['git submodule update --init %(submod)s' % env() ],
-            'targets': [submod],
+            'targets': ['%(submod)s/.git' % env()],
+            'targets': [os.path.join(submod, '.git')]
         }
 
 def task_build_ragel():
     return {
-        'file_dep': [dodo, 'repos/ragel/configure'],
+        'file_dep': [dodo, 'repos/ragel/.git'],
         'actions': ['cd repos/ragel && ./configure', 'cd repos/ragel && make'],
         'targets': ['repos/ragel/ragel/ragel'],
     }
@@ -58,6 +59,8 @@ def task_build_sota():
     return {
         'file_dep': [
             dodo,
+            'repos/pypy/.git',
+            'repos/ragel/.git',
             '%(PRE)s/results' % env(),
             'targetsota.py',
             'repos/ragel/ragel/ragel',
@@ -87,8 +90,8 @@ def task_tidy():
     return {
         'actions': [
             'git clean -xfd',
-            'cd repos/pypy && git clean -xfd',
-            'cd repos/ragel && git clean -xfd',
+            'cd repos/pypy && git reset --hard HEAD && git clean -xfd',
+            'cd repos/ragel && git reset --hard HEAD && git clean -xfd',
         ],
         'verbosity': 2,
     }
