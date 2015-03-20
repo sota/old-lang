@@ -1,5 +1,5 @@
 func_inline = () -> { x = 1; print x }
-                         # ^esep
+                         # ^ssep
 func_flow = ()
 	x = 1
 	   # ^ssep
