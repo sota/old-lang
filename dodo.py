@@ -10,11 +10,17 @@ SCRIPT_NAME, SCRIPT_EXT = os.path.splitext(os.path.basename(BASENAME) )
 sys.path.insert(0, os.path.abspath(os.path.join(SCRIPT_PATH, 'utils') ) )
 
 from common import cd, call, env
+from doit.task import clean_targets
 
 DOIT_CONFIG = { 'default_tasks': ['success'] }
 
 dodo = 'dodo.py'
 sota = 'sota'
+ragel = 'repos/ragel/ragel/ragel'
+lexer_rl = 'src/lexer/lexer.rl'
+lexer_c = 'src/lexer/lexer.c'
+lexer_o = 'src/lexer/lexer.o'
+liblexer_a = 'src/lexer/liblexer.a'
 sotasrc = 'targetsota.py'
 python = 'python' if call('which pypy', throw=False)[0] else 'pypy'
 python = 'python' # FIXME:  its slower; doing this for now ... -sai
@@ -31,67 +37,89 @@ def task_pyflakes():
 
 def task_submod_update():
     stdout = call('git submodule')[1]
-    submods = [ line.split()[1] for line in stdout.strip().split('\n') ]
+    submods = [line.split()[1] for line in stdout.strip().split('\n')]
     for submod in submods:
         yield {
             'name': submod,
+            'verbosity': 2,
             'file_dep': [dodo],
             'actions': ['git submodule update --init %(submod)s' % env() ],
-            'targets': ['%(submod)s/.git' % env()],
             'targets': [os.path.join(submod, '.git')]
         }
 
 def task_build_ragel():
     return {
+        'verbosity': 2,
         'file_dep': [dodo, 'repos/ragel/.git'],
         'actions': ['cd repos/ragel && ./configure', 'cd repos/ragel && make'],
-        'targets': ['repos/ragel/ragel/ragel'],
+        'targets': [ragel],
+        'clean': [clean_targets],
+    }
+
+def task_build_lexer():
+    return {
+        'verbosity': 2,
+        'file_dep': [dodo, ragel, lexer_rl],
+        'actions': [
+            '%(ragel)s %(lexer_rl)s -o %(lexer_c)s' % env(),
+            'gcc -Wall -c %(lexer_c)s -o %(lexer_o)s' % env(),
+            'ar rcs %(liblexer_a)s %(lexer_o)s' % env(),
+        ],
+        'targets': [lexer_c, lexer_o, liblexer_a],
+        'clean': [clean_targets],
     }
 
 def task_prebuild():
     return {
+        'verbosity': 2,
         'file_dep': [dodo, rpython],
         'actions': ['py.test -v %(PRE)s > %(PRE)s/results' % env()],
         'targets': ['%(PRE)s/results' % env()],
+        'clean': [clean_targets],
     }
 
 def task_build_sota():
     return {
+        'verbosity': 2,
         'file_dep': [
             dodo,
+            ragel,
+            liblexer_a,
             'repos/pypy/.git',
             'repos/ragel/.git',
             '%(PRE)s/results' % env(),
             'targetsota.py',
-            'repos/ragel/ragel/ragel',
         ],
         'actions': [
             '%(python)s -B %(rpython)s %(sotasrc)s' % env(),
             'mv targetsota-c sota'
         ],
         'targets': ['sota'],
+        'clean': [clean_targets],
     }
 
 def task_postbuild():
     return {
+        'verbosity': 2,
         'file_dep': [dodo, 'sota'],
         'actions': ['py.test -v %(POST)s > %(POST)s/results' % env()],
         'targets': ['%(POST)s/results' % env()],
+        'clean': [clean_targets],
     }
 
 def task_success():
     return {
+        'verbosity': 2,
         'file_dep': ['%(POST)s/results' % env()],
         'actions': ['echo "sota build success!"'],
-        'verbosity': 2,
     }
 
 def task_tidy():
     return {
+        'verbosity': 2,
         'actions': [
             'git clean -xfd',
             'cd repos/pypy && git reset --hard HEAD && git clean -xfd',
             'cd repos/ragel && git reset --hard HEAD && git clean -xfd',
         ],
-        'verbosity': 2,
     }
