@@ -35,7 +35,7 @@ def task_pyflakes():
         'file_dep': [dodo],
     }
 
-def task_submod_update():
+def task_submod():
     stdout = call('git submodule')[1]
     submods = [line.split()[1] for line in stdout.strip().split('\n')]
     for submod in submods:
@@ -47,7 +47,7 @@ def task_submod_update():
             'targets': [os.path.join(submod, '.git')]
         }
 
-def task_build_ragel():
+def task_ragel():
     return {
         'verbosity': 2,
         'file_dep': [dodo, 'repos/ragel/.git'],
@@ -56,7 +56,7 @@ def task_build_ragel():
         'clean': [clean_targets],
     }
 
-def task_build_lexer():
+def task_lexer():
     return {
         'verbosity': 2,
         'file_dep': [dodo, ragel, lexer_rl],
@@ -69,7 +69,7 @@ def task_build_lexer():
         'clean': [clean_targets],
     }
 
-def task_prebuild():
+def task_pre():
     return {
         'verbosity': 2,
         'file_dep': [dodo, rpython],
@@ -78,7 +78,7 @@ def task_prebuild():
         'clean': [clean_targets],
     }
 
-def task_build_sota():
+def task_sota():
     return {
         'verbosity': 2,
         'file_dep': [
@@ -98,7 +98,7 @@ def task_build_sota():
         'clean': [clean_targets],
     }
 
-def task_postbuild():
+def task_post():
     return {
         'verbosity': 2,
         'file_dep': [dodo, 'sota'],
