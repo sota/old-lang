@@ -111,7 +111,10 @@ def task_success():
     return {
         'verbosity': 2,
         'file_dep': ['%(POST)s/results' % env()],
-        'actions': ['echo "sota build success!"'],
+        'actions': [
+            './sota',
+            'echo "sota build success!"',
+        ],
     }
 
 def task_tidy():
