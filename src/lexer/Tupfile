@@ -1,0 +1,4 @@
+include_rules
+: foreach *.rl |> !r2c |>
+: foreach *.c |> !cc |>
+: foreach *.o |> !ar |>
