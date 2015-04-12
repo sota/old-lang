@@ -56,16 +56,12 @@ def task_ragel():
         'clean': [clean_targets],
     }
 
-def task_lexer():
+def task_ccode():
     return {
         'verbosity': 2,
-        'file_dep': [dodo, ragel, lexer_rl],
-        'actions': [
-            '%(ragel)s %(lexer_rl)s -o %(lexer_c)s' % env(),
-            'gcc -Wall -c %(lexer_c)s -o %(lexer_o)s' % env(),
-            'ar rcs %(liblexer_a)s %(lexer_o)s' % env(),
-        ],
-        'targets': [lexer_c, lexer_o, liblexer_a],
+        'file_dep': [dodo, ragel, 'src/lexer/lexer.rl', 'src/cli/cli.c'],
+        'actions': ['cd src && tup'],
+        'targets': ['src/lexer/liblexer.a', 'src/cli/libcli.a'],
         'clean': [clean_targets],
     }
 
@@ -87,6 +83,7 @@ def task_sota():
             liblexer_a,
             'repos/pypy/.git',
             'repos/ragel/.git',
+            'repos/argtable3/.git',
             '%(PRE)s/results' % env(),
             'targetsota.py',
         ],
@@ -124,5 +121,6 @@ def task_tidy():
             'git clean -xfd',
             'cd repos/pypy && git reset --hard HEAD && git clean -xfd',
             'cd repos/ragel && git reset --hard HEAD && git clean -xfd',
+            'cd repos/argtable3 && git reset --hard HEAD && git clean -xfd',
         ],
     }
