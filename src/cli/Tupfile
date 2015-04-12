@@ -1,4 +1,4 @@
 include_rules
 : foreach *.rl |> !r2c |>
-: foreach *.cpp |> !++ |>
+: foreach *.c |> !cc |>
 : foreach *.o |> !ar |>
