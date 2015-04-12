@@ -4,3 +4,6 @@
 [submodule "repos/ragel"]
 	path = repos/ragel
 	url = https://github.com/sota/ragel
+[submodule "repos/argtable3"]
+	path = repos/argtable3
+	url = https://github.com/argtable/argtable3.git
