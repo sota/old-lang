@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 
+#include "argtable3/argtable3.h"
+
 int parse(int argc, char **argv);
 
 #endif /*__SOTA_CLI__*/
