@@ -1,9 +1,49 @@
 #include "cli.h"
 
 int parse(int argc, char **argv) {
-    printf("parse: argc=%d argv=\n", argc);
-    for (int i=0; i<argc; ++i) {
-        printf("\t%s\n", argv[i]);
+    const char *sota = "sota";
+    int exitcode = 0;
+    int errors = 0;
+
+    struct arg_lit *help    = arg_lit0(NULL, "help", "print this help and exit");
+    struct arg_lit *version = arg_lit0(NULL, "version", "print the version and exit");
+    struct arg_end *end     = arg_end(20);
+
+    void *argtable[] = {
+        help,
+        version,
+        end,
+    };
+
+    if (arg_nullcheck(argtable) != 0) {
+        printf("%s: insufficient memory for argtable\n", sota);
+        exitcode = 1;
     }
-    return argc;
+
+    errors = arg_parse(argc, argv, argtable);
+
+    if (help->count) {
+        printf("usage: %s", sota);
+        arg_print_syntax(stdout, argtable, "\n");
+        arg_print_glossary(stdout, argtable, " %-25s %s\n");
+        exitcode = 0;
+        goto exit;
+    }
+
+    if (version->count) {
+        printf("sota version: %s\n", STR(SOTA_VERSION));
+        exitcode = 0;
+        goto exit;
+    }
+
+    if (errors) {
+        arg_print_errors(stdout, end, sota);
+        printf("try '%s --help' for more info\n", sota);
+        exitcode = 1;
+        goto exit;
+    }
+
+exit:
+    arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
+    return exitcode;
 }
