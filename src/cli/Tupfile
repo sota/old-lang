@@ -1,5 +1,5 @@
 include_rules
 : foreach *.rl |> !r2c |>
 : foreach *.c |> !cc |>
-: foreach *.o |> !ar |>
-: *.o libcli.a |> gcc %f -o %o |> test
+: *.o |> !ar |> libcli.a
+: test.o libcli.a |> gcc %f -o %o |> test
