@@ -6,7 +6,7 @@
 
 #include <stdio.h>
 
-#include "argtable/argtable3.h"
+#include "argtable3.h"
 
 int parse(int argc, char **argv);
 
