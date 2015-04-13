@@ -2,4 +2,4 @@ include_rules
 : foreach *.rl |> !r2c |>
 : foreach *.c |> !cc |>
 : foreach *.o |> !ar |>
-: *.o libcli.a |> gcc %f -o %o |> test
+: *.o libcli.a |> gcc -L../ %f -o %o |> test
