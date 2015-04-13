@@ -7,9 +7,10 @@ import os
 
 from rpython.rtyper.lltypesystem import rffi, lltype
 from rpython.translator.tool.cbuild import ExternalCompilationInfo
-cli_dir = os.path.join(os.getcwd(), 'src/cli')
+src_dir = os.path.join(os.getcwd(), 'src')
+cli_dir = os.path.join(src_dir, 'cli')
 cli_eci = ExternalCompilationInfo(
-    include_dirs=[cli_dir],
+    include_dirs=[src_dir, cli_dir],
     includes=['cli.h'],
     library_dirs=[cli_dir],
     libraries=['cli'])
