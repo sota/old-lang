@@ -12,7 +12,7 @@ cli_dir = os.path.join(src_dir, 'cli')
 cli_eci = ExternalCompilationInfo(
     include_dirs=[src_dir, cli_dir],
     includes=['cli.h'],
-    library_dirs=[cli_dir],
+    library_dirs=[src_dir, cli_dir],
     libraries=['cli'])
 
 parse = rffi.llexternal(
