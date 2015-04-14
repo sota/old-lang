@@ -59,7 +59,14 @@ def task_ragel():
 def task_ccode():
     return {
         'verbosity': 2,
-        'file_dep': [dodo, ragel, 'src/lexer/lexer.rl', 'src/cli/cli.c'],
+        'file_dep': [
+            dodo,
+            ragel,
+            'src/lexer/lexer.h',
+            'src/lexer/lexer.rl',
+            'src/cli/cli.h',
+            'src/cli/cli.c',
+        ],
         'actions': ['cd src && tup'],
         'targets': ['src/lexer/liblexer.a', 'src/cli/libcli.a'],
         'clean': [clean_targets],
