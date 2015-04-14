@@ -5,8 +5,8 @@ int parse(int argc, char **argv) {
     int exitcode = 0;
     int errors = 0;
 
-    struct arg_lit *help    = arg_lit0(NULL, "help", "print this help and exit");
-    struct arg_lit *version = arg_lit0(NULL, "version", "print the version and exit");
+    struct arg_lit *help    = arg_lit0("h", "help", "print this help and exit");
+    struct arg_lit *version = arg_lit0("v", "version", "print the version and exit");
     struct arg_end *end     = arg_end(20);
 
     void *argtable[] = {
@@ -31,7 +31,8 @@ int parse(int argc, char **argv) {
     }
 
     if (version->count) {
-        printf("sota version: %s\n", STR(SOTA_VERSION));
+        printf("sota version: %s\n", VERSION);
+
         exitcode = 0;
         goto exit;
     }

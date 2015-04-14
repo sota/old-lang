@@ -1,8 +1,7 @@
 #ifndef __SOTA_CLI__
 #define __SOTA_CLI__ = 1
 
-#define STR(x) #x
-#define SOTA_VERSION "0.1";
+#define VERSION "0.1"
 
 #include <stdio.h>
 
