@@ -21,7 +21,12 @@ lexer_rl = 'src/lexer/lexer.rl'
 lexer_c = 'src/lexer/lexer.c'
 lexer_o = 'src/lexer/lexer.o'
 liblexer_a = 'src/lexer/liblexer.a'
-sotasrc = 'targetsota.py'
+targetdir = 'src/target'
+targetsrc = 'sota-interpreter.py'
+sotadir = 'src/sota'
+sotasrc = 'sota.c'
+interpreter = 'sota-interpreter'
+program = 'sota'
 python = 'python' if call('which pypy', throw=False)[0] else 'pypy'
 python = 'python' # FIXME:  its slower; doing this for now ... -sai
 rpython = 'repos/pypy/rpython/bin/rpython'
@@ -31,7 +36,7 @@ POST = 'tests/post'
 
 def task_pyflakes():
     return {
-        'actions': ['pyflakes %(sotasrc)s' % env() ],
+        'actions': ['pyflakes %(targetsrc)s' % env() ],
         'file_dep': [dodo],
     }
 
@@ -64,11 +69,10 @@ def task_ccode():
             ragel,
             'src/lexer/lexer.h',
             'src/lexer/lexer.rl',
-            'src/cli/cli.h',
-            'src/cli/cli.c',
+            'src/sota/sota.c',
         ],
-        'actions': ['cd src && tup'],
-        'targets': ['src/lexer/liblexer.a', 'src/cli/libcli.a'],
+        'actions': ['cd src && tup', 'cp src/sota/sota .'],
+        'targets': ['src/lexer/liblexer.a', 'sota'],
         'clean': [clean_targets],
     }
 
@@ -81,7 +85,7 @@ def task_pre():
         'clean': [clean_targets],
     }
 
-def task_sota():
+def task_target():
     return {
         'verbosity': 2,
         'file_dep': [
@@ -92,20 +96,23 @@ def task_sota():
             'repos/ragel/.git',
             'repos/argtable3/.git',
             '%(PRE)s/results' % env(),
-            'targetsota.py',
+            '%(targetdir)s/%(targetsrc)s' % env(),
         ],
         'actions': [
-            '%(python)s -B %(rpython)s %(sotasrc)s' % env(),
-            'mv targetsota-c sota'
+            '%(python)s -B %(rpython)s --output %(interpreter)s %(targetdir)s/%(targetsrc)s' % env(),
         ],
-        'targets': ['sota'],
+        'targets': [interpreter],
         'clean': [clean_targets],
     }
 
 def task_post():
     return {
         'verbosity': 2,
-        'file_dep': [dodo, 'sota'],
+        'file_dep': [
+            dodo,
+            program,
+            interpreter,
+        ],
         'actions': ['py.test -v %(POST)s > %(POST)s/results' % env()],
         'targets': ['%(POST)s/results' % env()],
         'clean': [clean_targets],
@@ -116,7 +123,7 @@ def task_success():
         'verbosity': 2,
         'file_dep': ['%(POST)s/results' % env()],
         'actions': [
-            './sota',
+            '%(sotadir)s/sota' % env(),
             'echo "sota build success!"',
         ],
     }
