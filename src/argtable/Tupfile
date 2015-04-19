@@ -1,5 +1,0 @@
-include_rules
-: foreach *.rl |> !r2c |>
-: foreach *.c |> !cc |>
-: *.o |> !ar |> libargtable.a
-: test.o libargtable.a |> gcc %f -o %o |> test
