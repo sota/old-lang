@@ -1,10 +1,12 @@
-#include "cli.h"
+//#include "argtable3.h"
 
-int parse(int argc, char **argv) {
+#define VERSION "0.1"
+
+int main(int argc, char **argv) {
+/*
     const char *sota = "sota";
     int exitcode = 0;
     int errors = 0;
-
     struct arg_lit *help    = arg_lit0("h", "help", "print this help and exit");
     struct arg_lit *version = arg_lit0("v", "version", "print the version and exit");
     struct arg_end *end     = arg_end(20);
@@ -47,4 +49,6 @@ int parse(int argc, char **argv) {
 exit:
     arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
     return exitcode;
+*/
+    return 0;
 }
