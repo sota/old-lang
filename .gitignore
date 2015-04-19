@@ -54,7 +54,7 @@ coverage.xml
 docs/_build/
 
 # PyBuilder
-target/
+# target/ commented out... -sai
 
 # tup
 .tup
@@ -66,4 +66,4 @@ target/
 __pycache__
 
 # sota
-targetsota-c
+sota*
