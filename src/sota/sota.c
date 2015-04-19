@@ -1,5 +1,7 @@
 //#include "argtable3.h"
 
+#include <stdio.h>
+
 #define VERSION "0.1"
 
 int main(int argc, char **argv) {
