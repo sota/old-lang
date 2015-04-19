@@ -8,6 +8,6 @@ typedef struct {
     const int pos;
 } SotaToken;
 
-int scan(const char *filename, SotaToken *tokens);
+int scan(const char *source, SotaToken *tokens);
 
 #endif /*__SOTA_LEXER__*/

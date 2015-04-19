@@ -6,7 +6,7 @@ vim: syntax=c
 
 #include "lexer.h"
 
-int scan(const char *filename, SotaToken *tokens) {
-    printf("scan: filename=%s", filename);
+int scan(const char *source, SotaToken *tokens) {
+    printf("scan: source=%s", source);
     return 0;
 }
