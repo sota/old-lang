@@ -21,7 +21,7 @@ lexer_rl = 'src/lexer/lexer.rl'
 lexer_c = 'src/lexer/lexer.c'
 lexer_o = 'src/lexer/lexer.o'
 liblexer_a = 'src/lexer/liblexer.a'
-targetdir = 'src/target'
+targetdir = 'src/interpreter'
 targetsrc = 'sota-interpreter.py'
 sotadir = 'src/sota'
 sotasrc = 'sota.c'
@@ -71,7 +71,7 @@ def task_ccode():
             'src/lexer/lexer.rl',
             'src/sota/sota.c',
         ],
-        'actions': ['cd src && tup', 'cp src/sota/sota .'],
+        'actions': ['cd src && tup', 'cp -f src/sota/sota .'],
         'targets': ['src/lexer/liblexer.a', 'sota'],
         'clean': [clean_targets],
     }
