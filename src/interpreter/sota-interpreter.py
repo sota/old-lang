@@ -51,6 +51,7 @@ def entry_point(argv):
         print src
     else:
         print "sota-interpreter"
+        exitcode = 1
     return exitcode
 
 # _____ Define and setup target ___
