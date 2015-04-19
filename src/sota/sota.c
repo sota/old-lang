@@ -50,5 +50,6 @@ exit:
     arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
     return exitcode;
 */
+    printf("sota\n");
     return 0;
 }
