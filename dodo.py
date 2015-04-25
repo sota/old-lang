@@ -17,10 +17,6 @@ DOIT_CONFIG = { 'default_tasks': ['success'] }
 dodo = 'dodo.py'
 sota = 'sota'
 ragel = 'src/ragel/ragel/ragel'
-lexer_rl = 'src/lexer/lexer.rl'
-lexer_c = 'src/lexer/lexer.c'
-lexer_o = 'src/lexer/lexer.o'
-liblexer_a = 'src/lexer/liblexer.a'
 targetdir = 'src/jit'
 targetsrc = 'sota-jit.py'
 sotadir = 'src/sota'
@@ -90,7 +86,7 @@ def task_target():
         'file_dep': [
             dodo,
             ragel,
-            liblexer_a,
+            'src/lexer/liblexer.a',
             'src/pypy/.git',
             'src/ragel/.git',
             'src/argtable3/.git',
