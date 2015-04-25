@@ -12,18 +12,19 @@
 int main(int argc, char **argv) {
     try {
         TCLAP::CmdLine cmdline("sota: state of the art", ' ', "0.1");
-        TCLAP::ValueArg<std::string> nameArg("n", "name", "name", true, "scott", "string", cmdline);
-        TCLAP::SwitchArg sexArg("s", "sex", "sex", cmdline, false);
+        TCLAP::UnlabeledValueArg<std::string> sourceArg(
+            "source",                       //name
+            "sota source <text|file>",      //desc
+            true,                           //reqd
+            "",                             //value
+            "string",                       //typedesc
+            cmdline);                       //parser
 
         cmdline.parse(argc, argv);
 
-        std::string name = nameArg.getValue();
-        bool sex = sexArg.getValue();
-        if (sex) {
-            std::cout << "sex please" << std::endl;
-        }
-        if (!name.empty()) {
-            std::cout << "name = " << name << std::endl;
+        std::string source = sourceArg.getValue();
+        if (!source.empty()) {
+            std::cout << "source = " << source << std::endl;
         }
 
     } catch (TCLAP::ArgException &ae) {
