@@ -1,0 +1,12 @@
+[submodule "src/argtable3"]
+	path = src/argtable3
+	url = https://github.com/sota/argtable3
+[submodule "src/pypy"]
+	path = src/pypy
+	url = https://github.com/sota/pypy
+[submodule "src/ragel"]
+	path = src/ragel
+	url = https://github.com/sota/ragel
+[submodule "src/tclap"]
+	path = src/tclap
+	url = https://github.com/sota/tclap
