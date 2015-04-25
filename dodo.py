@@ -21,12 +21,11 @@ lexer_rl = 'src/lexer/lexer.rl'
 lexer_c = 'src/lexer/lexer.c'
 lexer_o = 'src/lexer/lexer.o'
 liblexer_a = 'src/lexer/liblexer.a'
-targetdir = 'src/interpreter'
-targetsrc = 'sota-interpreter.py'
+targetdir = 'src/jit'
+targetsrc = 'sota-jit.py'
 sotadir = 'src/sota'
 sotasrc = 'sota.c'
-interpreter = 'sota-interpreter'
-program = 'sota'
+sotajit = 'sota-jit'
 python = 'python' if call('which pypy', throw=False)[0] else 'pypy'
 python = 'python' # FIXME:  its slower; doing this for now ... -sai
 rpython = 'repos/pypy/rpython/bin/rpython'
@@ -99,9 +98,9 @@ def task_target():
             '%(targetdir)s/%(targetsrc)s' % env(),
         ],
         'actions': [
-            '%(python)s -B %(rpython)s --output %(interpreter)s %(targetdir)s/%(targetsrc)s' % env(),
+            '%(python)s -B %(rpython)s --output %(sotajit)s %(targetdir)s/%(targetsrc)s' % env(),
         ],
-        'targets': [interpreter],
+        'targets': [sotajit],
         'clean': [clean_targets],
     }
 
@@ -110,8 +109,8 @@ def task_post():
         'verbosity': 2,
         'file_dep': [
             dodo,
-            program,
-            interpreter,
+            sota,
+            sotajit,
         ],
         'actions': ['py.test -v %(POST)s > %(POST)s/results' % env()],
         'targets': ['%(POST)s/results' % env()],

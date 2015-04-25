@@ -7,3 +7,6 @@
 [submodule "repos/argtable3"]
 	path = repos/argtable3
 	url = https://github.com/sota/argtable3
+[submodule "src/repos/tclap"]
+	path = src/repos/tclap
+	url = https://github.com/sota/tclap
