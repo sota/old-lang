@@ -1,12 +1,12 @@
-[submodule "repos/pypy"]
-	path = repos/pypy
+[submodule "src/pypy"]
+	path = src/pypy
 	url = https://github.com/sota/pypy
-[submodule "repos/ragel"]
-	path = repos/ragel
+[submodule "src/ragel"]
+	path = src/ragel
 	url = https://github.com/sota/ragel
-[submodule "repos/argtable3"]
-	path = repos/argtable3
+[submodule "src/argtable3"]
+	path = src/argtable3
 	url = https://github.com/sota/argtable3
-[submodule "repos/tclap"]
-	path = repos/tclap
+[submodule "src/tclap"]
+	path = src/tclap
 	url = https://github.com/sota/tclap
