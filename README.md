@@ -13,7 +13,7 @@ Sota uses pyflakes and pytest.  You can install them individually or use the pip
 doit -f pipdeps.py
 
 # Git Submodules
-The sota/lang repo contains several git submodule pointers located in the repos/ directory.  You can manipulate these with git commands, but the dodo.py file has tasks to ensure the repos needed for the build are updated and init'd.
+The sota/lang repo contains several git submodule pointers located in the src/ directory.  You can manipulate these with git commands, but the dodo.py file has tasks to ensure the repos needed for the build are updated and init'd.
 
 # Compiling
 Running the doit command in the root of the sota/lang repo should run the tasks listed in dodo.py to run some prebuild actions, the bulid itself and some postbuild actions.  The doit infrastructure tracks when files are modified and only runs tasks that have been affected by these changes.  Running the doit command multiple times after the inital run should finish quickly, not changing anything.

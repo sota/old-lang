@@ -16,7 +16,7 @@ DOIT_CONFIG = { 'default_tasks': ['success'] }
 
 dodo = 'dodo.py'
 sota = 'sota'
-ragel = 'repos/ragel/ragel/ragel'
+ragel = 'src/ragel/ragel/ragel'
 lexer_rl = 'src/lexer/lexer.rl'
 lexer_c = 'src/lexer/lexer.c'
 lexer_o = 'src/lexer/lexer.o'
@@ -28,7 +28,7 @@ sotasrc = 'sota.c'
 sotajit = 'sota-jit'
 python = 'python' if call('which pypy', throw=False)[0] else 'pypy'
 python = 'python' # FIXME:  its slower; doing this for now ... -sai
-rpython = 'repos/pypy/rpython/bin/rpython'
+rpython = 'src/pypy/rpython/bin/rpython'
 
 PRE = 'tests/pre'
 POST = 'tests/post'
@@ -54,8 +54,8 @@ def task_submod():
 def task_ragel():
     return {
         'verbosity': 2,
-        'file_dep': [dodo, 'repos/ragel/.git'],
-        'actions': ['cd repos/ragel && ./configure', 'cd repos/ragel && make'],
+        'file_dep': [dodo, 'src/ragel/.git'],
+        'actions': ['cd src/ragel && ./configure', 'cd src/ragel && make'],
         'targets': [ragel],
         'clean': [clean_targets],
     }
@@ -91,9 +91,9 @@ def task_target():
             dodo,
             ragel,
             liblexer_a,
-            'repos/pypy/.git',
-            'repos/ragel/.git',
-            'repos/argtable3/.git',
+            'src/pypy/.git',
+            'src/ragel/.git',
+            'src/argtable3/.git',
             '%(PRE)s/results' % env(),
             '%(targetdir)s/%(targetsrc)s' % env(),
         ],
@@ -132,8 +132,8 @@ def task_tidy():
         'verbosity': 2,
         'actions': [
             'git clean -xfd',
-            'cd repos/pypy && git reset --hard HEAD && git clean -xfd',
-            'cd repos/ragel && git reset --hard HEAD && git clean -xfd',
-            'cd repos/argtable3 && git reset --hard HEAD && git clean -xfd',
+            'cd src/pypy && git reset --hard HEAD && git clean -xfd',
+            'cd src/ragel && git reset --hard HEAD && git clean -xfd',
+            'cd src/argtable3 && git reset --hard HEAD && git clean -xfd',
         ],
     }
