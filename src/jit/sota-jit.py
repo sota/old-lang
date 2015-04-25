@@ -57,7 +57,7 @@ def entry_point(argv):
     print lltype.typeOf(pointp)
     print lltype.typeOf(pointp.x)
     z = pointp.x + pointp.y
-    print z
+    #print z
 
     exitcode = 0
     if len(argv) == 2:
@@ -66,7 +66,7 @@ def entry_point(argv):
             src = loadfile(src)
         print src
     else:
-        print "sota-interpreter"
+        print "sota-jit"
         exitcode = 1
     return exitcode
 

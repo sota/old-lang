@@ -11,4 +11,4 @@ sys.path.insert(0, os.path.abspath(os.path.join(SCRIPT_PATH, '../../utils') ) )
 from common import cd, call
 
 def test_checkinterpreter():
-    assert call('./sota-interpreter hello')[0] == 0
+    assert call('./sota-jit hello')[0] == 0
