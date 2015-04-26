@@ -58,7 +58,7 @@ def task_ragel():
         'clean': [clean_targets],
     }
 
-def task_ccode():
+def task_sota():
     return {
         'verbosity': 2,
         'file_dep': [
@@ -84,7 +84,7 @@ def task_pre():
         'clean': [clean_targets],
     }
 
-def task_target():
+def task_sotajit():
     return {
         'verbosity': 2,
         'file_dep': [
