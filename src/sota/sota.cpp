@@ -1,8 +1,7 @@
 //#include "argtable3.h"
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string>
+#include <sstream>
 #include <iostream>
 #include <algorithm>
 #include "tclap/CmdLine.h"
@@ -23,13 +22,16 @@ int main(int argc, char **argv) {
         cmdline.parse(argc, argv);
 
         std::string source = sourceArg.getValue();
-        if (!source.empty()) {
-            std::cout << "source = " << source << std::endl;
+        if (source.empty()) {
+            std::cerr << "source must be non-empty text or file" << source << std::endl;
+            return 1;
         }
+        std::ostringstream cmd;
+        cmd << "./sota-jit \"" << source << "\"";
+        system(cmd.str().c_str());
 
     } catch (TCLAP::ArgException &ae) {
         std::cerr << "error: " << ae.error() << " for arg " << ae.argId() << std::endl;
     }
-    printf("sota\n");
     return 0;
 }
