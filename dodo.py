@@ -30,8 +30,8 @@ PRE = 'tests/pre'
 POST = 'tests/post'
 
 def submods():
-    stdout = call('git submodule')[1]
-    return [line.split()[1] for line in stdout.strip().split('\n')]
+    stdout = call('git submodule')[1].strip()
+    return [line.split()[1] for line in stdout.split('\n')]
 
 def task_pyflakes():
     return {
@@ -45,7 +45,7 @@ def task_submod():
             'name': submod,
             'verbosity': 2,
             'file_dep': [dodo],
-            'actions': ['git submodule update --init %(submod)s' % env() ],
+            'actions': ['git submodule update --init %(submod)s' % env()],
             'targets': [os.path.join(submod, '.git')]
         }
 
@@ -67,6 +67,7 @@ def task_ccode():
             'src/lexer/lexer.h',
             'src/lexer/lexer.rl',
             'src/sota/sota.cpp',
+            'src/tclap/include/tclap/CmdLine.h',
         ],
         'actions': ['cd src && tup', 'cp -f src/sota/sota .'],
         'targets': ['src/lexer/liblexer.a', 'sota'],
