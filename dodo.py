@@ -67,6 +67,7 @@ def task_ccode():
             'src/lexer/lexer.h',
             'src/lexer/lexer.rl',
             'src/sota/sota.cpp',
+            'src/tclap/.git',
             'src/tclap/include/tclap/CmdLine.h',
         ],
         'actions': ['cd src && tup', 'cp -f src/sota/sota .'],
