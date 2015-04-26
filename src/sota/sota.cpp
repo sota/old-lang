@@ -13,12 +13,12 @@ int main(int argc, char **argv) {
     try {
         TCLAP::CmdLine cmdline("sota: state of the art", ' ', "0.1");
         TCLAP::UnlabeledValueArg<std::string> sourceArg(
-            "source",                       //name
-            "sota source <text|file>",      //desc
-            true,                           //reqd
-            "",                             //value
-            "string",                       //typedesc
-            cmdline);                       //parser
+            "source",       //name
+            "sota source",  //desc
+            true,           //reqd
+            "",             //value
+            "text|file",    //typedesc
+            cmdline);       //parser
 
         cmdline.parse(argc, argv);
 
