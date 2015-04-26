@@ -48,29 +48,15 @@ def debug(msg):
 # __________  Entry point  __________
 
 def entry_point(argv):
-
-    print 'lexer_dir =', lexer_dir
-    tokens = lltype.Ptr(SotaToken)
-    pointp = lltype.nullptr(Point)
-    r = foo(pointp)
-    print lltype.typeOf(r)
-    print lltype.typeOf(pointp)
-    print lltype.typeOf(pointp.x)
-    z = pointp.x + pointp.y
-    #print z
-
-    exitcode = 0
-    if len(argv) == 2:
-        filename, src = argv
-        if os.path.isfile(src):
-            src = loadfile(src)
-        print src
+    if len(argv) != 2:
+        print 'sota-jit only takes one argument <text|file>'
+        return 1
+    source = argv[1]
+    if os.path.isfile(source):
+        print 'source is file'
     else:
-        print "sota-jit"
-        exitcode = 1
-    return exitcode
-
-# _____ Define and setup target ___
+        print 'source is text'
+    return 0
 
 def target(*args):
     return entry_point
