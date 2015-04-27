@@ -5,7 +5,9 @@ The target below specifies the sota dynamic programming language.
 '''
 import os
 
+from rpython.translator.unsimplify import varoftype
 from rpython.rtyper.lltypesystem import rffi, lltype
+from rpython.rtyper.tool import rffi_platform as platform
 from rpython.translator.tool.cbuild import ExternalCompilationInfo
 
 lexer_dir = os.path.join(os.getcwd(), 'src/lexer')
@@ -22,15 +24,29 @@ SotaToken = lltype.Struct(
     ('line', rffi.LONG),
     ('pos', rffi.LONG))
 
-Point = lltype.GcStruct(
+#PointGc = lltype.GcStruct(
+#    'Point',
+#    ('x', lltype.Signed),
+#    ('y', lltype.Signed))
+
+CPOINT = rffi.CStruct(
     'Point',
-    ('x', lltype.Signed),
-    ('y', lltype.Signed))
+    ('x', rffi.LONG),
+    ('y', rffi.LONG))
+CPOINTP = rffi.CArrayPtr(CPOINT)
+CPOINTPP = rffi.CArrayPtr(CPOINTP)
+#CCHARP = lltype.Ptr(lltype.Array(lltype.Char, hints={'nolength': True}))
+#CCHARPP = lltype.Ptr(lltype.Array(CCHARP, hints={'nolength': True}))
+#PointPtr = rffi.CStructPtr(
+#    'Point',
+#    ('x', rffi.LONG),
+#    ('y', rffi.LONG))
+#PointArray = rffi.CArrayPtr(Point)
 
 foo = rffi.llexternal(
     'foo',
-    [lltype.Ptr(Point)],
-    lltype.Signed,
+    [CPOINTPP],
+    rffi.LONG,
     compilation_info=lexer_eci)
 
 scan = rffi.llexternal(
@@ -56,6 +72,14 @@ def entry_point(argv):
         print 'source is file'
     else:
         print 'source is text'
+
+    with lltype.scoped_alloc(CPOINTPP.TO, 1) as cpointpp:
+        count = foo(cpointpp)
+        cpointp = cpointpp[0]
+        for i in range(count):
+            cpoint = cpointp[i]
+            print 'Point {x=%d, %d}' % (cpoint.c_x, cpoint.c_y)
+    print 'sota-jit success'
     return 0
 
 def target(*args):
