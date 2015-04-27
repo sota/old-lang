@@ -4,20 +4,14 @@ vim: syntax=c
 
 #include "lexer.h"
 
-long foo(Point *point) {
-    printf("foo\n");
-    if (point) {
-        printf("{x=%ld,y=%ld}\n", point->x, point->y);
+size_t foo(struct Point *ppoints[]) {
+    size_t count = 5;
+    struct Point *points = malloc(count * sizeof(struct Point));
+    for (size_t i=0; i<count; ++i) {
+        points[i].x = points[i].y = i;
     }
-    else {
-        printf("pre malloc\n");
-        point = (Point *)malloc(sizeof(Point));
-        printf("post malloc\n");
-        point->x = 1;
-        point->y = 2;
-        printf("point->x=%ld point->y=%ld\n", point->x, point->y);
-    }
-    return 0;
+    *ppoints = points;
+    return count;
 }
 
 long scan(const char *source, SotaToken *tokens) {
