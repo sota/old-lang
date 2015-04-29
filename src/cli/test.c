@@ -2,12 +2,16 @@
 
 #include "cli.h"
 
-extern struct CliTokens parse(int argc, char *argv[]);
+extern int parse(int argc, char *argv[], struct CliToken **tokens);
 
 int main(int argc, char *argv[]) {
     printf("test\n");
-    struct CliTokens tokens = parse(argc, argv);
-    printf("%p\n", &tokens);
+    struct CliToken *tokens = NULL;
+    int result = parse(argc, argv, &tokens);
+    printf("result = %d\n", result);
+    for (int i=0; i<result; ++i) {
+        printf("CliToken {name=%s, value=%s}\n", tokens[i].name, tokens[i].value);
+    }
     printf("buh-bye\n");
     return 0;
 }

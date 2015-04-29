@@ -7,10 +7,15 @@
 #include "tclap/CmdLine.h"
 #include <stdio.h>
 
-extern "C" struct CliTokens parse(int argc, char *argv[]) {
+extern "C" int parse(int argc, char *argv[], struct CliToken **tokens) {
     printf("parse\n");
-    struct CliTokens tokens;
-    return tokens;
+    int count = 3;
+    *tokens = (struct CliToken *)malloc(count * sizeof(struct CliToken));
+    for (int i=0; i<count; ++i) {
+        (*tokens)[i].name = "si";
+        (*tokens)[i].value = "og";
+    }
+    return count;
 }
 /*
 int parse(int argc, char *argv[]) {

@@ -11,8 +11,17 @@ vim: syntax=cpp
 #include "tclap/CmdLine.h"
 #include <stdio.h>
 
-extern "C" struct SotaTokens scan(const char *source) {
+extern "C" int scan(const char *source, struct SotaToken **tokens) {
     printf("parse\n");
-    struct SotaTokens tokens;
-    return tokens;
+    int count = 3;
+    *tokens = (struct SotaToken *)malloc(count * sizeof(struct SotaToken));
+    for (int i=0; i<count; ++i) {
+        struct SotaToken *token = &(*tokens)[i];
+        token->name = "si";
+        token->value = "og";
+        token->line = i;
+        token->pos = i;
+    }
+ 
+    return count;
 }

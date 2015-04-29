@@ -8,16 +8,11 @@ extern "C" {
 #endif
 
 struct CliToken {
-    char *name;
-    char *value;
+    const char *name;
+    const char *value;
 };
 
-struct CliTokens {
-    long count;
-    struct CliToken tokens[];
-};
-
-struct CliTokens parse(int argc, char *argv[]);
+int parse(int argc, char *argv[], struct CliToken **tokens);
 
 #ifdef __cplusplus
 }

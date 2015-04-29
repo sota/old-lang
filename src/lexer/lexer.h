@@ -7,19 +7,16 @@
 extern "C" {
 #endif
 
+#include <stdio.h>
+
 struct SotaToken {
-    char *name;
-    char *value;
-    long line;
-    long pos;
+    const char *name;
+    const char *value;
+    size_t line;
+    size_t pos;
 };
 
-struct SotaTokens {
-    long count;
-    struct SotaToken tokens[];
-};
-
-struct SotaTokens scan(const char *source);
+int scan(const char *source, struct SotaToken **tokens);
 
 #ifdef __cplusplus
 }
