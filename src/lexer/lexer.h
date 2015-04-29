@@ -1,29 +1,28 @@
-#ifndef __SOTA_LEXER__
-#define __SOTA_LEXER__ = 1
+#ifndef __SOTA_CLI__
+#define __SOTA_CLI__ = 1
 
-#include <stdio.h>
-#include <stdlib.h>
+#define VERSION "0.1"
 
-typedef struct {
-    const char *name;
-    const char *value;
-    const long line;
-    const long pos;
-} SotaToken;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-/*
-typedef struct {
-    long x;
-    long y;
-} Point;
-
-long foo(Point **points);
-*/
-struct Point {
-    long x;
-    long y;
+struct SotaToken {
+    char *name;
+    char *value;
+    long line;
+    long pos;
 };
-size_t foo(struct Point *ppoints[]);
-long scan(const char *source, SotaToken *tokens);
 
-#endif /*__SOTA_LEXER__*/
+struct SotaTokens {
+    long count;
+    struct SotaToken tokens[];
+};
+
+struct SotaTokens scan(const char *source);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /*__SOTA_CLI__*/

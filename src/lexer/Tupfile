@@ -1,4 +1,5 @@
 include_rules
-: foreach *.rl |> !r2c |>
-: foreach *.c |> !cc |>
-: foreach *.o |> !ar |>
+: foreach *.rl |> !r2cpp |>
+: *.cpp |> !++ -I../tclap/include |>
+: *.c |> !cc |>
+: *.o |> g++ %f -o %o |> test

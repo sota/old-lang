@@ -10,6 +10,7 @@ CXXFLAGS += -O2
 CXXFLAGS += -std=c++11
 
 !r2c = |> ../ragel/ragel/ragel %f -o %B.c |> %B.c
+!r2cpp = |> ../ragel/ragel/ragel %f -o %B.cpp |> %B.cpp
 !cc = |> gcc $(CFLAGS) -I../ -c %f -o %o |> %B.o
 !++ = |> g++ $(CXXFLAGS) -I../ -c %f -o %o |> %B.o
 !ar = |> ar crs %o %f |> lib%B.a

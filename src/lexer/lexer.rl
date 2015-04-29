@@ -1,20 +1,18 @@
 /*
-vim: syntax=c
+vim: syntax=cpp
 */
 
 #include "lexer.h"
 
-size_t foo(struct Point *ppoints[]) {
-    size_t count = 5;
-    struct Point *points = malloc(count * sizeof(struct Point));
-    for (size_t i=0; i<count; ++i) {
-        points[i].x = points[i].y = i;
-    }
-    *ppoints = points;
-    return count;
-}
+#include <string>
+#include <sstream>
+#include <iostream>
+#include <algorithm>
+#include "tclap/CmdLine.h"
+#include <stdio.h>
 
-long scan(const char *source, SotaToken *tokens) {
-    printf("scan: source=%s", source);
-    return 0;
+extern "C" struct SotaTokens scan(const char *source) {
+    printf("parse\n");
+    struct SotaTokens tokens;
+    return tokens;
 }
