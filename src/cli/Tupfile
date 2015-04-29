@@ -1,0 +1,4 @@
+include_rules
+: *.cpp |> !++ -I../tclap/include |>
+: *.c |> !cc |>
+: *.o |> g++ %f -o %o |> test
