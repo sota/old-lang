@@ -73,13 +73,13 @@ def entry_point(argv):
     else:
         print 'source is text'
 
-    with lltype.scoped_alloc(CPOINTPP.TO, 1) as cpointpp:
-        count = foo(cpointpp)
-        cpointp = cpointpp[0]
-        for i in range(count):
-            cpoint = cpointp[i]
-            print 'Point {x=%d, %d}' % (cpoint.c_x, cpoint.c_y)
-    print 'sota-jit success'
+#    with lltype.scoped_alloc(CPOINTPP.TO, 1) as cpointpp:
+#        count = foo(cpointpp)
+#        cpointp = cpointpp[0]
+#        for i in range(count):
+#            cpoint = cpointp[i]
+#            print 'Point {x=%d, %d}' % (cpoint.c_x, cpoint.c_y)
+    print 'sota success'
     return 0
 
 def target(*args):
