@@ -72,7 +72,7 @@ def task_ccode():
             'src/tclap/include/tclap/CmdLine.h',
         ],
         'actions': ['cd src && tup'],
-        'targets': ['src/cli/test', 'src/lexer/test'],
+        'targets': ['src/cli/test', 'src/lexer/test', 'src/lexer/lexer.cpp'],
         'clean': [clean_targets],
     }
 
@@ -93,6 +93,7 @@ def task_sota():
             ragel,
             'src/cli/test',
             'src/lexer/test',
+            'src/lexer/lexer.cpp',
             'src/pypy/.git',
             'src/ragel/.git',
             'src/argtable3/.git',
