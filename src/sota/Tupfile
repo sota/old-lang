@@ -1,3 +1,0 @@
-include_rules
-: *.cpp |> !++ -I../tclap/include |>
-: *.o |> g++ %f -o %o |> sota
