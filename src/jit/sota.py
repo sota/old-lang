@@ -85,9 +85,6 @@ def debug(msg):
 # __________  Entry point  __________
 
 def entry_point(argv):
-    if len(argv) != 2:
-        print 'sota-jit only takes one argument <text|file>'
-        return 1
     source = argv[1]
     if os.path.isfile(source):
         print 'source is file'
