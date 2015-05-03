@@ -18,63 +18,43 @@ cli_eci = ExternalCompilationInfo(
     libraries=['cli'],
     use_cpp_linker=True)
 
+CCLITOKEN = rffi.CStruct(
+    'CliToken',
+    ('name', rffi.CCHARP),
+    ('value', rffi.CCHARP))
+CCLITOKENP = rffi.CArrayPtr(CCLITOKEN)
+CCLITOKENPP = rffi.CArrayPtr(CCLITOKENP)
+
+parse = rffi.llexternal(
+    'parse',
+    [rffi.LONG, rffi.CCHARPP, CCLITOKENPP],
+    rffi.LONG,
+    compilation_info=cli_eci)
+
+#######################################################
+
 lexer_dir = os.path.join(os.getcwd(), 'src/lexer')
 lexer_eci = ExternalCompilationInfo(
     include_dirs=[lexer_dir],
     includes=['lexer.h'],
     library_dirs=[lexer_dir],
-    libraries=['lexer'])
+    libraries=['lexer'],
+    use_cpp_linker=True)
 
-SotaToken = lltype.Struct(
+CSOTATOKEN = rffi.CStruct(
     'SotaToken',
-    ('name', rffi.CCHARP),
-    ('value', rffi.CCHARP),
-    ('line', rffi.LONG),
-    ('pos', rffi.LONG))
-
-#PointGc = lltype.GcStruct(
-#    'Point',
-#    ('x', lltype.Signed),
-#    ('y', lltype.Signed))
-
-CPOINT = rffi.CStruct(
-    'Point',
-    ('x', rffi.LONG),
-    ('y', rffi.LONG))
-CPOINTP = rffi.CArrayPtr(CPOINT)
-CPOINTPP = rffi.CArrayPtr(CPOINTP)
-#CCHARP = lltype.Ptr(lltype.Array(lltype.Char, hints={'nolength': True}))
-#CCHARPP = lltype.Ptr(lltype.Array(CCHARP, hints={'nolength': True}))
-#PointPtr = rffi.CStructPtr(
-#    'Point',
-#    ('x', rffi.LONG),
-#    ('y', rffi.LONG))
-#PointArray = rffi.CArrayPtr(Point)
-
-foo = rffi.llexternal(
-    'foo',
-    [CPOINTPP],
-    rffi.LONG,
-    compilation_info=lexer_eci)
+    ('source', rffi.CONST_CCHARP),
+    ('pos', rffi.LONG),
+    ('len', rffi.LONG),
+    ('type', rffi.LONG))
+CSOTATOKENP = rffi.CArrayPtr(CSOTATOKEN)
+CSOTATOKENPP = rffi.CArrayPtr(CSOTATOKENP)
 
 scan = rffi.llexternal(
     'scan',
-    [rffi.CCHARP, lltype.Ptr(SotaToken)],
-    rffi.INT,
-    compilation_info=lexer_eci)
-
-CLITOKEN = rffi.CStruct(
-    'CliToken',
-    ('name', rffi.CCHARP),
-    ('value', rffi.CCHARP))
-CLITOKENP = rffi.CArrayPtr(CLITOKEN)
-CLITOKENPP = rffi.CArrayPtr(CLITOKENP)
-
-parse = rffi.llexternal(
-    'parse',
-    [rffi.LONG, rffi.CCHARPP, CLITOKENPP],
+    [rffi.CONST_CCHARP, CSOTATOKENPP],
     rffi.LONG,
-    compilation_info=cli_eci)
+    compilation_info=lexer_eci)
 
 def loadfile(src):
     return open(src).read()
@@ -85,26 +65,22 @@ def debug(msg):
 # __________  Entry point  __________
 
 def entry_point(argv):
-    source = argv[1]
-    if os.path.isfile(source):
-        print 'source is file'
-    else:
-        print 'source is text'
 
-    with lltype.scoped_alloc(CLITOKENPP.TO, 1) as clitokenpp:
-        result = parse(len(argv), rffi.liststr2charpp(argv), clitokenpp)
+    with lltype.scoped_alloc(CCLITOKENPP.TO, 1) as cclitokenpp:
+        result = parse(len(argv), rffi.liststr2charpp(argv), cclitokenpp)
         for i in range(result):
-            clitoken = clitokenpp[0][i]
+            clitoken = cclitokenpp[0][i]
             print 'CliToken {name=%s, value=%s}' % (rffi.charp2str(clitoken.c_name), rffi.charp2str(clitoken.c_value))
         print 'result =', result
 
-#    with lltype.scoped_alloc(CPOINTPP.TO, 1) as cpointpp:
-#        count = foo(cpointpp)
-#        cpointp = cpointpp[0]
-#        for i in range(count):
-#            cpoint = cpointp[i]
-#            print 'Point {x=%d, %d}' % (cpoint.c_x, cpoint.c_y)
-    print 'sota success'
+    source = loadfile(argv[1]) if os.path.isfile(argv[1]) else argv[1] + '\n'
+
+    with lltype.scoped_alloc(CSOTATOKENPP.TO, 1) as csotatokenpp:
+        csource = rffi.str2charp(source)
+        ccsource = rffi.cast(rffi.CONST_CCHARP, csource)
+        result = scan(ccsource, csotatokenpp)
+        for i in range(result):
+            print csotatokenpp[0][i].c_pos
     return 0
 
 def target(*args):
