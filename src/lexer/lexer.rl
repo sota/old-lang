@@ -12,16 +12,27 @@ vim: syntax=cpp
 #include <stdio.h>
 
 extern "C" int scan(const char *source, struct SotaToken **tokens) {
-    printf("parse\n");
+    printf("scan: source=\n%s", source);
     int count = 3;
     *tokens = (struct SotaToken *)malloc(count * sizeof(struct SotaToken));
     for (int i=0; i<count; ++i) {
         struct SotaToken *token = &(*tokens)[i];
-        token->name = "si";
-        token->value = "og";
-        token->line = i;
+        token->source = source;
         token->pos = i;
+        token->len = i;
+        token->type = i;
     }
  
     return count;
 }
+/*
+extern "C" int foo(char *source) {
+    printf("source:\n%s", source);
+    return 0;
+}
+
+extern "C" int bar(const char *source) {
+    printf("source:\n%s", source);
+    return 0;
+}
+*/
