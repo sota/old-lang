@@ -43,10 +43,9 @@ lexer_eci = ExternalCompilationInfo(
 
 CSOTATOKEN = rffi.CStruct(
     'SotaToken',
-    ('source', rffi.CONST_CCHARP),
-    ('pos', rffi.LONG),
-    ('len', rffi.LONG),
-    ('type', rffi.LONG))
+    ('index', rffi.SIZE_T),
+    ('length', rffi.SIZE_T),
+    ('type', rffi.SIZE_T))
 CSOTATOKENP = rffi.CArrayPtr(CSOTATOKEN)
 CSOTATOKENPP = rffi.CArrayPtr(CSOTATOKENP)
 
@@ -56,11 +55,14 @@ scan = rffi.llexternal(
     rffi.LONG,
     compilation_info=lexer_eci)
 
-def loadfile(src):
-    return open(src).read()
+def loadfile(source):
+    return open(source).read()
 
 def debug(msg):
     print 'debug:', msg
+
+def deref(obj):
+    return obj[0]
 
 # __________  Entry point  __________
 
@@ -73,14 +75,15 @@ def entry_point(argv):
             print 'CliToken {name=%s, value=%s}' % (rffi.charp2str(clitoken.c_name), rffi.charp2str(clitoken.c_value))
         print 'result =', result
 
-    source = loadfile(argv[1]) if os.path.isfile(argv[1]) else argv[1] + '\n'
+    source = argv[1]
+    source = loadfile(source) if os.path.isfile(source) else source + '\n'
 
     with lltype.scoped_alloc(CSOTATOKENPP.TO, 1) as csotatokenpp:
-        csource = rffi.str2charp(source)
-        ccsource = rffi.cast(rffi.CONST_CCHARP, csource)
-        result = scan(ccsource, csotatokenpp)
+        sotacode = rffi.cast(rffi.CONST_CCHARP, rffi.str2charp(source))
+        result = scan(sotacode, csotatokenpp)
         for i in range(result):
-            print csotatokenpp[0][i].c_pos
+            token = deref(csotatokenpp)[i]
+            print token.c_type
     return 0
 
 def target(*args):

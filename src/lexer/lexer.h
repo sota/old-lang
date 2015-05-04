@@ -10,17 +10,13 @@ extern "C" {
 #include <stdio.h>
 
 struct SotaToken {
-    const char *source;
-    long pos;
-    long len;
-    long type;
+    size_t index;
+    size_t length;
+    size_t type;
 };
 
-int scan(const char *source, struct SotaToken **tokens);
-/*
-int foo(char *source);
-int bar(const char *source);
-*/
+long scan(const char *source, struct SotaToken **tokens);
+
 #ifdef __cplusplus
 }
 #endif
