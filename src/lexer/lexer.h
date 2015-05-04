@@ -10,9 +10,9 @@ extern "C" {
 #include <stdio.h>
 
 struct SotaToken {
-    size_t index;
-    size_t length;
-    size_t type;
+    long ts;
+    long te;
+    long type;
 };
 
 long scan(const char *source, struct SotaToken **tokens);

@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
     long result = scan("1+2;", &tokens);
     printf("result = %ld\n", result);
     for (int i=0; i<result; ++i) {
-        printf("SotaToken {index=%lu, length=%lu, type=%lu}\n", tokens[i].index, tokens[i].length, tokens[i].type);
+        printf("SotaToken {ts=%ld, te=%ld, type=%ld}\n", tokens[i].ts, tokens[i].te, tokens[i].type);
     }
     printf("buh-bye\n");
     return 0;

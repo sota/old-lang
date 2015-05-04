@@ -47,8 +47,8 @@ static const char *te;
 
     action num_tok {
         struct SotaToken token = {
-            0,
-            1,
+            ts-source,
+            te-source,
             SOTA_Number,
         };
         tokenlist.push_back(token);
@@ -56,8 +56,8 @@ static const char *te;
 
     action add_tok {
         struct SotaToken token = {
-            0,
-            1,
+            ts-source,
+            te-source,
             '+',
         };
         tokenlist.push_back(token);
@@ -65,8 +65,8 @@ static const char *te;
 
     action sub_tok {
         struct SotaToken token = {
-            0,
-            1,
+            ts-source,
+            te-source,
             '-',
         };
         tokenlist.push_back(token);
@@ -74,8 +74,8 @@ static const char *te;
 
     action mul_tok {
         struct SotaToken token = {
-            0,
-            1,
+            ts-source,
+            te-source,
             '*',
         };
         tokenlist.push_back(token);
@@ -83,8 +83,8 @@ static const char *te;
 
     action div_tok {
         struct SotaToken token = {
-            0,
-            1,
+            ts-source,
+            te-source,
             '/',
         };
         tokenlist.push_back(token);
@@ -92,8 +92,8 @@ static const char *te;
 
     action op_tok {
         struct SotaToken token = {
-            0,
-            1,
+            ts-source,
+            te-source,
             '(',
         };
         tokenlist.push_back(token);
@@ -101,8 +101,8 @@ static const char *te;
 
     action cp_tok {
         struct SotaToken token = {
-            0,
-            1,
+            ts-source,
+            te-source,
             ')',
         };
         tokenlist.push_back(token);
@@ -110,8 +110,8 @@ static const char *te;
 
     action semi_tok {
         struct SotaToken token = {
-            0,
-            1,
+            ts-source,
+            te-source,
             ';',
         };
         tokenlist.push_back(token);

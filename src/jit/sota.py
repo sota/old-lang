@@ -18,16 +18,16 @@ cli_eci = ExternalCompilationInfo(
     libraries=['cli'],
     use_cpp_linker=True)
 
-CCLITOKEN = rffi.CStruct(
+CLITOKEN = rffi.CStruct(
     'CliToken',
     ('name', rffi.CCHARP),
     ('value', rffi.CCHARP))
-CCLITOKENP = rffi.CArrayPtr(CCLITOKEN)
-CCLITOKENPP = rffi.CArrayPtr(CCLITOKENP)
+CLITOKENP = rffi.CArrayPtr(CLITOKEN)
+CLITOKENPP = rffi.CArrayPtr(CLITOKENP)
 
 parse = rffi.llexternal(
     'parse',
-    [rffi.LONG, rffi.CCHARPP, CCLITOKENPP],
+    [rffi.LONG, rffi.CCHARPP, CLITOKENPP],
     rffi.LONG,
     compilation_info=cli_eci)
 
@@ -41,17 +41,17 @@ lexer_eci = ExternalCompilationInfo(
     libraries=['lexer'],
     use_cpp_linker=True)
 
-CSOTATOKEN = rffi.CStruct(
+SOTATOKEN = rffi.CStruct(
     'SotaToken',
-    ('index', rffi.SIZE_T),
-    ('length', rffi.SIZE_T),
-    ('type', rffi.SIZE_T))
-CSOTATOKENP = rffi.CArrayPtr(CSOTATOKEN)
-CSOTATOKENPP = rffi.CArrayPtr(CSOTATOKENP)
+    ('ts', rffi.LONG),
+    ('te', rffi.LONG),
+    ('type', rffi.LONG))
+SOTATOKENP = rffi.CArrayPtr(SOTATOKEN)
+SOTATOKENPP = rffi.CArrayPtr(SOTATOKENP)
 
 scan = rffi.llexternal(
     'scan',
-    [rffi.CONST_CCHARP, CSOTATOKENPP],
+    [rffi.CONST_CCHARP, SOTATOKENPP],
     rffi.LONG,
     compilation_info=lexer_eci)
 
@@ -68,7 +68,7 @@ def deref(obj):
 
 def entry_point(argv):
 
-    with lltype.scoped_alloc(CCLITOKENPP.TO, 1) as cclitokenpp:
+    with lltype.scoped_alloc(CLITOKENPP.TO, 1) as cclitokenpp:
         result = parse(len(argv), rffi.liststr2charpp(argv), cclitokenpp)
         for i in range(result):
             clitoken = cclitokenpp[0][i]
@@ -78,12 +78,14 @@ def entry_point(argv):
     source = argv[1]
     source = loadfile(source) if os.path.isfile(source) else source + '\n'
 
-    with lltype.scoped_alloc(CSOTATOKENPP.TO, 1) as csotatokenpp:
+    with lltype.scoped_alloc(SOTATOKENPP.TO, 1) as csotatokenpp:
         sotacode = rffi.cast(rffi.CONST_CCHARP, rffi.str2charp(source))
         result = scan(sotacode, csotatokenpp)
         for i in range(result):
             token = deref(csotatokenpp)[i]
-            print token.c_type
+            ts = rffi.cast(rffi.SIZE_T, token.c_ts)
+            te = rffi.cast(rffi.SIZE_T, token.c_te)
+            print '{ts=%s, te=%s, type=%s value=%s}' % (ts, te, token.c_type, source[ts:te])
     return 0
 
 def target(*args):
