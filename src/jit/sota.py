@@ -73,16 +73,15 @@ def entry_point(argv):
         for i in range(result):
             clitoken = cclitokenpp[0][i]
             print 'CliToken {name=%s, value=%s}' % (rffi.charp2str(clitoken.c_name), rffi.charp2str(clitoken.c_value))
-        print 'result =', result
 
     source = argv[1]
     source = loadfile(source) if os.path.isfile(source) else source + '\n'
 
-    with lltype.scoped_alloc(SOTATOKENPP.TO, 1) as csotatokenpp:
+    with lltype.scoped_alloc(SOTATOKENPP.TO, 1) as sotatokenpp:
         sotacode = rffi.cast(rffi.CONST_CCHARP, rffi.str2charp(source))
-        result = scan(sotacode, csotatokenpp)
+        result = scan(sotacode, sotatokenpp)
         for i in range(result):
-            token = deref(csotatokenpp)[i]
+            token = deref(sotatokenpp)[i]
             ts = rffi.cast(rffi.SIZE_T, token.c_ts)
             te = rffi.cast(rffi.SIZE_T, token.c_te)
             print '{ts=%s, te=%s, type=%s value=%s}' % (ts, te, token.c_type, source[ts:te])

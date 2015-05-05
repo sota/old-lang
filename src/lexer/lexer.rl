@@ -36,14 +36,16 @@ using std::cerr;
 using std::cout;
 using std::cin;
 using std::endl;
+using std::copy;
 
 static int cs;
 static int act;
-static const char *ts;
-static const char *te;
+static const char *ts = NULL;
+static const char *te = NULL;
 
 %%{
     machine sota;
+    write data nofinal;
 
     action num_tok {
         struct SotaToken token = {
@@ -140,11 +142,10 @@ static const char *te;
 
 }%%
 
-%% write data;
 
 extern "C" long scan(const char *source, struct SotaToken **tokens) {
-    std::vector<SotaToken> tokenlist;
 
+    std::vector<SotaToken> tokenlist;
     size_t length = strlen(source);
     const char *p = source;
     const char *pe = source + length;
@@ -153,7 +154,7 @@ extern "C" long scan(const char *source, struct SotaToken **tokens) {
     %% write init;
     %% write exec;
 
-    *tokens = &tokenlist[0];
-    printf("tokenlist.size()=%ld\n", tokenlist.size());
+    *tokens = (struct SotaToken *)malloc(tokenlist.size() * sizeof(struct SotaToken));
+    copy(tokenlist.begin(), tokenlist.end(), *tokens);
     return tokenlist.size();
 }
