@@ -84,7 +84,7 @@ def entry_point(argv):
             token = deref(sotatokenpp)[i]
             ts = rffi.cast(rffi.SIZE_T, token.c_ts)
             te = rffi.cast(rffi.SIZE_T, token.c_te)
-            print '{ts=%s, te=%s, type=%s value=%s}' % (ts, te, token.c_type, source[ts:te])
+            print '{ts=%s, te=%s, type=%s value=\"%s\"}' % (ts, te, token.c_type, source[ts:te])
     return 0
 
 def target(*args):
