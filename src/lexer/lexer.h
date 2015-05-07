@@ -17,14 +17,21 @@ extern "C" {
 #define SOTA_Replace        260
 #define SOTA_RightArrow     261
 */
-#define TOKENS                      \
-T(RightArrow,   256,    "->")       \
-T(Indent,       257,    "<INDENT>") \
-T(Dedent,       258,    "<DEDENT>") \
-T(Symbol,       259,    "<SYM>")    \
-T(Number,       260,    "<NUM>")    \
-T(Literal,      261,    "<LIT>")    \
-T(Comment,      262,    "<COMMENT>")\
+#define TOKENS                          \
+T(RightArrow,   256,    "->")           \
+T(Indent,       257,    "<INDENT>")     \
+T(Dedent,       258,    "<DEDENT>")     \
+T(Symbol,       259,    "<SYM>")        \
+T(Number,       260,    "<NUM>")        \
+T(Literal,      261,    "<LIT>")        \
+T(Comment,      262,    "<COMMENT>")    \
+T(True,         263,    "true")         \
+T(False,        264,    "false")        \
+T(Skip,         265,    "skip")         \
+T(Null,         266,    "null")         \
+T(Match,        267,    "match")        \
+T(Search,       268,    "s/")           \
+T(Replace,      269,    "r/")           \
 
 #define T(t,i,v) t=i,
 enum TokenType {
@@ -41,7 +48,7 @@ struct SotaToken {
 };
 
 
-const char * token_value(int tokenType);
+const char * token_value(int type);
 long scan(const char *source, struct SotaToken **tokens);
 
 #ifdef __cplusplus
