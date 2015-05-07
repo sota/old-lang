@@ -4,33 +4,12 @@ vim: syntax=cpp
 
 #include "lexer.h"
 
+#include <map>
 #include <string>
 #include <sstream>
 #include <iostream>
 #include <algorithm>
 #include "tclap/CmdLine.h"
-#include <stdio.h>
-#include <string.h>
-
-#define SOTA_Number         258
-#define SOTA_Symbol         259
-#define SOTA_RightArrow     261
-#define SOTA_PlusPlus       262
-#define SOTA_MinusMinus     263
-#define SOTA_EqualsEquals   271
-#define SOTA_NotEquals      272
-#define SOTA_AndAnd         273
-#define SOTA_OrOr           274
-#define SOTA_AddAssign      275
-#define SOTA_SubAssign      276
-#define SOTA_MulAssign      277
-#define SOTA_DivAssign      278
-#define SOTA_ModAssign      279
-#define SOTA_DotDot         280
-#define SOTA_DotDotDot      281
-#define SOTA_Whitespace     282
-#define SOTA_Comment        283
-
 
 using std::cerr;
 using std::cout;
@@ -43,105 +22,104 @@ static int act;
 static const char *ts = NULL;
 static const char *te = NULL;
 
+#define T(t,i,v) {t,v},
+static std::map<enum TokenType,const char *> TokenMap = {
+    TOKENS
+};
+#undef T
+
+#define TOKEN(i) tokenlist.push_back({ts-source, te-source, i})
+
 %%{
     machine sota;
     write data nofinal;
 
-    action num_tok {
-        struct SotaToken token = {
-            ts-source,
-            te-source,
-            SOTA_Number,
-        };
-        tokenlist.push_back(token);
+    action assign_tok {
+        TOKEN('=');
     }
 
-    action add_tok {
-        struct SotaToken token = {
-            ts-source,
-            te-source,
-            '+',
-        };
-        tokenlist.push_back(token);
+    action comma_tok {
+        TOKEN(',');
     }
 
-    action sub_tok {
-        struct SotaToken token = {
-            ts-source,
-            te-source,
-            '-',
-        };
-        tokenlist.push_back(token);
+    action openparen_tok {
+        TOKEN('(');
     }
 
-    action mul_tok {
-        struct SotaToken token = {
-            ts-source,
-            te-source,
-            '*',
-        };
-        tokenlist.push_back(token);
+    action closeparen_tok {
+        TOKEN(')');
     }
 
-    action div_tok {
-        struct SotaToken token = {
-            ts-source,
-            te-source,
-            '/',
-        };
-        tokenlist.push_back(token);
+    action semicolon_tok {
+        TOKEN(';');
     }
 
-    action op_tok {
-        struct SotaToken token = {
-            ts-source,
-            te-source,
-            '(',
-        };
-        tokenlist.push_back(token);
+    action number_tok {
+        TOKEN(TokenType::Number);
     }
 
-    action cp_tok {
-        struct SotaToken token = {
-            ts-source,
-            te-source,
-            ')',
-        };
-        tokenlist.push_back(token);
+    action symbol_tok {
+        TOKEN(TokenType::Symbol);
     }
 
-    action semi_tok {
-        struct SotaToken token = {
-            ts-source,
-            te-source,
-            ';',
-        };
-        tokenlist.push_back(token);
+    action rightarrow_tok {
+        TOKEN(TokenType::RightArrow);
     }
 
-    num = [0-9]+('.'[0-9]+)?;
-    add = '+';
-    sub = '-';
-    mul = '*';
-    div = '/';
-    op = '(';
-    cp = ')';
-    semi = ';';
+    action literal_tok {
+        TOKEN(TokenType::Literal);
+    }
+
+    action comment_tok {
+        TOKEN(TokenType::Comment);
+    }
+
+    assign      = '=';
+    comma       = ',';
+    openparen   ='(';
+    closeparen  = ')';
+    semicolon   = ';';
+    number      = [0-9]+('.'[0-9]+)?;
+    op          = [+\-*\/:=^&%$@!~<>]+;
+    alpha_      = (alpha | '_');
+    alnum_      = (alnum | '_');
+    syms        = '_' | '-' | '+' | '&';
+    id          = (digit+ (alpha | syms) | alpha | '_') (syms? (alnum | '_' | '?'))*;
+    symbol      = op | id;
+    rightarrow  = "->";
+    literal     = "\"" any* :>> "\"";
+    comment     = "##" any* :>> "##" | '#' [^\n\r]+;
 
     scan := |*
-        num => num_tok;
-        add => add_tok;
-        sub => sub_tok;
-        mul => mul_tok;
-        div => div_tok;
-        op => op_tok;
-        cp => cp_tok;
-        semi => semi_tok;
+        assign      => assign_tok;
+        comma       => comma_tok;
+        openparen   => openparen_tok;
+        closeparen  => closeparen_tok;
+        semicolon   => semicolon_tok;
+        rightarrow  => rightarrow_tok;
+        number      => number_tok;
+        symbol      => symbol_tok;
+        literal     => literal_tok;
+        comment     => comment_tok;
         space;
     *|;
 
 }%%
 
+extern "C" const char * token_value(int tokenType) {
+    if (0 <= tokenType && tokenType <= 255) {
+        std::string s;
+        s.insert(0, 1, (char)tokenType);
+        return s.c_str();
+    }
+    else if (TokenMap.find((enum TokenType)tokenType) != TokenMap.end()) {
+        return TokenMap[(enum TokenType)tokenType];
+    }
+    else {
+        printf("token_value: error!\n");
+        return NULL;
+    }
+}
 
 extern "C" long scan(const char *source, struct SotaToken **tokens) {
 

@@ -2,6 +2,7 @@
 
 #include "lexer.h"
 
+extern const char * token_value(int tokeType);
 extern long scan(const char *source, struct SotaToken **tokens);
 
 int main(int argc, char *argv[]) {
