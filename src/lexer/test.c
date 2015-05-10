@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
     long result = scan("1+2;", &tokens);
     printf("result = %ld\n", result);
     for (int i=0; i<result; ++i) {
-        printf("SotaToken {ts=%ld, te=%ld, type=%ld}\n", tokens[i].ts, tokens[i].te, tokens[i].type);
+        printf("SotaToken {ts=%ld, te=%ld, tt=%ld}\n", tokens[i].ts, tokens[i].te, tokens[i].tt);
     }
     printf("buh-bye\n");
     return 0;

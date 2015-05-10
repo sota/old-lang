@@ -15,7 +15,7 @@ CSOTATOKEN = rffi.CStruct(
     'SotaToken',
     ('ts', rffi.LONG),
     ('te', rffi.LONG),
-    ('type', rffi.LONG))
+    ('tt', rffi.LONG))
 CSOTATOKENP = rffi.CArrayPtr(CSOTATOKEN)
 CSOTATOKENPP = rffi.CArrayPtr(CSOTATOKENP)
 
@@ -37,5 +37,5 @@ def scan(source):
             ctoken = deref(csotatokenpp)[i]
             ts = rffi.cast(rffi.SIZE_T, ctoken.c_ts)
             te = rffi.cast(rffi.SIZE_T, ctoken.c_te)
-            print '{ts=%s, te=%s, type=%s value=\"%s\"}' % (ts, te, ctoken.c_type, source[ts:te])
+            print '{ts=%s, te=%s, tt=%s value=\"%s\"}' % (ts, te, ctoken.c_tt, source[ts:te])
 

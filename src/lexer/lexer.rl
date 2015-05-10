@@ -28,8 +28,8 @@ static std::map<enum TokenType,const char *> TokenMap = {
 };
 #undef T
 
-#define TOKEN(type) tokenlist.push_back({ts-source, te-source, type})
-#define TRIMMED_TOKEN(type, trim) tokenlist.push_back({ts-source+trim, te-source-trim, type})
+#define TOKEN(tt) tokenlist.push_back({ts-source, te-source, tt})
+#define TRIMMED_TOKEN(tt, trim) tokenlist.push_back({ts-source+trim, te-source-trim, tt})
 
 %%{
     machine sota;
@@ -107,14 +107,14 @@ static std::map<enum TokenType,const char *> TokenMap = {
 
 }%%
 
-extern "C" const char * token_value(int type) {
-    if (0 <= type && type <= 255) {
+extern "C" const char * token_value(int tt) {
+    if (0 <= tt && tt <= 255) {
         std::string s;
-        s.insert(0, 1, (char)type);
+        s.insert(0, 1, (char)tt);
         return s.c_str();
     }
-    else if (TokenMap.find((enum TokenType)type) != TokenMap.end()) {
-        return TokenMap[(enum TokenType)type];
+    else if (TokenMap.find((enum TokenType)tt) != TokenMap.end()) {
+        return TokenMap[(enum TokenType)tt];
     }
     else {
         printf("token_value: error!\n");

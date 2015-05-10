@@ -42,13 +42,13 @@ enum TokenType {
 //static std::map<TokenType, std::string> TokenMap;
 
 struct SotaToken {
-    long ts;
-    long te;
-    long type;
+    long ts;    //token start
+    long te;    //token end
+    long tt;    //token type
 };
 
 
-const char * token_value(int type);
+const char * token_value(int tt);
 long scan(const char *source, struct SotaToken **tokens);
 
 #ifdef __cplusplus
