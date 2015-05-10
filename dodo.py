@@ -29,6 +29,14 @@ rpython = 'src/pypy/rpython/bin/rpython'
 PRE = 'tests/pre'
 POST = 'tests/post'
 
+def rglob(pattern):
+    import fnmatch
+    matches = []
+    for r, ds, fs in os.walk(os.path.dirname(pattern)):
+        for f in fnmatch.filter(fs, os.path.basename(pattern)):
+            matches.append(os.path.join(r, f) )
+    return matches
+
 def submods():
     stdout = call('git submodule')[1].strip()
     return [line.split()[1] for line in stdout.split('\n')]
@@ -98,8 +106,7 @@ def task_sota():
             'src/ragel/.git',
             'src/argtable3/.git',
             '%(PRE)s/results' % env(),
-            '%(targetdir)s/%(targetsrc)s' % env(),
-        ],
+        ] + rglob('%(targetdir)s/*.py' % env()),
         'actions': [
             '%(python)s -B %(rpython)s --output %(sota)s %(targetdir)s/%(targetsrc)s' % env(),
         ],
