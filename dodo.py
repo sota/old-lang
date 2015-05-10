@@ -141,7 +141,9 @@ def task_tidy():
         yield {
             'name': submod,
             'verbosity': 2,
-            'actions': ['cd %(submod)s && git reset --hard HEAD && git clean -xfd' % env()],
+            'actions': [
+                'cd %(submod)s && git reset --hard HEAD && git clean -xfd' % env()
+            ],
         }
     yield {
         'name': 'sota/lang',
