@@ -11,17 +11,17 @@ lexer_eci = ExternalCompilationInfo(
     libraries=['lexer'],
     use_cpp_linker=True)
 
-SOTATOKEN = rffi.CStruct(
+CSOTATOKEN = rffi.CStruct(
     'SotaToken',
     ('ts', rffi.LONG),
     ('te', rffi.LONG),
     ('type', rffi.LONG))
-SOTATOKENP = rffi.CArrayPtr(SOTATOKEN)
-SOTATOKENPP = rffi.CArrayPtr(SOTATOKENP)
+CSOTATOKENP = rffi.CArrayPtr(CSOTATOKEN)
+CSOTATOKENPP = rffi.CArrayPtr(CSOTATOKENP)
 
 c_scan = rffi.llexternal(
     'scan',
-    [rffi.CONST_CCHARP, SOTATOKENPP],
+    [rffi.CONST_CCHARP, CSOTATOKENPP],
     rffi.LONG,
     compilation_info=lexer_eci)
 
@@ -30,12 +30,12 @@ def deref(obj):
 
 def scan(source):
 
-    with lltype.scoped_alloc(SOTATOKENPP.TO, 1) as sotatokenpp:
-        sotacode = rffi.cast(rffi.CONST_CCHARP, rffi.str2charp(source))
-        result = c_scan(sotacode, sotatokenpp)
+    with lltype.scoped_alloc(CSOTATOKENPP.TO, 1) as csotatokenpp:
+        csource = rffi.cast(rffi.CONST_CCHARP, rffi.str2charp(source))
+        result = c_scan(csource, csotatokenpp)
         for i in range(result):
-            token = deref(sotatokenpp)[i]
-            ts = rffi.cast(rffi.SIZE_T, token.c_ts)
-            te = rffi.cast(rffi.SIZE_T, token.c_te)
-            print '{ts=%s, te=%s, type=%s value=\"%s\"}' % (ts, te, token.c_type, source[ts:te])
+            ctoken = deref(csotatokenpp)[i]
+            ts = rffi.cast(rffi.SIZE_T, ctoken.c_ts)
+            te = rffi.cast(rffi.SIZE_T, ctoken.c_te)
+            print '{ts=%s, te=%s, type=%s value=\"%s\"}' % (ts, te, ctoken.c_type, source[ts:te])
 
