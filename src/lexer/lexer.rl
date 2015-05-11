@@ -48,7 +48,20 @@ static std::map<enum TokenType,const char *> TokenMap = {
     }
 
     action denter_tok {
-        int count = (te - ts) - 1;
+        int count = 0;
+        const char *s = ts;
+        while (s != te) {
+            switch (*s) {
+                case '\n':
+                case '\r':
+                    count = 0;
+                    break;
+                default:
+                    ++count;
+                    break;
+            }
+            ++s;
+        }
         if (dentsize == 0)
             dentsize = count;
         if (count != spaces) {
@@ -58,9 +71,6 @@ static std::map<enum TokenType,const char *> TokenMap = {
                 TOKEN(TokenType::Dedent);
             else {
                 printf("DENTING ERROR!\n");
-                int position = ts-source;
-                int length = te-ts;
-                printf("position=%d length=%d count=%d spaces=%d\n", position, length, count, spaces);
             }
         }
         else if (parenthesis)
@@ -92,7 +102,7 @@ static std::map<enum TokenType,const char *> TokenMap = {
 
     whitespace      = ' '+;
     newline         = "\n\r"|'\n'|'\r';
-    denter          = newline ' '*;
+    denter          = (newline ' '*)+;
     reserved        = '='|'('|')'|'['|']'|'{'|'}'|'.'|','|':'|';';
     symbol          = (any - (reserved|space))*;
     number          = [0-9]+('.'[0-9]+)?;
