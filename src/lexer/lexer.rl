@@ -19,6 +19,9 @@ using std::copy;
 
 static int cs;
 static int act;
+static int spaces = 0;
+static int dentsize = 0;
+static int parenthesis = 0;
 static const char *ts = NULL;
 static const char *te = NULL;
 
@@ -35,24 +38,36 @@ static std::map<enum TokenType,const char *> TokenMap = {
     machine sota;
     write data nofinal;
 
-    action assign_tok {
-        TOKEN('=');
+    action eponymous_tok {
+        char c = *ts;
+        if (c == '(')
+            ++parenthesis;
+        else if (c == ')')
+            --parenthesis;
+        TOKEN((long)*ts);
     }
 
-    action comma_tok {
-        TOKEN(',');
-    }
-
-    action openparen_tok {
-        TOKEN('(');
-    }
-
-    action closeparen_tok {
-        TOKEN(')');
-    }
-
-    action semicolon_tok {
-        TOKEN(';');
+    action denter_tok {
+        int count = (te - ts) - 1;
+        if (dentsize == 0)
+            dentsize = count;
+        if (count != spaces) {
+            if (count == spaces + dentsize)
+                TOKEN(TokenType::Indent);
+            else if (count == spaces - dentsize)
+                TOKEN(TokenType::Dedent);
+            else {
+                printf("DENTING ERROR!\n");
+                int position = ts-source;
+                int length = te-ts;
+                printf("position=%d length=%d count=%d spaces=%d\n", position, length, count, spaces);
+            }
+        }
+        else if (parenthesis)
+            TOKEN(TokenType::EOE);
+        else
+            TOKEN(TokenType::EOS);
+        spaces = count;
     }
 
     action number_tok {
@@ -63,8 +78,8 @@ static std::map<enum TokenType,const char *> TokenMap = {
         TOKEN(TokenType::Symbol);
     }
 
-    action rightarrow_tok {
-        TOKEN(TokenType::RightArrow);
+    action lambda_tok {
+        TOKEN(TokenType::Lambda);
     }
 
     action literal_tok {
@@ -75,34 +90,25 @@ static std::map<enum TokenType,const char *> TokenMap = {
         TOKEN(TokenType::Comment);
     }
 
-    assign      = '=';
-    comma       = ',';
-    openparen   ='(';
-    closeparen  = ')';
-    semicolon   = ';';
-    number      = [0-9]+('.'[0-9]+)?;
-    op          = [+\-*\/:=^&%$@!~<>]+;
-    alpha_      = (alpha | '_');
-    alnum_      = (alnum | '_');
-    syms        = '_' | '-' | '+' | '&';
-    id          = (digit+ (alpha | syms) | alpha | '_') (syms? (alnum | '_' | '?'))*;
-    symbol      = op | id;
-    rightarrow  = "->";
-    literal     = "\"" any* :>> "\"";
-    comment     = "##" any* :>> "##" | '#' [^\n\r]+;
+    whitespace      = ' '+;
+    newline         = "\n\r"|'\n'|'\r';
+    denter          = newline ' '*;
+    reserved        = '='|'('|')'|'['|']'|'{'|'}'|'.'|','|':'|';';
+    symbol          = (any - (reserved|space))*;
+    number          = [0-9]+('.'[0-9]+)?;
+    lambda          = "->";
+    literal         = "\"" any* :>> "\"";
+    comment         = "##" any* :>> "##" | '#' newline;
 
     scan := |*
-        assign      => assign_tok;
-        comma       => comma_tok;
-        openparen   => openparen_tok;
-        closeparen  => closeparen_tok;
-        semicolon   => semicolon_tok;
-        rightarrow  => rightarrow_tok;
-        number      => number_tok;
-        symbol      => symbol_tok;
-        literal     => literal_tok;
-        comment     => comment_tok;
-        space;
+        reserved        => eponymous_tok;
+        symbol          => symbol_tok;
+        number          => number_tok;
+        lambda          => lambda_tok;
+        literal         => literal_tok;
+        comment         => comment_tok;
+        denter          => denter_tok;
+        whitespace;
     *|;
 
 }%%
