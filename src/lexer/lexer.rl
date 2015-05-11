@@ -98,7 +98,7 @@ static std::map<enum TokenType,const char *> TokenMap = {
     number          = [0-9]+('.'[0-9]+)?;
     lambda          = "->";
     literal         = "\"" any* :>> "\"";
-    comment         = "##" any* :>> "##" | '#' newline;
+    comment         = "##" (any* - '#') :>> "##" | '#'+ any* :>> newline;
 
     scan := |*
         reserved        => eponymous_tok;
