@@ -3,6 +3,8 @@ import os
 from rpython.rtyper.lltypesystem import rffi, lltype
 from rpython.translator.tool.cbuild import ExternalCompilationInfo
 
+from tokens import SotaToken
+
 lexer_dir = os.path.join(os.getcwd(), 'src/lexer')
 lexer_eci = ExternalCompilationInfo(
     include_dirs=[lexer_dir],
@@ -30,6 +32,7 @@ def deref(obj):
 
 def scan(source):
 
+    tokens = []
     with lltype.scoped_alloc(CSOTATOKENPP.TO, 1) as csotatokenpp:
         csource = rffi.cast(rffi.CONST_CCHARP, rffi.str2charp(source))
         result = c_scan(csource, csotatokenpp)
@@ -38,5 +41,6 @@ def scan(source):
             ts = rffi.cast(rffi.SIZE_T, ctoken.c_ts)
             te = rffi.cast(rffi.SIZE_T, ctoken.c_te)
             value = source[ts:te]
-            print '{ts=%s, te=%s, tt=%s value=\"%s\"}' % (ts, te, ctoken.c_tt, value)
+            tokens.append(SotaToken(value, ctoken.c_ts, ctoken.c_te, ctoken.c_tt))
+    return tokens
 

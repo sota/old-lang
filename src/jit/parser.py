@@ -16,6 +16,8 @@ def evaluate():
 
 def parse(source):
     tokens = lexer.scan(source)
+    for token in tokens:
+        print '%s %s' % (token.type, token.value)
     return 0
 
 def repl(prompt='sota>'):
