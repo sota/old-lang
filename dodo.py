@@ -30,8 +30,17 @@ PRE = 'tests/pre'
 POST = 'tests/post'
 
 def rglob(pattern):
-    import fnmatch
     matches = []
+    # support for shell-like {x,y} syntax
+    regex = re.compile('(.*){(.*)}(.*)')
+    match = regex.search(pattern)
+    if match:
+        prefix, alternates, suffix = match.groups()
+        for alternate in alternates.split(','):
+            matches += rglob(prefix + alternate.strip() + suffix)
+        return matches
+    # support for recursive glob
+    import fnmatch
     for r, ds, fs in os.walk(os.path.dirname(pattern)):
         for f in fnmatch.filter(fs, os.path.basename(pattern)):
             matches.append(os.path.join(r, f) )
@@ -72,13 +81,9 @@ def task_ccode():
         'file_dep': [
             dodo,
             ragel,
-            'src/lexer/lexer.h',
-            'src/lexer/lexer.rl',
-            'src/cli/cli.h',
-            'src/cli/cli.cpp',
             'src/tclap/.git',
             'src/tclap/include/tclap/CmdLine.h',
-        ],
+        ] + rglob('src/lexer/*.{h,rl}') + rglob('src/cli/*.{h,cpp}'),
         'actions': ['cd src && tup'],
         'targets': ['src/cli/test', 'src/lexer/test', 'src/lexer/lexer.cpp'],
         'clean': [clean_targets],
@@ -101,12 +106,10 @@ def task_sota():
             ragel,
             'src/cli/test',
             'src/lexer/test',
-            'src/lexer/lexer.cpp',
             'src/pypy/.git',
             'src/ragel/.git',
-            'src/argtable3/.git',
             '%(PRE)s/results' % env(),
-        ] + rglob('%(targetdir)s/*.py' % env()),
+        ] + rglob('%(targetdir)s/*.py' % env()) + rglob('src/lexer/*.{h,rl}') + rglob('src/cli/*.{h,cpp}'),
         'actions': [
             '%(python)s -B %(rpython)s --output %(sota)s %(targetdir)s/%(targetsrc)s' % env(),
         ],
