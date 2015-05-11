@@ -37,5 +37,6 @@ def scan(source):
             ctoken = deref(csotatokenpp)[i]
             ts = rffi.cast(rffi.SIZE_T, ctoken.c_ts)
             te = rffi.cast(rffi.SIZE_T, ctoken.c_te)
-            print '{ts=%s, te=%s, tt=%s value=\"%s\"}' % (ts, te, ctoken.c_tt, source[ts:te])
+            value = source[ts:te]
+            print '{ts=%s, te=%s, tt=%s value=\"%s\"}' % (ts, te, ctoken.c_tt, value)
 
