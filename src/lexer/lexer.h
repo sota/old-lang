@@ -10,8 +10,7 @@ extern "C" {
 
 #include "token.h"
 
-const char * token_value(int tt);
-long scan(const char *source, struct SotaToken **tokens);
+long scan(const char *source, struct CSotaToken **tokens);
 
 #ifdef __cplusplus
 }

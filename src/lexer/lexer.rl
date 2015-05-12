@@ -26,13 +26,13 @@ static const char *ts = NULL;
 static const char *te = NULL;
 
 #define T(t,i,v) {t,v},
-static std::map<enum TokenType,const char *> TokenMap = {
+static std::map<enum TokenType, const char *> TokenMap = {
     TOKENS
 };
 #undef T
 
-#define TOKEN(tt) tokenlist.push_back({ts-source, te-source, tt})
-#define TRIMMED_TOKEN(tt, trim) tokenlist.push_back({ts-source+trim, te-source-trim, tt})
+#define TOKEN(ti) tokenlist.push_back({ts-source, te-source, ti})
+#define TRIMMED_TOKEN(ti, trim) tokenlist.push_back({ts-source+trim, te-source-trim, ti})
 
 %%{
     machine sota;
@@ -74,9 +74,9 @@ static std::map<enum TokenType,const char *> TokenMap = {
             }
         }
         else if (parenthesis)
-            TOKEN(TokenType::EOE);
+            TOKEN(',');
         else
-            TOKEN(TokenType::EOS);
+            TOKEN(';');
         spaces = count;
     }
 
@@ -86,10 +86,6 @@ static std::map<enum TokenType,const char *> TokenMap = {
 
     action symbol_tok {
         TOKEN(TokenType::Symbol);
-    }
-
-    action lambda_tok {
-        TOKEN(TokenType::Lambda);
     }
 
     action literal_tok {
@@ -106,7 +102,6 @@ static std::map<enum TokenType,const char *> TokenMap = {
     reserved        = '='|'('|')'|'['|']'|'{'|'}'|'.'|','|':'|';';
     symbol          = (any - (reserved|space))*;
     number          = [0-9]+('.'[0-9]+)?;
-    lambda          = "->";
     literal         = "\"" any* :>> "\"";
     comment         = "##" (any* - '#') :>> "##" | '#'+ any* :>> newline;
 
@@ -114,7 +109,6 @@ static std::map<enum TokenType,const char *> TokenMap = {
         reserved        => eponymous_tok;
         symbol          => symbol_tok;
         number          => number_tok;
-        lambda          => lambda_tok;
         literal         => literal_tok;
         comment         => comment_tok;
         denter          => denter_tok;
@@ -123,24 +117,9 @@ static std::map<enum TokenType,const char *> TokenMap = {
 
 }%%
 
-extern "C" const char * token_value(int tt) {
-    if (0 <= tt && tt <= 255) {
-        std::string s;
-        s.insert(0, 1, (char)tt);
-        return s.c_str();
-    }
-    else if (TokenMap.find((enum TokenType)tt) != TokenMap.end()) {
-        return TokenMap[(enum TokenType)tt];
-    }
-    else {
-        printf("token_value: error!\n");
-        return NULL;
-    }
-}
+extern "C" long scan(const char *source, struct CSotaToken **tokens) {
 
-extern "C" long scan(const char *source, struct SotaToken **tokens) {
-
-    std::vector<SotaToken> tokenlist;
+    std::vector<CSotaToken> tokenlist;
     size_t length = strlen(source);
     const char *p = source;
     const char *pe = source + length;
@@ -149,7 +128,7 @@ extern "C" long scan(const char *source, struct SotaToken **tokens) {
     %% write init;
     %% write exec;
 
-    *tokens = (struct SotaToken *)malloc(tokenlist.size() * sizeof(struct SotaToken));
+    *tokens = (struct CSotaToken *)malloc(tokenlist.size() * sizeof(struct CSotaToken));
     copy(tokenlist.begin(), tokenlist.end(), *tokens);
     return tokenlist.size();
 }

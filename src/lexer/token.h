@@ -6,8 +6,6 @@ extern "C" {
 #endif
 
 #define TOKENS                          \
-T(EOS,          257,    "<EOS>")        \
-T(EOE,          258,    "<EOE>")        \
 T(Indent,       259,    "<INDENT>")     \
 T(Dedent,       260,    "<DEDENT>")     \
 T(Symbol,       261,    "<SYMBOL>")     \
@@ -24,10 +22,10 @@ enum TokenType {
 
 //static std::map<TokenType, std::string> TokenMap;
 
-struct SotaToken {
+struct CSotaToken {
     long ts;    //token start
     long te;    //token end
-    long tt;    //token type
+    long ti;    //token id
 };
 
 #ifdef __cplusplus
