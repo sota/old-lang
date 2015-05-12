@@ -14,10 +14,10 @@ lexer_eci = ExternalCompilationInfo(
     use_cpp_linker=True)
 
 CSOTATOKEN = rffi.CStruct(
-    'SotaToken',
+    'CSotaToken',
     ('ts', rffi.LONG),
     ('te', rffi.LONG),
-    ('tt', rffi.LONG))
+    ('ti', rffi.LONG))
 CSOTATOKENP = rffi.CArrayPtr(CSOTATOKEN)
 CSOTATOKENPP = rffi.CArrayPtr(CSOTATOKENP)
 
@@ -30,6 +30,16 @@ c_scan = rffi.llexternal(
 def deref(obj):
     return obj[0]
 
+def escape(old):
+    new = ''
+    for c in old:
+        if c == '\n':
+            new += '\\'
+            new += 'n'
+        else:
+            new += c
+    return new
+
 def scan(source):
 
     tokens = []
@@ -40,7 +50,14 @@ def scan(source):
             ctoken = deref(csotatokenpp)[i]
             ts = rffi.cast(rffi.SIZE_T, ctoken.c_ts)
             te = rffi.cast(rffi.SIZE_T, ctoken.c_te)
-            value = source[ts:te]
-            tokens.append(SotaToken(value, ctoken.c_ts, ctoken.c_te, ctoken.c_tt))
+            ti = ctoken.c_ti
+            tv = escape(source[ts:te])
+            if ti == 259:
+                tt = "INDENT"
+            elif ti == 260:
+                tt = "DEDENT"
+            else:
+                tt = tv
+            tokens.append(SotaToken(ctoken.c_ts, ctoken.c_te, ctoken.c_ti, tt, tv))
     return tokens
 
