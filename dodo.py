@@ -14,6 +14,7 @@ from doit.task import clean_targets
 
 DOIT_CONFIG = { 'default_tasks': ['success'] }
 
+versionh = 'src/version.h'
 dodo = 'dodo.py'
 sota = 'sota'
 ragel = 'src/ragel/ragel/ragel'
@@ -28,6 +29,25 @@ rpython = 'src/pypy/rpython/bin/rpython'
 
 PRE = 'tests/pre'
 POST = 'tests/post'
+
+try:
+    VERSION = open('VERSION').read().strip()
+except:
+    try:
+        VERSION = call('git describe')[1].strip()
+    except:
+        VERSION = 'UNKNOWN'
+
+VERSIONH = '''
+#ifndef __SOTA_VERSION__
+#define __SOTA_VERSION__ = 1
+
+#include <string>
+const std::string VERSION = "%(VERSION)s";
+
+#endif /*__SOTA_VERSION__*/
+''' % env()
+VERSIONH = VERSIONH.strip()
 
 def rglob(pattern):
     matches = []
@@ -50,9 +70,26 @@ def submods():
     stdout = call('git submodule')[1].strip()
     return [line.split()[1] for line in stdout.split('\n')]
 
+def version_changed():
+    try:
+        return open(versionh).read().strip() == VERSIONH
+    except:
+        pass
+    return False
+
+def task_version():
+    return {
+        'verbosity': 2,
+        'actions': [
+            "echo '%(VERSIONH)s' > %(versionh)s" % env()],
+        'targets': [versionh],
+        'clean': [clean_targets],
+        'uptodate': [version_changed],
+    }
+
 def task_pyflakes():
     return {
-        'actions': ['pyflakes %(targetsrc)s' % env() ],
+        'actions': ['pyflakes %(targetsrc)s' % env()],
         'file_dep': [dodo],
     }
 
@@ -79,6 +116,7 @@ def task_ccode():
     return {
         'verbosity': 2,
         'file_dep': [
+            versionh,
             dodo,
             ragel,
             'src/tclap/.git',
