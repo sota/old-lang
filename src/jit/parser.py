@@ -16,9 +16,9 @@ def evaluate():
 
 def printtoken(token):
     if token.tt == token.tv:
-        print '[%s]' % token.tv
+        print '[%d,%d %d:%d %s:%d]' % (token.line, token.pos, token.ts, token.te, token.tv, token.ti)
     else:
-        print '[%s %s]' % (token.tt, token.tv)
+        print '[%d,%d %d:%d %s|%s:%d]' % (token.line, token.pos, token.ts, token.te, token.tt, token.tv, token.ti)
 
 def parse(source):
     tokens = lexer.scan(source)

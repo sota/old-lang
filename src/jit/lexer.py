@@ -17,7 +17,9 @@ CSOTATOKEN = rffi.CStruct(
     'CSotaToken',
     ('ts', rffi.LONG),
     ('te', rffi.LONG),
-    ('ti', rffi.LONG))
+    ('ti', rffi.LONG),
+    ('line', rffi.LONG),
+    ('pos', rffi.LONG))
 CSOTATOKENP = rffi.CArrayPtr(CSOTATOKEN)
 CSOTATOKENPP = rffi.CArrayPtr(CSOTATOKENP)
 
@@ -58,6 +60,6 @@ def scan(source):
                 tt = "DEDENT"
             else:
                 tt = tv
-            tokens.append(SotaToken(ctoken.c_ts, ctoken.c_te, ctoken.c_ti, tt, tv))
+            tokens.append(SotaToken(ctoken.c_ts, ctoken.c_te, ctoken.c_ti, tt, tv, ctoken.c_line, ctoken.c_pos))
     return tokens
 
