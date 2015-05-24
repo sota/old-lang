@@ -83,7 +83,7 @@ def task_ccode():
             ragel,
             'src/tclap/.git',
             'src/tclap/include/tclap/CmdLine.h',
-        ] + rglob('src/lexer/*.{h,rl}') + rglob('src/cli/*.{h,cpp}'),
+        ] + rglob('src/lexer/*.{h,rl,c}') + rglob('src/cli/*.{h,cpp,c}'),
         'actions': ['cd src && tup'],
         'targets': ['src/cli/test', 'src/lexer/test', 'src/lexer/lexer.cpp'],
         'clean': [clean_targets],
