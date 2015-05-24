@@ -1,8 +1,12 @@
 /*
-vim: syntax=cpp
+vim: syntax=ragel
 */
 
 #include "lexer.h"
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 #include <map>
 #include <string>
@@ -17,118 +21,181 @@ using std::cin;
 using std::endl;
 using std::copy;
 
-static int cs;
-static int act;
-static int spaces = 0;
-static int dentsize = 0;
-static int parenthesis = 0;
-static const char *ts = NULL;
-static const char *te = NULL;
-
 #define T(t,i,v) {t,v},
 static std::map<enum TokenType, const char *> TokenMap = {
     TOKENS
 };
 #undef T
 
-#define TOKEN(ti) tokenlist.push_back({ts-source, te-source, ti})
-#define TRIMMED_TOKEN(ti, trim) tokenlist.push_back({ts-source+trim, te-source-trim, ti})
+#define TOKEN(ti) tokenlist.push_back({ts-source, te-source, ti, line, ts-ls+1})
+#define TRIMMED_TOKEN(ti, trim) tokenlist.push_back({ts-source+trim, te-source-trim, ti, line, ts-ls+1})
+
+static int cs, act;
+int stack[1], top;
+
+inline void write(const char *data) {
+    cout << data;
+}
+
+inline void write(const char c) {
+    cout << c;
+}
+
+inline void write(const char *data, int len) {
+    cout.write(data, len);
+}
 
 %%{
     machine sota;
-    write data nofinal;
-
-    action eponymous_tok {
-        char c = *ts;
-        if (c == '(')
-            ++parenthesis;
-        else if (c == ')')
-            --parenthesis;
-        TOKEN((long)*ts);
-    }
-
-    action denter_tok {
-        int count = 0;
-        const char *s = ts;
-        while (s != te) {
-            switch (*s) {
-                case '\n':
-                case '\r':
-                    count = 0;
-                    break;
-                default:
-                    ++count;
-                    break;
-            }
-            ++s;
-        }
-        if (dentsize == 0)
-            dentsize = count;
-        if (count != spaces) {
-            if (count == spaces + dentsize)
-                TOKEN(TokenType::Indent);
-            else if (count == spaces - dentsize)
-                TOKEN(TokenType::Dedent);
-            else {
-                printf("DENTING ERROR!\n");
-            }
-        }
-        else if (parenthesis)
-            TOKEN(',');
-        else
-            TOKEN(';');
-        spaces = count;
-    }
-
-    action number_tok {
-        TOKEN(TokenType::Number);
-    }
-
-    action symbol_tok {
-        TOKEN(TokenType::Symbol);
-    }
-
-    action literal_tok {
-        TRIMMED_TOKEN(TokenType::Literal, 1);
-    }
-
-    action comment_tok {
-        TOKEN(TokenType::Comment);
-    }
 
     whitespace      = ' '+;
     newline         = "\n\r"|'\n'|'\r';
-    denter          = (newline ' '*)+;
-    reserved        = '='|'('|')'|'['|']'|'{'|'}'|'.'|','|':'|';';
-    symbol          = (any - (reserved|space))*;
-    number          = [0-9]+('.'[0-9]+)?;
-    literal         = "\"" any* :>> "\"";
-    comment         = "##" (any* - '#') :>> "##" | '#'+ any* :>> newline;
+    number          = digit+ ('.' digit+)?;
+    syntax          = '.'|','|'('|')'|'['|']'|'{'|'}'|';';
+    symbol          = (any - ('#'|whitespace|newline|syntax))+;
 
-    scan := |*
-        reserved        => eponymous_tok;
-        symbol          => symbol_tok;
-        number          => number_tok;
-        literal         => literal_tok;
-        comment         => comment_tok;
-        denter          => denter_tok;
-        whitespace;
+    action newline_action {
+        if (nesting == 0) {
+            TOKEN(TokenType::Newline);
+            ++line;
+            ls = te;
+            fgoto denter;
+        }
+    }
+
+    commentline := |*
+        (any - newline)* => {
+            TOKEN(TokenType::Comment);
+        };
+
+        newline => newline_action;
     *|;
 
+    comment := |*
+        '#' (any - '#')* '#' => {
+            TOKEN(TokenType::Comment);
+            fgoto body;
+        };
+    *|;
+
+    body := |*
+
+        whitespace => {
+        };
+
+        newline => newline_action;
+
+        "##" => {
+            fhold;
+            fhold;
+            fgoto commentline;
+        };
+
+        '#' => {
+            fhold;
+            fgoto comment;
+        };
+
+        '\t' => {
+            printf("TAB ERROR\n");
+            exit(-1);
+        };
+
+        '{'|'['|'(' => {
+            TOKEN(fc);
+            ++nesting;
+            if ('{' == fc)
+                fcall body;
+        };
+
+        '}'|']'|')' => {
+            TOKEN(fc);
+            --nesting;
+            if ('}' == fc)
+                fret;
+        };
+
+        number => {
+            TOKEN(TokenType::Number);
+        };
+
+        symbol => {
+            TOKEN(TokenType::Symbol);
+        };
+
+        syntax => {
+            TOKEN(fc);
+        };
+
+
+    *|;
+
+    denter := |*
+        whitespace* => {
+            int spaces = te-ts;
+            //printf("denter: ts=%ld te=%ld\n", ts-source, te-source);
+            //printf("spaces=%d dentsize=%d indents=%d\n", spaces, dentsize, indents);
+            if (dentsize == 0)
+                dentsize = spaces;
+            if (spaces == indents + dentsize)
+                TOKEN(TokenType::Indent);
+            else if (spaces == indents - dentsize)
+                TOKEN(TokenType::Dedent);
+            else if (spaces == indents)
+                TOKEN(TokenType::Newline);
+            else
+                printf("DENTING ERROR: spaces=%d indents=%d dentsize=%d\n", spaces, indents, dentsize);
+            indents = spaces;
+            fgoto body;
+        };
+
+        /./ => {
+            fhold;
+            int spaces = te-ts-1;
+            //printf("denter2: ts=%ld te=%ld\n", ts-source, te-source);
+            //printf("spaces=%d dentsize=%d indents=%d\n", spaces, dentsize, indents);
+            if (dentsize && (spaces == indents - dentsize))
+                TOKEN(TokenType::Dedent);
+            fgoto body;
+        };
+    *|;
+
+    write data nofinal;
 }%%
 
-extern "C" long scan(const char *source, struct CSotaToken **tokens) {
+/*
+*/
+    //debug := /./ @{ fhold; write("debug\n"); fgoto body; };
 
+extern "C" long scan(const char *source, struct CSotaToken **tokens)
+{
+    std::ios::sync_with_stdio(false);
+    std::vector<const char *> newlines;
     std::vector<CSotaToken> tokenlist;
     size_t length = strlen(source);
+
     const char *p = source;
     const char *pe = source + length;
     const char *eof = pe;
+    const char *ts = p;
+    const char *te = p;
+    const char *ls = p;
+    long line = 1;
+    int indents = 0;
+    int dentsize = 0;
+    int nesting = 0;
 
     %% write init;
     %% write exec;
+
+    if (cs == sota_error) {
+        // Machine failed before finding a token.
+        cerr << "PARSE ERROR" << endl;
+        exit(1);
+    }
 
     *tokens = (struct CSotaToken *)malloc(tokenlist.size() * sizeof(struct CSotaToken));
     copy(tokenlist.begin(), tokenlist.end(), *tokens);
     return tokenlist.size();
 }
+

@@ -6,6 +6,7 @@ extern "C" {
 #endif
 
 #define TOKENS                          \
+T(Newline,      258,    "<NEWLINE>")    \
 T(Indent,       259,    "<INDENT>")     \
 T(Dedent,       260,    "<DEDENT>")     \
 T(Symbol,       261,    "<SYMBOL>")     \
@@ -26,6 +27,8 @@ struct CSotaToken {
     long ts;    //token start
     long te;    //token end
     long ti;    //token id
+    long line;  //token line
+    long pos;   //token pos
 };
 
 #ifdef __cplusplus
