@@ -1,16 +1,19 @@
 #include "cli.h"
 
 #include <string>
+#include <fstream>
 #include <sstream>
 #include <iostream>
 #include <algorithm>
 #include "tclap/CmdLine.h"
 #include <stdio.h>
 
+#include "../version.h"
+
 extern "C" int parse(int argc, char *argv[], struct CliToken **tokens) {
     int result = 0;
     try {
-        TCLAP::CmdLine cmdline("sota: state of the art", ' ', "0.1");
+        TCLAP::CmdLine cmdline("sota: state of the art", ' ', VERSION);
         TCLAP::UnlabeledValueArg<std::string> sourceArg(
             "source",       //name
             "sota source",  //desc

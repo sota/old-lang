@@ -1,8 +1,6 @@
 #ifndef __SOTA_CLI__
 #define __SOTA_CLI__ = 1
 
-#define VERSION "0.1"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
