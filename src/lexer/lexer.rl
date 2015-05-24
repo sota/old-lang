@@ -64,7 +64,7 @@ inline void write(const char *data, int len) {
     }
 
     commentline := |*
-        (any - newline)* => {
+        "##" (any - newline)* => {
             TOKEN(TokenType::Comment);
         };
 
