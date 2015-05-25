@@ -3,6 +3,7 @@ vim: syntax=ragel
 */
 
 #include "lexer.h"
+#include "filelocation.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -27,8 +28,8 @@ static std::map<enum TokenType, const char *> TokenMap = {
 };
 #undef T
 
-#define TOKEN(ti) tokenlist.push_back({ts-source, te-source, ti, line, ts-ls+1})
-#define TRIMMED_TOKEN(ti, trim) tokenlist.push_back({ts-source+trim, te-source-trim, ti, line, ts-ls+1})
+#define TOKEN(ti) tokenlist.push_back({ts-source, te-source, ti, fl.line(ts), fl.pos(ts)})
+#define TRIMMED_TOKEN(ti, trim) tokenlist.push_back({ts-source+trim, te-source-trim, ti, fl.line(ts), fl.pos(ts)})
 
 static int cs, act;
 int stack[1], top;
@@ -54,23 +55,15 @@ inline void write(const char *data, int len) {
     syntax          = '.'|','|'('|')'|'['|']'|'{'|'}'|';';
     symbol          = (any - ('#'|whitespace|newline|syntax))+;
 
-    commentline := |*
-        "##" (any - newline)* => {
+    counter         = (any | newline @{fl.add_newline(fpc);})*;
+
+    commenter := |*
+        ("##" (any - newline)* newline) & counter=> {
             TOKEN(TokenType::Comment);
+            fgoto body;
         };
 
-        newline => {
-            if (nesting == 0) {
-                TOKEN(TokenType::Newline);
-                ++line;
-                ls = te;
-                fgoto denter;
-            }
-        }
-    *|;
-
-    comment := |*
-        '#' (any - '#')* '#' => {
+        ('#' (any - '#')* '#') & counter => {
             TOKEN(TokenType::Comment);
             fgoto body;
         };
@@ -81,17 +74,16 @@ inline void write(const char *data, int len) {
         whitespace => {
         };
 
-        newline => newline_action;
-
-        "##" => {
-            fhold;
-            fhold;
-            fgoto commentline;
+        newline & counter => {
+            if (nesting == 0) {
+                TOKEN(TokenType::Newline);
+                fgoto denter;
+            }
         };
 
         '#' => {
             fhold;
-            fgoto comment;
+            fgoto commenter;
         };
 
         '\t' => {
@@ -137,8 +129,6 @@ inline void write(const char *data, int len) {
                 TOKEN(TokenType::Indent);
             else if (spaces == indents - dentsize)
                 TOKEN(TokenType::Dedent);
-            else if (spaces == indents)
-                TOKEN(TokenType::Newline);
             else
                 printf("DENTING ERROR: spaces=%d indents=%d dentsize=%d\n", spaces, indents, dentsize);
             indents = spaces;
@@ -169,11 +159,13 @@ extern "C" long scan(const char *source, struct CSotaToken **tokens)
     const char *eof = pe;
     const char *ts = p;
     const char *te = p;
-    const char *ls = p;
-    long line = 1;
+    //const char *ls = p;
+    //long line = 1;
     int indents = 0;
     int dentsize = 0;
     int nesting = 0;
+
+    FileLocation fl(p-1);
 
     %% write init;
     %% write exec;
