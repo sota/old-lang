@@ -54,21 +54,19 @@ inline void write(const char *data, int len) {
     syntax          = '.'|','|'('|')'|'['|']'|'{'|'}'|';';
     symbol          = (any - ('#'|whitespace|newline|syntax))+;
 
-    action newline_action {
-        if (nesting == 0) {
-            TOKEN(TokenType::Newline);
-            ++line;
-            ls = te;
-            fgoto denter;
-        }
-    }
-
     commentline := |*
         "##" (any - newline)* => {
             TOKEN(TokenType::Comment);
         };
 
-        newline => newline_action;
+        newline => {
+            if (nesting == 0) {
+                TOKEN(TokenType::Newline);
+                ++line;
+                ls = te;
+                fgoto denter;
+            }
+        }
     *|;
 
     comment := |*
