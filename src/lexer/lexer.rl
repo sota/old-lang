@@ -133,8 +133,6 @@ inline void write(const char *data, int len) {
     denter := |*
         whitespace* => {
             int spaces = te-ts;
-            //printf("denter: ts=%ld te=%ld\n", ts-source, te-source);
-            //printf("spaces=%d dentsize=%d indents=%d\n", spaces, dentsize, indents);
             if (dentsize == 0)
                 dentsize = spaces;
             if (spaces == indents + dentsize)
@@ -152,8 +150,6 @@ inline void write(const char *data, int len) {
         /./ => {
             fhold;
             int spaces = te-ts-1;
-            //printf("denter2: ts=%ld te=%ld\n", ts-source, te-source);
-            //printf("spaces=%d dentsize=%d indents=%d\n", spaces, dentsize, indents);
             if (dentsize && (spaces == indents - dentsize))
                 TOKEN(TokenType::Dedent);
             fgoto body;
@@ -162,10 +158,6 @@ inline void write(const char *data, int len) {
 
     write data nofinal;
 }%%
-
-/*
-*/
-    //debug := /./ @{ fhold; write("debug\n"); fgoto body; };
 
 extern "C" long scan(const char *source, struct CSotaToken **tokens)
 {
