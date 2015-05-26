@@ -58,7 +58,7 @@ inline void write(const char *data, int len) {
     counter         = (any | newline @{lh.add_newline(fpc);})*;
 
     commenter := |*
-        ("##" (any - newline)* newline) & counter=> {
+        ("##" (any - newline)* newline) & counter => {
             TOKEN(TokenType::Comment);
             fgoto body;
         };
@@ -191,7 +191,7 @@ extern "C" long scan(const char *source, struct CSotaToken **tokens)
     //int dentsize = 0;
     int nesting = 0;
 
-    LexerHelper lh(p-1);
+    LexerHelper lh(p-1); //pretend that there was a newline before the first char
 
     %% write init;
     %% write exec;
