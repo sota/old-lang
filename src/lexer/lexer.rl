@@ -3,7 +3,7 @@ vim: syntax=ragel
 */
 
 #include "lexer.h"
-#include "filelocation.h"
+#include "helper.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -28,8 +28,8 @@ static std::map<enum TokenType, const char *> TokenMap = {
 };
 #undef T
 
-#define TOKEN(ti) tokenlist.push_back({ts-source, te-source, ti, fl.line(ts), fl.pos(ts)})
-#define TRIMMED_TOKEN(ti, trim) tokenlist.push_back({ts-source+trim, te-source-trim, ti, fl.line(ts), fl.pos(ts)})
+#define TOKEN(ti) tokenlist.push_back({ts-source, te-source, ti, lh.line(ts), lh.pos(ts)})
+#define TRIMMED_TOKEN(ti, trim) tokenlist.push_back({ts-source+trim, te-source-trim, ti, lh.line(ts), lh.pos(ts)})
 
 static int cs, act;
 int stack[1], top;
@@ -52,10 +52,10 @@ inline void write(const char *data, int len) {
     whitespace      = ' '+;
     newline         = "\n\r"|'\n'|'\r';
     number          = digit+ ('.' digit+)?;
-    syntax          = '.'|','|'('|')'|'['|']'|'{'|'}'|';';
+    syntax          = '"'|"'"|'.'|','|'('|')'|'['|']'|'{'|'}'|';';
     symbol          = (any - ('#'|whitespace|newline|syntax))+;
 
-    counter         = (any | newline @{fl.add_newline(fpc);})*;
+    counter         = (any | newline @{lh.add_newline(fpc);})*;
 
     commenter := |*
         ("##" (any - newline)* newline) & counter=> {
@@ -65,6 +65,18 @@ inline void write(const char *data, int len) {
 
         ('#' (any - '#')* '#') & counter => {
             TOKEN(TokenType::Comment);
+            fgoto body;
+        };
+    *|;
+
+    literal := |*
+        ('"' (any - '"')* '"') & counter => {
+            TOKEN(TokenType::Literal);
+            fgoto body;
+        };
+
+        ("'" (any - "'")* "'") & counter => {
+            TOKEN(TokenType::Literal);
             fgoto body;
         };
     *|;
@@ -84,6 +96,11 @@ inline void write(const char *data, int len) {
         '#' => {
             fhold;
             fgoto commenter;
+        };
+
+        '"' | "'" => {
+            fhold;
+            fgoto literal;
         };
 
         '\t' => {
@@ -117,29 +134,40 @@ inline void write(const char *data, int len) {
             TOKEN(fc);
         };
 
-
     *|;
 
     denter := |*
         whitespace* => {
-            int spaces = te-ts;
-            if (dentsize == 0)
-                dentsize = spaces;
-            if (spaces == indents + dentsize)
-                TOKEN(TokenType::Indent);
-            else if (spaces == indents - dentsize)
-                TOKEN(TokenType::Dedent);
-            else
-                printf("DENTING ERROR: spaces=%d indents=%d dentsize=%d\n", spaces, indents, dentsize);
-            indents = spaces;
+
+            switch (lh.is_dent(te-ts)) {
+                case 1:
+                    TOKEN(TokenType::Indent);
+                    break;
+                case -1:
+                    TOKEN(TokenType::Dedent);
+                    break;
+                default:
+                    printf("1 really?\n");
+                    break;
+            }
             fgoto body;
         };
 
         /./ => {
             fhold;
-            int spaces = te-ts-1;
-            if (dentsize && (spaces == indents - dentsize))
-                TOKEN(TokenType::Dedent);
+            switch (lh.is_dent(te-ts-1)) {
+                case 1:
+                    //ignored on purpose
+                    //otherwise file starts with
+                    //erroneous indent
+                    break;
+                case -1:
+                    TOKEN(TokenType::Dedent);
+                    break;
+                default:
+                    printf("2 really?\n");
+                    break;
+            }
             fgoto body;
         };
     *|;
@@ -159,13 +187,11 @@ extern "C" long scan(const char *source, struct CSotaToken **tokens)
     const char *eof = pe;
     const char *ts = p;
     const char *te = p;
-    //const char *ls = p;
-    //long line = 1;
-    int indents = 0;
-    int dentsize = 0;
+    //int indents = 0;
+    //int dentsize = 0;
     int nesting = 0;
 
-    FileLocation fl(p-1);
+    LexerHelper lh(p-1);
 
     %% write init;
     %% write exec;
