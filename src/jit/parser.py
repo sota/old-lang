@@ -15,10 +15,10 @@ def evaluate():
     pass
 
 def printtoken(token):
-    if token.tt == token.tv:
-        print '[%d,%d %d:%d %s:%d]' % (token.line, token.pos, token.ts, token.te, token.tv, token.ti)
+    if token.name == token.value:
+        print '[%s,%s %s]' % (token.line, token.pos, token.value)
     else:
-        print '[%d,%d %d:%d %s|%s:%d]' % (token.line, token.pos, token.ts, token.te, token.tt, token.tv, token.ti)
+        print '[%s,%s %s:%s]' % (token.line, token.pos, token.name, token.value)
 
 def parse(source):
     tokens = lexer.scan(source)

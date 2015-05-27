@@ -52,14 +52,28 @@ def scan(source):
             ctoken = deref(csotatokenpp)[i]
             ts = rffi.cast(rffi.SIZE_T, ctoken.c_ts)
             te = rffi.cast(rffi.SIZE_T, ctoken.c_te)
-            ti = ctoken.c_ti
-            tv = escape(source[ts:te])
-            if ti == 259:
-                tt = "INDENT"
-            elif ti == 260:
-                tt = "DEDENT"
+            value = escape(source[ts:te])
+            if ctoken.c_ti == 257:
+                name = 'EOS'
+            elif ctoken.c_ti == 258:
+                name = 'EOE'
+            elif ctoken.c_ti == 259:
+                name = 'INDENT'
+            elif ctoken.c_ti == 260:
+                name = 'DEDENT'
+            elif ctoken.c_ti == 261:
+                name = 'SYM'
+            elif ctoken.c_ti == 262:
+                name = 'NUM'
+            elif ctoken.c_ti == 263:
+                name = 'LIT'
+            elif ctoken.c_ti == 264:
+                name = 'CMT'
+            elif ctoken.c_ti == 265:
+                name = '->'
             else:
-                tt = tv
-            tokens.append(SotaToken(ctoken.c_ts, ctoken.c_te, ctoken.c_ti, tt, tv, ctoken.c_line, ctoken.c_pos))
+                name = value
+            #tokens.append(SotaToken(ctoken.c_ts, ctoken.c_te, ctoken.c_ti, tt, tv, ctoken.c_line, ctoken.c_pos))
+            tokens.append(SotaToken(name, value, ctoken.c_line, ctoken.c_pos))
     return tokens
 
