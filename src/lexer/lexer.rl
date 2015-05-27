@@ -22,8 +22,9 @@ using std::cin;
 using std::endl;
 using std::copy;
 
-#define T(t,i,v) {t,v},
-static std::map<enum TokenType, const char *> TokenMap = {
+#define T(t,i,v) {i,v},
+static std::map<long, const char *> TokenMap = {
+    ASCII
     TOKENS
 };
 #undef T
@@ -88,7 +89,7 @@ inline void write(const char *data, int len) {
 
         newline & counter => {
             if (nesting == 0) {
-                TOKEN(TokenType::Newline);
+                TOKEN(TokenType::EOS);
                 fgoto denter;
             }
         };
