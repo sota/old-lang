@@ -6,7 +6,8 @@ extern "C" {
 #endif
 
 #define TOKENS                          \
-T(Newline,      258,    "<NEWLINE>")    \
+T(EOS,          257,    "<EOS>")        \
+T(EOE,          258,    "<EOE>")        \
 T(Indent,       259,    "<INDENT>")     \
 T(Dedent,       260,    "<DEDENT>")     \
 T(Symbol,       261,    "<SYMBOL>")     \
