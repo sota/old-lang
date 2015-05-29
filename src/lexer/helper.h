@@ -84,6 +84,11 @@ public:
         this->indents = spaces;
         return result;
     }
+    int dents() {
+        if (this->dentsize)
+            return this->indents / this->dentsize;
+        return 0;
+    }
 };
 
 
