@@ -73,7 +73,6 @@ def scan(source):
                 name = '->'
             else:
                 name = value
-            #tokens.append(SotaToken(ctoken.c_ts, ctoken.c_te, ctoken.c_ti, tt, tv, ctoken.c_line, ctoken.c_pos))
             tokens.append(SotaToken(name, value, ctoken.c_line, ctoken.c_pos))
     return tokens
 
