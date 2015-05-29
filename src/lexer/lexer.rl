@@ -87,11 +87,15 @@ inline void write(const char *data, int len) {
         whitespace => {
         };
 
-        newline & counter => {
+        ';'? ' '* newline & counter => {
             if (nesting == 0) {
                 TOKEN(TokenType::EOS);
                 fgoto denter;
             }
+        };
+
+        ';' => {
+            TOKEN(TokenType::EOS);
         };
 
         '#' => {
@@ -176,8 +180,11 @@ inline void write(const char *data, int len) {
     write data nofinal;
 }%%
 
-extern "C" long scan(const char *source, struct CSotaToken **tokens)
-{
+extern "C" const char * token_name(long ti) {
+    return TokenMap[ti];
+}
+
+extern "C" long scan(const char *source, struct CSotaToken **tokens) {
     std::ios::sync_with_stdio(false);
     std::vector<const char *> newlines;
     std::vector<CSotaToken> tokenlist;
@@ -188,8 +195,6 @@ extern "C" long scan(const char *source, struct CSotaToken **tokens)
     const char *eof = pe;
     const char *ts = p;
     const char *te = p;
-    //int indents = 0;
-    //int dentsize = 0;
     int nesting = 0;
 
     LexerHelper lh(p-1); //pretend that there was a newline before the first char
@@ -201,6 +206,10 @@ extern "C" long scan(const char *source, struct CSotaToken **tokens)
         // Machine failed before finding a token.
         cerr << "PARSE ERROR" << endl;
         exit(1);
+    }
+    int dents = lh.dents();
+    for (int dent=0; dent < dents; ++dent) {
+        tokenlist.push_back({(long)length, (long)length, TokenType::Dedent, lh.line(pe), lh.pos(pe)});
     }
 
     *tokens = (struct CSotaToken *)malloc(tokenlist.size() * sizeof(struct CSotaToken));
