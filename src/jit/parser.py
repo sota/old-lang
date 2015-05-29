@@ -18,7 +18,7 @@ def printtoken(token):
     if token.name == token.value:
         print '[%s,%s %s]' % (token.line, token.pos, token.value)
     else:
-        print '[%s,%s %s:%s]' % (token.line, token.pos, token.name, token.value)
+        print '[%s,%s %s %s]' % (token.line, token.pos, token.name, token.value)
 
 def parse(source):
     tokens = lexer.scan(source)
