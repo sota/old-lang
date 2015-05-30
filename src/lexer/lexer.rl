@@ -2,9 +2,6 @@
 vim: syntax=ragel
 */
 
-#include "lexer.h"
-#include "helper.h"
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -14,13 +11,34 @@ vim: syntax=ragel
 #include <sstream>
 #include <iostream>
 #include <algorithm>
+
 #include "tclap/CmdLine.h"
+#include "lexer.h"
+#include "helper.h"
+#include "ascii.h"
 
 using std::cerr;
 using std::cout;
 using std::cin;
 using std::endl;
 using std::copy;
+
+class Lexer {
+    char const* p;
+    char const* const pe;
+    char const* const eof;
+    char const* ts;
+    char const* te;
+    int cs, act;
+    int stack[1], top;
+
+public:
+    Lexer(char const* source)
+        : p(source)
+        , pe(source + strlen(source))
+        , eof(source + strlen(source)) {
+    }
+};
 
 #define T(t,i,v) {i,v},
 static std::map<long, const char *> TokenMap = {
