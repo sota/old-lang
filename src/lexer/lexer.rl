@@ -8,13 +8,15 @@ vim: syntax=ragel
 
 #include <map>
 #include <string>
+#include <vector>
 #include <sstream>
 #include <iostream>
 #include <algorithm>
+#include <exception>
+#include <stdexcept>
 
 #include "tclap/CmdLine.h"
 #include "lexer.h"
-#include "helper.h"
 #include "ascii.h"
 
 using std::cerr;
@@ -23,22 +25,29 @@ using std::cin;
 using std::endl;
 using std::copy;
 
-class Lexer {
-    char const* p;
-    char const* const pe;
-    char const* const eof;
-    char const* ts;
-    char const* te;
-    int cs, act;
-    int stack[1], top;
-
+class DenterException: public std::runtime_error {
+    static std::ostringstream oss;
+    int spaces;
+    int indents;
+    int dentsize;
 public:
-    Lexer(char const* source)
-        : p(source)
-        , pe(source + strlen(source))
-        , eof(source + strlen(source)) {
+    DenterException(int spaces, int indents, int dentsize)
+        : std::runtime_error("Denter Exception")
+        , spaces(spaces)
+        , indents(indents)
+        , dentsize(dentsize) {}
+
+    virtual const char * what() const throw() {
+        oss.str("");
+        oss
+            << std::runtime_error::what()
+            << ": spaces=" << this->spaces
+            << "indents=" << this->indents
+            << "dentsize=" << this->dentsize << std::endl;
+        return oss.str().c_str();
     }
 };
+std::ostringstream DenterException::oss;
 
 #define T(t,i,v) {i,v},
 static std::map<long, const char *> TokenMap = {
@@ -46,13 +55,7 @@ static std::map<long, const char *> TokenMap = {
     TOKENS
 };
 #undef T
-
-#define TOKEN(ti) tokenlist.push_back({ts-source, te-source, ti, lh.line(ts), lh.pos(ts)})
-#define TRIMMED_TOKEN(ti, trim) tokenlist.push_back({ts-source+trim, te-source-trim, ti, lh.line(ts), lh.pos(ts)})
-
-static int cs, act;
-int stack[1], top;
-
+#
 inline void write(const char *data) {
     cout << data;
 }
@@ -74,28 +77,28 @@ inline void write(const char *data, int len) {
     syntax          = '"'|"'"|'.'|','|'('|')'|'['|']'|'{'|'}'|';';
     symbol          = (any - ('#'|whitespace|newline|syntax))+;
 
-    counter         = (any | newline @{lh.add_newline(fpc);})*;
+    counter         = (any | newline @{AddNewline(fpc);})*;
 
     commenter := |*
         ("##" (any - newline)* newline) & counter => {
-            TOKEN(TokenType::Comment);
+            Token(TokenType::Comment);
             fgoto body;
         };
 
         ('#' (any - '#')* '#') & counter => {
-            TOKEN(TokenType::Comment);
+            Token(TokenType::Comment);
             fgoto body;
         };
     *|;
 
     literal := |*
         ('"' (any - '"')* '"') & counter => {
-            TOKEN(TokenType::Literal);
+            Token(TokenType::Literal);
             fgoto body;
         };
 
         ("'" (any - "'")* "'") & counter => {
-            TOKEN(TokenType::Literal);
+            Token(TokenType::Literal);
             fgoto body;
         };
     *|;
@@ -107,13 +110,13 @@ inline void write(const char *data, int len) {
 
         ';'? ' '* newline & counter => {
             if (nesting == 0) {
-                TOKEN(TokenType::EOS);
+                Token(TokenType::EOS);
                 fgoto denter;
             }
         };
 
         ';' => {
-            TOKEN(TokenType::EOS);
+            Token(TokenType::EOS);
         };
 
         '#' => {
@@ -132,29 +135,29 @@ inline void write(const char *data, int len) {
         };
 
         '{'|'['|'(' => {
-            TOKEN(fc);
+            Token(fc);
             ++nesting;
             if ('{' == fc)
                 fcall body;
         };
 
         '}'|']'|')' => {
-            TOKEN(fc);
+            Token(fc);
             --nesting;
             if ('}' == fc)
                 fret;
         };
 
         number => {
-            TOKEN(TokenType::Number);
+            Token(TokenType::Number);
         };
 
         symbol => {
-            TOKEN(TokenType::Symbol);
+            Token(TokenType::Symbol);
         };
 
         syntax => {
-            TOKEN(fc);
+            Token(fc);
         };
 
     *|;
@@ -162,15 +165,14 @@ inline void write(const char *data, int len) {
     denter := |*
         whitespace* => {
 
-            switch (lh.is_dent(te-ts)) {
+            switch (IsDent(te-ts)) {
                 case 1:
-                    TOKEN(TokenType::Indent);
+                    Token(TokenType::Indent);
                     break;
                 case -1:
-                    TOKEN(TokenType::Dedent);
+                    Token(TokenType::Dedent);
                     break;
                 default:
-                    printf("1 really?\n");
                     break;
             }
             fgoto body;
@@ -178,17 +180,16 @@ inline void write(const char *data, int len) {
 
         /./ => {
             fhold;
-            switch (lh.is_dent(te-ts-1)) {
+            switch (IsDent(te-ts-1)) {
                 case 1:
                     //ignored on purpose
                     //otherwise file starts with
                     //erroneous indent
                     break;
                 case -1:
-                    TOKEN(TokenType::Dedent);
+                    Token(TokenType::Dedent);
                     break;
                 default:
-                    printf("2 really?\n");
                     break;
             }
             fgoto body;
@@ -198,40 +199,115 @@ inline void write(const char *data, int len) {
     write data nofinal;
 }%%
 
-extern "C" const char * token_name(long ti) {
-    return TokenMap[ti];
-}
+class Lexer {
+    char const* const source;
+    char const* const pe;
+    char const* const eof;
+    char const* p;
+    char const* ts;
+    char const* te;
+    int stack[1];
+    int cs;
+    int act;
+    int top;
+    int indents;
+    int dentsize;
+    int nesting;
+    std::vector<const char *> newlines;
+    std::vector<CSotaToken> tokens;
+
+public:
+    Lexer(char const* const source)
+        : source(source)
+        , pe(source + strlen(source))
+        , eof(source + strlen(source))
+        , p(source)
+        , indents(0)
+        , dentsize(0)
+        , nesting(0) {
+        %% write init;
+        //pretend newline before start of file
+        newlines.push_back(source-1);
+    }
+
+    ~Lexer() {
+        newlines.clear();
+        tokens.clear();
+    }
+
+    void AddNewline(const char *pchar) {
+        if (pchar > newlines.back())
+            newlines.push_back(pchar);
+        else
+            printf("UNEXPECTED BEHAVIOR!!!\n");
+    }
+
+    const char * Newline(const char *pchar) {
+        for (unsigned i = newlines.size(); i-- > 0;) {
+            if (pchar > newlines[i])
+                return newlines[i];
+        }
+        return 0;
+    }
+
+    long Line(const char *pchar) {
+        for (unsigned i = newlines.size(); i-- > 0;) {
+            if (pchar > newlines[i])
+                return i + 1;
+        }
+        return 0;
+    }
+
+    long Pos(const char *pchar) {
+        const char *nl = Newline(pchar);
+        if (nl)
+            return pchar - nl;
+        return 0;
+    }
+
+    int IsDent(int spaces) {
+        int result = 0;
+        if (dentsize == 0)
+            dentsize = spaces;
+        if (spaces == indents + dentsize)
+            result = 1;
+        else if (spaces == indents - dentsize)
+            result = -1;
+        else if (spaces == indents)
+            result = 0;
+        else
+            throw DenterException(spaces, indents, dentsize);
+        indents = spaces;
+        return result;
+    }
+
+    int Dents() {
+        if (dentsize)
+            return indents / dentsize;
+        return 0;
+    }
+
+    void Token(long ti, long trim=0) {
+        tokens.push_back({
+            ts - source + trim,
+            te - source - trim,
+            ti,
+            Line(ts),
+            Pos(ts)});
+    }
+
+    long Scan(CSotaToken **tokens) {
+        %% write exec;
+        *tokens = (struct CSotaToken *)malloc(this->tokens.size() * sizeof(struct CSotaToken));
+        copy(this->tokens.begin(), this->tokens.end(), *tokens);
+        return this->tokens.size();
+    }
+
+};
 
 extern "C" long scan(const char *source, struct CSotaToken **tokens) {
     std::ios::sync_with_stdio(false);
-    std::vector<const char *> newlines;
-    std::vector<CSotaToken> tokenlist;
-    size_t length = strlen(source);
-
-    const char *p = source;
-    const char *pe = source + length;
-    const char *eof = pe;
-    const char *ts = p;
-    const char *te = p;
-    int nesting = 0;
-
-    LexerHelper lh(p-1); //pretend that there was a newline before the first char
-
-    %% write init;
-    %% write exec;
-
-    if (cs == sota_error) {
-        // Machine failed before finding a token.
-        cerr << "PARSE ERROR" << endl;
-        exit(1);
-    }
-    int dents = lh.dents();
-    for (int dent=0; dent < dents; ++dent) {
-        tokenlist.push_back({(long)length, (long)length, TokenType::Dedent, lh.line(pe), lh.pos(pe)});
-    }
-
-    *tokens = (struct CSotaToken *)malloc(tokenlist.size() * sizeof(struct CSotaToken));
-    copy(tokenlist.begin(), tokenlist.end(), *tokens);
-    return tokenlist.size();
+    Lexer lexer(source);
+    return lexer.Scan(tokens);
 }
 
