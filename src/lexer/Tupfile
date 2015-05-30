@@ -1,5 +1,0 @@
-include_rules
-: foreach *.rl |> !r2cpp |>
-: *.cpp |> !++ -I../tclap/include |>
-: *.o |> !ar |> liblexer.a
-: test.c liblexer.a |> g++ %f -o %o |> test

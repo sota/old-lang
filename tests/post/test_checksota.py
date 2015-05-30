@@ -6,9 +6,8 @@ import sys
 
 SCRIPT_PATH, BASENAME = os.path.split(os.path.realpath(__file__) )
 SCRIPT_NAME, SCRIPT_EXT = os.path.splitext(os.path.basename(BASENAME) )
-sys.path.insert(0, os.path.abspath(os.path.join(SCRIPT_PATH, '../../src/utils') ) )
 
-from common import cd, call
+from subprocess import check_call
 
 def test_checksota():
-    assert call('./sota --help')[0] == 0
+    assert check_call(['./sota', '--help']) == 0

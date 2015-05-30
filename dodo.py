@@ -7,17 +7,25 @@ sys.dont_write_bytecode = True
 
 SCRIPT_PATH, BASENAME = os.path.split(os.path.realpath(__file__) )
 SCRIPT_NAME, SCRIPT_EXT = os.path.splitext(os.path.basename(BASENAME) )
-sys.path.insert(0, os.path.abspath(os.path.join(SCRIPT_PATH, 'src/utils') ) )
 
-from common import cd, call, env
+from utils import cd, call, env, inversepath
 from doit.task import clean_targets
 
-DOIT_CONFIG = { 'default_tasks': ['success'] }
+from doit.reporter import ConsoleReporter
+class MyReporter(ConsoleReporter):
+    def execute_task(self, task):
+        self.outstream.write('MyReporter --> %s\n' % task.title())
+
+DOIT_CONFIG = {
+    'verbosity': 2,
+    'default_tasks': ['success'],
+    #'reporter': MyReporter,
+}
 
 versionh = 'src/version.h'
 dodo = 'dodo.py'
 sota = 'sota'
-ragel = 'src/ragel/ragel/ragel'
+ragel = 'bin/ragel'
 targetdir = 'src/jit'
 targetsrc = 'sota.py'
 sotadir = 'src/sota'
@@ -27,6 +35,8 @@ python = 'python' if call('which pypy', throw=False)[0] else 'pypy'
 python = 'python' # FIXME:  its slower; doing this for now ... -sai
 rpython = 'src/pypy/rpython/bin/rpython'
 
+CC = 'g++'
+CXXFLAGS = '-Wall -Werror -O2 -std=c++11 -g -I../ -I../tclap/include'
 PRE = 'tests/pre'
 POST = 'tests/post'
 
@@ -79,9 +89,9 @@ def version_changed():
 
 def task_version():
     return {
-        'verbosity': 2,
         'actions': [
-            "echo '%(VERSIONH)s' > %(versionh)s" % env()],
+            "echo '%(VERSIONH)s' > %(versionh)s" % env()
+        ],
         'targets': [versionh],
         'clean': [clean_targets],
         'uptodate': [version_changed],
@@ -89,48 +99,73 @@ def task_version():
 
 def task_pyflakes():
     return {
-        'actions': ['pyflakes %(targetsrc)s' % env()],
         'file_dep': [dodo],
+        'actions': ['pyflakes %(targetsrc)s' % env()],
     }
 
 def task_submod():
     for submod in submods():
+        shafile = submod + '-sha'
+        inverse = inversepath(submod)
         yield {
             'name': submod,
-            'verbosity': 2,
             'file_dep': [dodo],
-            'actions': ['git submodule update --init %(submod)s' % env()],
-            'targets': [os.path.join(submod, '.git')]
+            'actions': [
+                'git submodule update --init %(submod)s' % env(),
+                'cd %(submod)s && git rev-parse HEAD > %(inverse)s/%(shafile)s' % env(),
+            ],
+            'targets': [shafile],
         }
 
 def task_ragel():
     return {
-        'verbosity': 2,
-        'file_dep': [dodo, 'src/ragel/.git'],
-        'actions': ['cd src/ragel && ./configure', 'cd src/ragel && make'],
+        'file_dep': [dodo, 'src/ragel-sha'],
+        'actions': [
+            'cd src/ragel && ./configure --prefix='+os.getcwd(),
+            'cd src/ragel && make',
+            'cd src/ragel && make install',
+        ],
         'targets': [ragel],
         'clean': [clean_targets],
     }
 
-def task_ccode():
+def task_libcli():
     return {
-        'verbosity': 2,
         'file_dep': [
+            dodo,
             versionh,
+            'src/tclap-sha',
+        ] + rglob('src/cli/*.{h,c,cpp}'),
+        'actions': [
+            'cd src/cli && %(CC)s %(CXXFLAGS)s -c cli.cpp -o cli.o' % env(),
+            'cd src/cli && ar crs libcli.a cli.o',
+            'cd src/cli && %(CC)s test.c libcli.a -o test' % env(),
+        ],
+        'targets': ['src/cli/test', 'src/cli/libcli.a'],
+        'clean': [clean_targets],
+    }
+
+def task_liblexer():
+    return {
+        'file_dep': [
             dodo,
             ragel,
-            'src/tclap/.git',
-            'src/tclap/include/tclap/CmdLine.h',
-        ] + rglob('src/lexer/*.{h,rl,c}') + rglob('src/cli/*.{h,cpp,c}'),
-        'actions': ['cd src && tup'],
-        'targets': ['src/cli/test', 'src/lexer/test', 'src/lexer/lexer.cpp'],
+        ] + rglob('src/lexer/*.{h,rl,c}'),
+        'actions': [
+            'cd src/lexer && ../ragel/ragel/ragel lexer.rl -o lexer.cpp',
+            'cd src/lexer && %(CC)s %(CXXFLAGS)s -c lexer.cpp -o lexer.o' % env(),
+            'cd src/lexer && ar crs liblexer.a lexer.o',
+            'cd src/lexer && %(CC)s test.c liblexer.a -o test' % env(),
+        ],
+        'targets': ['src/lexer/lexer.cpp', 'src/lexer/test', 'src/lexer/liblexer.a'],
         'clean': [clean_targets],
     }
 
 def task_pre():
     return {
-        'verbosity': 2,
-        'file_dep': [dodo, rpython],
+        'file_dep': [
+            dodo,
+        ],
         'actions': ['py.test -v %(PRE)s > %(PRE)s/results' % env()],
         'targets': ['%(PRE)s/results' % env()],
         'clean': [clean_targets],
@@ -138,14 +173,12 @@ def task_pre():
 
 def task_sota():
     return {
-        'verbosity': 2,
         'file_dep': [
             dodo,
-            ragel,
             'src/cli/test',
             'src/lexer/test',
-            'src/pypy/.git',
-            'src/ragel/.git',
+            'src/pypy-sha',
+            'src/ragel-sha',
             '%(PRE)s/results' % env(),
         ] + rglob('%(targetdir)s/*.py' % env()) + rglob('src/lexer/*.{h,rl}') + rglob('src/cli/*.{h,cpp}'),
         'actions': [
@@ -157,7 +190,6 @@ def task_sota():
 
 def task_post():
     return {
-        'verbosity': 2,
         'file_dep': [
             dodo,
             sota,
@@ -171,7 +203,7 @@ def task_success():
     return {
         'file_dep': [sota, '%(POST)s/results' % env()],
         'actions': [
-            './%(sota)s --help' % env(),
+            './%(sota)s --help > /dev/null 2>&1' % env(),
             'echo "sota build success!"',
         ],
     }
@@ -181,13 +213,12 @@ def task_tidy():
     for submod in submods():
         yield {
             'name': submod,
-            'verbosity': 2,
             'actions': [
                 'cd %(submod)s && git reset --hard HEAD && git clean -xfd' % env()
             ],
         }
     yield {
         'name': 'sota/lang',
-        'verbosity': 2,
         'actions': ['git clean -xfd'],
     }
+
