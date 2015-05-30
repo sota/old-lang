@@ -5,10 +5,6 @@
 extern "C" {
 #endif
 
-#include <stdio.h>
-#include <string.h>
-
-#include "ascii.h"
 #include "token.h"
 
 long scan(const char *source, struct CSotaToken **tokens);
