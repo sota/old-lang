@@ -80,7 +80,7 @@ def submods():
     stdout = call('git submodule')[1].strip()
     return [line.split()[1] for line in stdout.split('\n')]
 
-def version_changed():
+def version_unchanged():
     try:
         return open(versionh).read().strip() == VERSIONH
     except:
@@ -89,18 +89,22 @@ def version_changed():
 
 def task_version():
     return {
-        'actions': [
-            "echo '%(VERSIONH)s' > %(versionh)s" % env()
-        ],
+        'actions': ["echo '%(VERSIONH)s' > %(versionh)s" % env()],
         'targets': [versionh],
         'clean': [clean_targets],
-        'uptodate': [version_changed],
+        'uptodate': [version_unchanged],
     }
 
 def task_pyflakes():
     return {
         'file_dep': [dodo],
         'actions': ['pyflakes %(targetsrc)s' % env()],
+    }
+
+def task_init():
+    return {
+        'actions': ['git submodule init ' + ' '.join(submods())],
+        'targets': ['.git/config'],
     }
 
 def task_submod():
@@ -110,16 +114,15 @@ def task_submod():
         yield {
             'name': submod,
             'file_dep': [dodo],
-            'actions': [
-                'git submodule update --init %(submod)s' % env(),
-                'cd %(submod)s && git rev-parse HEAD > %(inverse)s/%(shafile)s' % env(),
-            ],
+            'task_dep': ['init'],
+            'actions': ['git submodule update %(submod)s' % env()],
             'targets': [shafile],
         }
 
 def task_ragel():
     return {
-        'file_dep': [dodo, 'src/ragel-sha'],
+        'file_dep': [dodo],
+        'task_dep': ['submod:src/ragel'],
         'actions': [
             'cd src/ragel && ./configure --prefix='+os.getcwd(),
             'cd src/ragel && make',
@@ -131,11 +134,8 @@ def task_ragel():
 
 def task_libcli():
     return {
-        'file_dep': [
-            dodo,
-            versionh,
-            'src/tclap-sha',
-        ] + rglob('src/cli/*.{h,c,cpp}'),
+        'file_dep': [dodo] + rglob('src/cli/*.{h,c,cpp}'),
+        'task_dep': ['version', 'submod:src/tclap'],
         'actions': [
             'cd src/cli && %(CC)s %(CXXFLAGS)s -c cli.cpp -o cli.o' % env(),
             'cd src/cli && ar crs libcli.a cli.o',
@@ -147,10 +147,8 @@ def task_libcli():
 
 def task_liblexer():
     return {
-        'file_dep': [
-            dodo,
-            ragel,
-        ] + rglob('src/lexer/*.{h,rl,c}'),
+        'file_dep': [dodo] + rglob('src/lexer/*.{h,rl,c}'),
+        'task_dep': ['ragel'],
         'actions': [
             'cd src/lexer && ../ragel/ragel/ragel lexer.rl -o lexer.cpp',
             'cd src/lexer && %(CC)s %(CXXFLAGS)s -c lexer.cpp -o lexer.o' % env(),
@@ -163,9 +161,7 @@ def task_liblexer():
 
 def task_pre():
     return {
-        'file_dep': [
-            dodo,
-        ],
+        'file_dep': [dodo],
         'actions': ['py.test -v %(PRE)s > %(PRE)s/results' % env()],
         'targets': ['%(PRE)s/results' % env()],
         'clean': [clean_targets],
@@ -173,14 +169,8 @@ def task_pre():
 
 def task_sota():
     return {
-        'file_dep': [
-            dodo,
-            'src/cli/test',
-            'src/lexer/test',
-            'src/pypy-sha',
-            'src/ragel-sha',
-            '%(PRE)s/results' % env(),
-        ] + rglob('%(targetdir)s/*.py' % env()) + rglob('src/lexer/*.{h,rl}') + rglob('src/cli/*.{h,cpp}'),
+        'file_dep': [dodo] + rglob('%(targetdir)s/*.py' % env()),
+        'task_dep': ['libcli', 'liblexer', 'submod:src/pypy', 'pre'],
         'actions': [
             '%(python)s -B %(rpython)s --output %(sota)s %(targetdir)s/%(targetsrc)s' % env(),
         ],
@@ -190,10 +180,8 @@ def task_sota():
 
 def task_post():
     return {
-        'file_dep': [
-            dodo,
-            sota,
-        ],
+        'file_dep': [dodo],
+        'task_dep': ['sota'],
         'actions': ['py.test -v %(POST)s > %(POST)s/results' % env()],
         'targets': ['%(POST)s/results' % env()],
         'clean': [clean_targets],
@@ -201,7 +189,7 @@ def task_post():
 
 def task_success():
     return {
-        'file_dep': [sota, '%(POST)s/results' % env()],
+        'task_dep': ['sota', 'post'],
         'actions': [
             './%(sota)s --help > /dev/null 2>&1' % env(),
             'echo "sota build success!"',
