@@ -101,10 +101,14 @@ def task_pyflakes():
         'actions': ['pyflakes %(targetsrc)s' % env()],
     }
 
+def is_initd():
+    return all([call('git config --get submodule.%s.url' % submod, throw=False)[1] for submod in submods()])
+
 def task_init():
     return {
         'actions': ['git submodule init ' + ' '.join(submods())],
         'targets': ['.git/config'],
+        'uptodate': [is_initd],
     }
 
 def task_submod():
