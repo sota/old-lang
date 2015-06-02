@@ -1,12 +1,10 @@
 language: python
 python:
     - "2.7"
-git:
-    submodules: false
+before_install:
+  - bash -x .travis.deps
 install:
     "pip install -r requirements.txt"
 sudo: true
-before_install:
-  - bash -x .travis.deps
 script:
     doit -n 4
