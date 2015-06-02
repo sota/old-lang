@@ -8,7 +8,7 @@ sys.dont_write_bytecode = True
 SCRIPT_PATH, BASENAME = os.path.split(os.path.realpath(__file__) )
 SCRIPT_NAME, SCRIPT_EXT = os.path.splitext(os.path.basename(BASENAME) )
 
-from utils import cd, call, env, inversepath
+from utils import cd, call, env, inversepath, get_subs2shas, rglob
 from doit.task import clean_targets
 
 from doit.reporter import ConsoleReporter
@@ -22,6 +22,8 @@ DOIT_CONFIG = {
     #'reporter': MyReporter,
 }
 
+subs2shas = get_subs2shas()
+submods = subs2shas.keys()
 versionh = 'src/version.h'
 dodo = 'dodo.py'
 sota = 'sota'
@@ -59,27 +61,6 @@ const std::string VERSION = "%(VERSION)s";
 ''' % env()
 VERSIONH = VERSIONH.strip()
 
-def rglob(pattern):
-    matches = []
-    # support for shell-like {x,y} syntax
-    regex = re.compile('(.*){(.*)}(.*)')
-    match = regex.search(pattern)
-    if match:
-        prefix, alternates, suffix = match.groups()
-        for alternate in alternates.split(','):
-            matches += rglob(prefix + alternate.strip() + suffix)
-        return matches
-    # support for recursive glob
-    import fnmatch
-    for r, ds, fs in os.walk(os.path.dirname(pattern)):
-        for f in fnmatch.filter(fs, os.path.basename(pattern)):
-            matches.append(os.path.join(r, f) )
-    return matches
-
-def submods():
-    stdout = call('git submodule')[1].strip()
-    return [line.split()[1] for line in stdout.split('\n')]
-
 def version_unchanged():
     try:
         return open(versionh).read().strip() == VERSIONH
@@ -102,25 +83,22 @@ def task_pyflakes():
     }
 
 def is_initd():
-    return all([call('git config --get submodule.%s.url' % submod, throw=False)[1] for submod in submods()])
+    return all([call('git config --get submodule.%s.url' % submod, throw=False)[1] for submod in submods])
 
 def task_init():
     return {
-        'actions': ['git submodule init ' + ' '.join(submods())],
+        'actions': ['git submodule init ' + ' '.join(submods)],
         'targets': ['.git/config'],
         'uptodate': [is_initd],
     }
 
 def task_submod():
-    for submod in submods():
-        shafile = submod + '-sha'
-        inverse = inversepath(submod)
+    for submod in submods:
         yield {
             'name': submod,
             'file_dep': [dodo],
             'task_dep': ['init'],
             'actions': ['git submodule update %(submod)s' % env()],
-            'targets': [shafile],
         }
 
 def task_ragel():
@@ -202,7 +180,7 @@ def task_success():
 
 def task_tidy():
 
-    for submod in submods():
+    for submod in submods:
         yield {
             'name': submod,
             'actions': [

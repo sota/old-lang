@@ -123,6 +123,23 @@ def env():
     finally:
         del frame
 
+def rglob(pattern):
+    matches = []
+    # support for shell-like {x,y} syntax
+    regex = re.compile('(.*){(.*)}(.*)')
+    match = regex.search(pattern)
+    if match:
+        prefix, alternates, suffix = match.groups()
+        for alternate in alternates.split(','):
+            matches += rglob(prefix + alternate.strip() + suffix)
+        return matches
+    # support for recursive glob
+    import fnmatch
+    for r, ds, fs in os.walk(os.path.dirname(pattern)):
+        for f in fnmatch.filter(fs, os.path.basename(pattern)):
+            matches.append(os.path.join(r, f) )
+    return matches
+
 def parameterized(d):
     ''' d for decorator f for function '''
     def layer(*args, **kwargs):
@@ -147,3 +164,7 @@ def timed(func):
                 return prepend_time(results)
             return wrap_reg(func)
     return wrap_func
+
+def get_subs2shas():
+    lines = call('git submodule')[1].strip().split('\n')
+    return dict([(item[1],item[0]) for item in [line.split() for line in lines]])
