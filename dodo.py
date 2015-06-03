@@ -151,8 +151,12 @@ def task_pre():
 
 def task_sota():
     return {
-        'file_dep': [dodo] + rglob('%(targetdir)s/*.py' % env()),
-        'task_dep': ['libcli', 'liblexer', 'submod:src/pypy', 'pre'],
+        'file_dep': [
+            dodo,
+            'src/cli/libcli.a',
+            'src/lexer/liblexer.a',
+        ] + rglob('%(targetdir)s/*.py' % env()),
+        'task_dep': ['submod:src/pypy', 'pre'],
         'actions': [
             '%(python)s -B %(rpython)s --output %(sota)s %(targetdir)s/%(targetsrc)s' % env(),
         ],
