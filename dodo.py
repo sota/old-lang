@@ -116,8 +116,8 @@ def task_ragel():
 
 def task_libcli():
     return {
-        'file_dep': [dodo] + rglob('src/cli/*.{h,c,cpp}'),
-        'task_dep': ['version', 'submod:src/tclap'],
+        'file_dep': [dodo, versionh] + rglob('src/cli/*.{h,c,cpp}'),
+        'task_dep': ['submod:src/tclap'],
         'actions': [
             'cd src/cli && %(CC)s %(CXXFLAGS)s -c cli.cpp -o cli.o' % env(),
             'cd src/cli && ar crs libcli.a cli.o',
