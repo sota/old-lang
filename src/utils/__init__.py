@@ -165,6 +165,58 @@ def timed(func):
             return wrap_reg(func)
     return wrap_func
 
-def get_subs2shas():
-    lines = call('git submodule')[1].strip().split('\n')
+def subs2shas(path='.'):
+    lines = call('cd %s && git submodule' % path)[1].strip().split('\n')
     return dict([(item[1],item[0]) for item in [line.split() for line in lines]])
+
+def ini2dict(ini):
+    config = {}
+    try:
+        from ConfigParser import SafeConfigParser
+        parser = SafeConfigParser()
+        parser.read(ini)
+        for section in parser.sections():
+            config[section] = {}
+            for option in parser.options(section):
+                config[section][option] = parser.get(section, option)
+    except: pass
+    return config
+
+#src: http://stackoverflow.com/questions/7204805/dictionaries-of-dictionaries-merge
+def merge(a, b):
+    """merges b into a and return merged result
+
+    NOTE: tuples and arbitrary objects are not handled as it is totally ambiguous what should happen"""
+
+    class MergeError(Exception):
+        pass
+
+    if b:
+        key = None
+        try:
+            if isscalar(a):
+                # border case for first run or if a is a primitive
+                a = b
+            elif islist(a):
+                # lists can be only appended
+                if islist(b):
+                    # merge lists
+                    a.extend(b)
+                else:
+                    # append to list
+                    a.append(b)
+            elif isdict(a):
+                # dicts must be merged
+                if isdict(b):
+                    for key in b:
+                        if key in a:
+                            a[key] = merge(a[key], b[key])
+                        else:
+                            a[key] = b[key]
+                else:
+                    raise MergeError('Cannot merge non-dict "%s" into dict "%s"' % (b, a))
+            else:
+                raise MergeError('NOT IMPLEMENTED "%s" into "%s"' % (b, a))
+        except TypeError, e:
+            raise MergeError('TypeError "%s" in key "%s" when merging "%s" into "%s"' % (e, key, b, a))
+    return a
