@@ -1,16 +1,15 @@
 #!/usr/bin/env python
 
 import os
-import re
 import sys
 sys.dont_write_bytecode = True
 
 SCRIPT_PATH, BASENAME = os.path.split(os.path.realpath(__file__) )
 SCRIPT_NAME, SCRIPT_EXT = os.path.splitext(os.path.basename(BASENAME) )
+sys.path.insert(0, 'src')
 
-from utils import cd, call, env, inversepath, get_subs2shas, rglob
+from utils import *
 from doit.task import clean_targets
-
 from doit.reporter import ConsoleReporter
 class MyReporter(ConsoleReporter):
     def execute_task(self, task):
@@ -22,8 +21,10 @@ DOIT_CONFIG = {
     #'reporter': MyReporter,
 }
 
-subs2shas = get_subs2shas()
-submods = subs2shas.keys()
+doitinid = {}
+merge(doitinid, ini2dict('doit.ini').get('doit'))
+merge(doitinid, ini2dict(expandpath(doitinid.get('doitini',{}))).get('doit'))
+submods = subs2shas().keys()
 versionh = 'src/version.h'
 dodo = 'dodo.py'
 sota = 'sota'
@@ -77,10 +78,11 @@ def task_version():
     }
 
 def task_pyflakes():
-    return {
-        'file_dep': [dodo],
-        'actions': ['pyflakes %(targetsrc)s' % env()],
-    }
+    for pyfile in rglob('%(targetdir)s/*.py' % env()):
+        yield {
+            'name': pyfile,
+            'actions': ['pyflakes ' + pyfile],
+        }
 
 def is_initd():
     return all([call('git config --get submodule.%s.url' % submod, throw=False)[1] for submod in submods])
@@ -180,6 +182,16 @@ def task_success():
             './%(sota)s --help > /dev/null 2>&1' % env(),
             'echo "sota build success!"',
         ],
+    }
+
+def task_show():
+    def show():
+        keywidth = max(map(lambda k: len(k), doitinid.keys())) + 4
+        valwidth = max(map(lambda v: len(v), doitinid.values()))
+        for key, val in doitinid.iteritems():
+            print key.ljust(keywidth), '=', val.ljust(valwidth)
+    return {
+        'actions': [show],
     }
 
 def task_tidy():
