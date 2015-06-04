@@ -1,6 +1,4 @@
 
-import exceptions
-
 class SotaExpr(object):
 
     def to_string(self):

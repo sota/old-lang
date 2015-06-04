@@ -1,5 +1,3 @@
-import os
-
 import lexer
 
 def debug(msg):

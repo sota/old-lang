@@ -5,9 +5,7 @@ The target below specifies the sota dynamic programming language.
 '''
 import os
 
-from rpython.translator.unsimplify import varoftype
 from rpython.rtyper.lltypesystem import rffi, lltype
-from rpython.rtyper.tool import rffi_platform as platform
 from rpython.translator.tool.cbuild import ExternalCompilationInfo
 
 import parser
@@ -51,7 +49,7 @@ def entry_point(argv):
     source = argv[1]
     source = loadfile(source) if os.path.isfile(source) else source + '\n'
     exitcode = parser.parse(source)
-    return 0
+    return exitcode
 
 def target(*args):
     return entry_point
