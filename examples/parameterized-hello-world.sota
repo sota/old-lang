@@ -1,0 +1,13 @@
+#!/usr/bin/sota
+
+config =
+    name:
+        arg: n|name
+        def: world
+    greeting:
+        arg: g|greeting
+        def: world
+
+main = (args)
+    ns = cli.Cli(config, args)
+    print '{ns.greeting} {ns.name}!'
