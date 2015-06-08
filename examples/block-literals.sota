@@ -1,0 +1,48 @@
+#!/usr/bin sota
+
+# 1) normal block of text starts with = and indent
+
+text =
+    You can have text like this.  With
+    sentences.
+        Even indents like until the
+    matching dedent.
+
+# matching dedent
+
+# 2) discriminating untions and enums use the same syntax
+
+Fruit =
+    | Apple
+    | Banana
+    | Cherry
+
+# the difference is every line starts with a |
+
+# 3) yaml can be used in the block literal and automatically loaded
+
+# can be the key, value pair of a dictionary
+deets =
+    dob: 01.16.1974
+    sex: male
+    hobbies:
+      - drumming
+      - programming
+      - reading
+
+# or the dashed itemization of a list
+countries =
+  - USA
+  - Mexico
+  - Canada
+
+# 4) a decorator can be used to force processing on load
+
+@tabular
+table =
+    suit    value   color
+    clubs   king    black
+    hearts  10      red
+
+
+
