@@ -5,12 +5,12 @@
 text =
     You can have text like this.  With
     sentences.
-        Even indents like until the
+        Even indents like this until the
     matching dedent.
 
-# matching dedent
+# matching dedent <-
 
-# 2) discriminating untions and enums use the same syntax
+# 2) discriminating unions and enums use the same syntax
 
 Fruit =
     | Apple
