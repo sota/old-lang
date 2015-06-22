@@ -6,7 +6,7 @@ config =
         def: world
     greeting:
         arg: g|greeting
-        def: world
+        def: hello
 
 main = (args)
     ns = cli.Cli(config, args)
