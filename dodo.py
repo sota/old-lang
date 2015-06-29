@@ -108,6 +108,7 @@ def task_ragel():
         'file_dep': [dodo],
         'task_dep': ['submod:src/ragel'],
         'actions': [
+            'cd src/ragel && ./autogen.sh',
             'cd src/ragel && ./configure --prefix='+os.getcwd(),
             'cd src/ragel && make',
             'cd src/ragel && make install',
@@ -121,8 +122,9 @@ def task_libcli():
         'file_dep': [dodo, versionh] + rglob('src/cli/*.{h,c,cpp}'),
         'task_dep': ['submod:src/tclap'],
         'actions': [
+            'cd src/cli && %(CC)s %(CXXFLAGS)s -c ../docopt.cpp/docopt.cpp -o docopt.o' % env(),
             'cd src/cli && %(CC)s %(CXXFLAGS)s -c cli.cpp -o cli.o' % env(),
-            'cd src/cli && ar crs libcli.a cli.o',
+            'cd src/cli && ar crs libcli.a docopt.o cli.o',
             'cd src/cli && %(CC)s test.c libcli.a -o test' % env(),
         ],
         'targets': ['src/cli/test', 'src/cli/libcli.a'],
