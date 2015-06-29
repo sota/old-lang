@@ -10,3 +10,6 @@
 	path = src/ragel
 	url = https://github.com/sota/ragel
 	branch = master
+[submodule "src/docopt.cpp"]
+	path = src/docopt.cpp
+	url = https://github.com/sota/docopt.cpp
