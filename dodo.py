@@ -39,7 +39,7 @@ python = 'python' # FIXME:  its slower; doing this for now ... -sai
 rpython = 'src/pypy/rpython/bin/rpython'
 
 CC = 'g++'
-CXXFLAGS = '-Wall -Werror -O2 -std=c++11 -g -I../ -I../tclap/include'
+CXXFLAGS = '-Wall -Werror -O2 -std=c++11 -g -I../ -I../docopt.cpp'
 PRE = 'tests/pre'
 POST = 'tests/post'
 

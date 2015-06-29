@@ -7,10 +7,8 @@
 #include <sstream>
 #include <iostream>
 #include <algorithm>
-#include "tclap/CmdLine.h"
 
 #include "docopt.cpp/docopt.h"
-
 #include "../version.h"
 
 /*

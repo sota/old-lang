@@ -15,7 +15,6 @@ vim: syntax=ragel
 #include <exception>
 #include <stdexcept>
 
-#include "tclap/CmdLine.h"
 #include "lexer.h"
 #include "ascii.h"
 
