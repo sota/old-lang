@@ -60,7 +60,11 @@ R"(Naval Fate.
 
 extern "C" int parse(int argc, char *argv[], struct CliToken **tokens) {
     int result = 0;
-    std::map<std::string, docopt::value> args = docopt::docopt(USAGE, {argv+1, argv+argc}, true, "Naval Fate 2.0");
+    auto args = docopt::docopt(
+        USAGE,
+        {argv+1, argv+argc},
+        true,
+        VERSION);
 
     for(auto const& arg : args) {
         std::cout << arg.first <<  arg.second << std::endl;

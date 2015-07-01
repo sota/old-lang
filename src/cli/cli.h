@@ -6,8 +6,8 @@ extern "C" {
 #endif
 
 struct CliToken {
-    const char *name;
-    const char *value;
+    char * name;
+    char * value;
 };
 
 int parse(int argc, char *argv[], struct CliToken **tokens);
