@@ -25,7 +25,7 @@ CLITOKEN = rffi.CStruct(
 CLITOKENP = rffi.CArrayPtr(CLITOKEN)
 CLITOKENPP = rffi.CArrayPtr(CLITOKENP)
 
-parse = rffi.llexternal(
+c_parse = rffi.llexternal(
     'parse',
     [rffi.LONG, rffi.CCHARPP, CLITOKENPP],
     rffi.LONG,
@@ -41,7 +41,8 @@ def loadfile(source):
 def entry_point(argv):
 
     with lltype.scoped_alloc(CLITOKENPP.TO, 1) as cclitokenpp:
-        result = parse(len(argv), rffi.liststr2charpp(argv), cclitokenpp)
+        result = c_parse(len(argv), rffi.liststr2charpp(argv), cclitokenpp)
+        print 'result =', result
         for i in range(result):
             clitoken = cclitokenpp[0][i]
             print 'CliToken {name=%s, value=%s}' % (rffi.charp2str(clitoken.c_name), rffi.charp2str(clitoken.c_value))
