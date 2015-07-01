@@ -14,12 +14,12 @@
 static const char USAGE[] =
 R"(sota: state of the art
 
-    Usage:
+    usage:
       sota <source>
       sota (-h | --help)
       sota --version
 
-    Options:
+    options:
       -h --help     Show this screen.
       --version     Show version.
 )";
@@ -33,7 +33,6 @@ extern "C" int parse(int argc, char *argv[], struct CliToken **tokens) {
 
     std::vector<struct CliToken> tokenlist;
     for(auto const& arg : args) {
-
         if (arg.second.isString()) {
             tokenlist.push_back({
                 name: (char *)arg.first.c_str(),

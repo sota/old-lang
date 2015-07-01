@@ -39,17 +39,18 @@ def loadfile(source):
 # __________  Entry point  __________
 
 def entry_point(argv):
-
+    exitcode = 0
+    args = {}
     with lltype.scoped_alloc(CLITOKENPP.TO, 1) as cclitokenpp:
         result = c_parse(len(argv), rffi.liststr2charpp(argv), cclitokenpp)
-        print 'result =', result
         for i in range(result):
             clitoken = cclitokenpp[0][i]
-            print 'CliToken {name=%s, value=%s}' % (rffi.charp2str(clitoken.c_name), rffi.charp2str(clitoken.c_value))
+            args[rffi.charp2str(clitoken.c_name)] = rffi.charp2str(clitoken.c_value)
 
-    source = argv[1]
-    source = loadfile(source) if os.path.isfile(source) else source + '\n'
-    exitcode = parser.parse(source)
+    if '<source>' in args:
+        source = args['<source>']
+        source = loadfile(source) if os.path.isfile(source) else source + '\n'
+        exitcode = parser.parse(source)
     return exitcode
 
 def target(*args):
