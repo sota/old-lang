@@ -2,10 +2,6 @@
 	path = src/pypy
 	url = https://github.com/sota/pypy
 	branch = master
-[submodule "src/tclap"]
-	path = src/tclap
-	url = https://github.com/sota/tclap
-	branch = master
 [submodule "src/ragel"]
 	path = src/ragel
 	url = https://github.com/sota/ragel
@@ -13,3 +9,4 @@
 [submodule "src/docopt.cpp"]
 	path = src/docopt.cpp
 	url = https://github.com/sota/docopt.cpp
+	branch = master
