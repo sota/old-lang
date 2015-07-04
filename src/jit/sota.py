@@ -34,14 +34,15 @@ c_parse = rffi.llexternal(
 
 def load_source(source):
     if os.path.isfile(source):
-        return source + '\n'
-    return open(source).read()
+        return open(source).read()
+    return source + '\n'
 
 def exec_source(source):
     return parser.parse(source)
 
 def sota_exec(args):
-    source = load_source(args['<source>'])
+    source = args['<source>']
+    source = load_source(source)
     return exec_source(source)
 
 def stdin_readline():
