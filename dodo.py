@@ -85,6 +85,15 @@ def task_version():
             'uptodate': [svu.uptodate],
         }
 
+def task_undo_version():
+    for filename in [sotapy, clicpp]:
+        svu = SotaVersionUpdater(filename, 'UNKNOWN')
+        yield {
+            'name': filename,
+            'actions': [svu.update],
+            'uptodate': [svu.uptodate],
+        }
+
 def task_pyflakes():
     for pyfile in rglob('%(targetdir)s/*.py' % env()):
         yield {
