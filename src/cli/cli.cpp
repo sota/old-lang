@@ -15,9 +15,7 @@ static const char USAGE[] =
 R"(sota: state of the art
 
     usage:
-      sota <source>
-      sota (-h | --help)
-      sota --version
+      sota [options] [<source>]
 
     options:
       -h --help     Show this screen.
