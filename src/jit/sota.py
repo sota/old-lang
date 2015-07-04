@@ -9,8 +9,7 @@ from rpython.rtyper.lltypesystem import rffi, lltype
 from rpython.translator.tool.cbuild import ExternalCompilationInfo
 
 import parser
-
-SOTA_VERSION = 'UNKNOWN'
+from version import SOTA_VERSION
 
 cli_dir = os.path.join(os.getcwd(), 'src/cli')
 cli_eci = ExternalCompilationInfo(

@@ -25,7 +25,6 @@ doitinid = {}
 merge(doitinid, ini2dict('doit.ini').get('doit'))
 merge(doitinid, ini2dict(expandpath(doitinid.get('doitini',{}))).get('doit'))
 submods = subs2shas().keys()
-versionh = 'src/version.h'
 dodo = 'dodo.py'
 sota = 'sota'
 ragel = 'bin/ragel'
@@ -38,8 +37,8 @@ python = 'python' if call('which pypy', throw=False)[0] else 'pypy'
 python = 'python' # FIXME:  its slower; doing this for now ... -sai
 rpython = 'src/pypy/rpython/bin/rpython'
 
-clicpp = 'src/cli/cli.cpp'
-sotapy = 'src/jit/sota.py'
+versionh = 'src/cli/version.h'
+versionpy = 'src/jit/version.py'
 
 CC = 'g++'
 CXXFLAGS = '-Wall -Werror -O2 -std=c++11 -g -I../ -I../docopt.cpp'
@@ -75,7 +74,7 @@ class SotaVersionUpdater(object):
             f.write(updated)
 
 def task_version():
-    for filename in [sotapy, clicpp]:
+    for filename in [versionh, versionpy]:
         svu = SotaVersionUpdater(filename, VERSION)
         yield {
             'name': filename,
@@ -86,7 +85,7 @@ def task_version():
         }
 
 def task_undo_version():
-    for filename in [sotapy, clicpp]:
+    for filename in [versionh, versionpy]:
         svu = SotaVersionUpdater(filename, 'UNKNOWN')
         yield {
             'name': filename,

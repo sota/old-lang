@@ -8,9 +8,9 @@
 #include <iostream>
 #include <algorithm>
 
+#include "version.h"
 #include "docopt.cpp/docopt.h"
 
-static const std::string SOTA_VERSION = "UNKNOWN";
 static const char USAGE[] =
 R"(sota: state of the art
 
