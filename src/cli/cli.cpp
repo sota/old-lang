@@ -18,8 +18,8 @@ R"(sota: state of the art
       sota [options] [<source>]
 
     options:
-      -h --help     Show this screen.
-      --version     Show version.
+      -h --help     show this screen
+      --version     show version
 )";
 
 extern "C" int parse(int argc, char *argv[], struct CliToken **tokens) {
