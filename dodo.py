@@ -46,16 +46,19 @@ PRE = 'tests/pre'
 POST = 'tests/post'
 
 try:
-    VERSION = open('VERSION').read().strip()
+    SOTA_VERSION = open('VERSION').read().strip()
 except:
     try:
-        VERSION = call('git describe')[1].strip()
+        SOTA_VERSION = call('git describe')[1].strip()
     except:
-        VERSION = 'UNKNOWN'
+        SOTA_VERSION = 'UNKNOWN'
 
 def task_version():
+    '''
+    replace version strings in files
+    '''
     for filename in [versionh, versionpy]:
-        svu = SotaVersionUpdater(filename, VERSION)
+        svu = SotaVersionUpdater(filename, SOTA_VERSION)
         yield {
             'name': filename,
             'actions': [svu.update],
@@ -65,6 +68,9 @@ def task_version():
         }
 
 def task_undo_version():
+    '''
+    undo version replacement with 'UNKNOWN'
+    '''
     for filename in [versionh, versionpy]:
         svu = SotaVersionUpdater(filename, 'UNKNOWN')
         yield {
@@ -74,6 +80,9 @@ def task_undo_version():
         }
 
 def task_pyflakes():
+    '''
+    run pyflakes on files
+    '''
     for pyfile in rglob('%(targetdir)s/*.py' % env()):
         yield {
             'name': pyfile,
@@ -84,6 +93,9 @@ def is_initd():
     return all([call('git config --get submodule.%s.url' % submod, throw=False)[1] for submod in submods])
 
 def task_init():
+    '''
+    run git submodule init on submods
+    '''
     return {
         'actions': ['git submodule init ' + ' '.join(submods)],
         'targets': ['.git/config'],
@@ -91,6 +103,9 @@ def task_init():
     }
 
 def task_submod():
+    '''
+    run git submodule update on submods
+    '''
     for submod in submods:
         yield {
             'name': submod,
@@ -100,6 +115,9 @@ def task_submod():
         }
 
 def task_ragel():
+    '''
+    build ragel binary for use in build
+    '''
     return {
         'file_dep': [dodo],
         'task_dep': ['submod:src/ragel'],
@@ -114,6 +132,9 @@ def task_ragel():
     }
 
 def task_libcli():
+    '''
+    build libary for use as sota's commandline interface
+    '''
     return {
         'file_dep': [dodo] + rglob('src/cli/*.{h,c,cpp}'),
         'task_dep': ['submod:src/docopt.cpp'],
@@ -128,6 +149,9 @@ def task_libcli():
     }
 
 def task_liblexer():
+    '''
+    build lexer library with ragel
+    '''
     return {
         'file_dep': [dodo] + rglob('src/lexer/*.{h,rl,c}'),
         'task_dep': ['ragel'],
@@ -142,6 +166,9 @@ def task_liblexer():
     }
 
 def task_pre():
+    '''
+    run pre tests
+    '''
     return {
         'file_dep': [dodo],
         'actions': ['py.test -v %(PRE)s > %(PRE)s/results' % env()],
@@ -150,6 +177,9 @@ def task_pre():
     }
 
 def task_sota():
+    '''
+    build sota program with rpython infrastructure
+    '''
     return {
         'file_dep': [
             dodo,
@@ -165,6 +195,9 @@ def task_sota():
     }
 
 def task_post():
+    '''
+    run post tests
+    '''
     return {
         'file_dep': [dodo],
         'task_dep': ['sota'],
@@ -174,6 +207,9 @@ def task_post():
     }
 
 def task_success():
+    '''
+    run ./sota --help and print success
+    '''
     return {
         'task_dep': ['sota', 'post'],
         'actions': [
@@ -183,6 +219,9 @@ def task_success():
     }
 
 def task_show():
+    '''
+    show variables
+    '''
     def show():
         keywidth = max(map(lambda k: len(k), doitinid.keys())) + 4
         valwidth = max(map(lambda v: len(v), doitinid.values()))
@@ -193,7 +232,9 @@ def task_show():
     }
 
 def task_tidy():
-
+    '''
+    clean submods and sota/lang repo
+    '''
     for submod in submods:
         yield {
             'name': submod,
