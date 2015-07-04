@@ -10,7 +10,7 @@ from rpython.translator.tool.cbuild import ExternalCompilationInfo
 
 import parser
 
-VERSION = 'unknown'
+SOTA_VERSION = 'UNKNOWN'
 
 cli_dir = os.path.join(os.getcwd(), 'src/cli')
 cli_eci = ExternalCompilationInfo(
@@ -57,7 +57,7 @@ def sota_repl(args):
     exitcode = 0
     prompt = 'sota> '
 
-    print 'sota %s repl:' % VERSION
+    print 'sota %s repl:' % SOTA_VERSION
     print 'ctrl+c | ctrl+d, return to exit'
     print
     while True:

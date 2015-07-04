@@ -9,8 +9,8 @@
 #include <algorithm>
 
 #include "docopt.cpp/docopt.h"
-#include "../version.h"
 
+static const std::string SOTA_VERSION = "UNKNOWN";
 static const char USAGE[] =
 R"(sota: state of the art
 
@@ -27,7 +27,7 @@ extern "C" int parse(int argc, char *argv[], struct CliToken **tokens) {
         USAGE,
         {argv+1, argv+argc},
         true,
-        VERSION);
+        SOTA_VERSION);
 
     std::vector<struct CliToken> tokenlist;
     for(auto const& arg : args) {

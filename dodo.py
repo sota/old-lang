@@ -38,6 +38,9 @@ python = 'python' if call('which pypy', throw=False)[0] else 'pypy'
 python = 'python' # FIXME:  its slower; doing this for now ... -sai
 rpython = 'src/pypy/rpython/bin/rpython'
 
+clicpp = 'src/cli/cli.cpp'
+sotapy = 'src/jit/sota.py'
+
 CC = 'g++'
 CXXFLAGS = '-Wall -Werror -O2 -std=c++11 -g -I../ -I../docopt.cpp'
 PRE = 'tests/pre'
@@ -51,31 +54,36 @@ except:
     except:
         VERSION = 'UNKNOWN'
 
-VERSIONH = '''
-#ifndef __SOTA_VERSION__
-#define __SOTA_VERSION__ = 1
-
-#include <string>
-const std::string VERSION = "%(VERSION)s";
-
-#endif /*__SOTA_VERSION__*/
-''' % env()
-VERSIONH = VERSIONH.strip()
-
-def version_unchanged():
-    try:
-        return open(versionh).read().strip() == VERSIONH
-    except:
-        pass
-    return False
+class SotaVersionUpdater(object):
+    def __init__(self, filename, version):
+        self.filename = filename
+        self.version = version
+        self.pattern = '''(.*SOTA_VERSION += +["'])([\w\-\.]+)(["'])'''
+        self.regex = re.compile(self.pattern)
+        self.replace = r'\1' + version + r'\3'
+        self.contents = open(filename).read()
+    def uptodate(self):
+        match = self.regex.search(self.contents)
+        if match:
+            return match.group(2) == self.version
+        return False
+    def update(self):
+        updated = self.regex.sub(self.replace, self.contents)
+        if not updated:
+            raise Exception('VersionUpdater.update produced empty updated string')
+        with open(self.filename, 'w') as f:
+            f.write(updated)
 
 def task_version():
-    return {
-        'actions': ["echo '%(VERSIONH)s' > %(versionh)s" % env()],
-        'targets': [versionh],
-        'clean': [clean_targets],
-        'uptodate': [version_unchanged],
-    }
+    for filename in [sotapy, clicpp]:
+        svu = SotaVersionUpdater(filename, VERSION)
+        yield {
+            'name': filename,
+            'actions': [svu.update],
+            'targets': [filename],
+            'clean': [clean_targets],
+            'uptodate': [svu.uptodate],
+        }
 
 def task_pyflakes():
     for pyfile in rglob('%(targetdir)s/*.py' % env()):
@@ -119,7 +127,7 @@ def task_ragel():
 
 def task_libcli():
     return {
-        'file_dep': [dodo, versionh] + rglob('src/cli/*.{h,c,cpp}'),
+        'file_dep': [dodo] + rglob('src/cli/*.{h,c,cpp}'),
         'task_dep': ['submod:src/docopt.cpp'],
         'actions': [
             'cd src/cli && %(CC)s %(CXXFLAGS)s -c ../docopt.cpp/docopt.cpp -o docopt.o' % env(),
