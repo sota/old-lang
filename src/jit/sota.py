@@ -10,6 +10,8 @@ from rpython.translator.tool.cbuild import ExternalCompilationInfo
 
 import parser
 
+VERSION = 'unknown'
+
 cli_dir = os.path.join(os.getcwd(), 'src/cli')
 cli_eci = ExternalCompilationInfo(
     include_dirs=[cli_dir],
@@ -31,8 +33,48 @@ c_parse = rffi.llexternal(
     rffi.LONG,
     compilation_info=cli_eci)
 
-def loadfile(source):
+def load_source(source):
+    if os.path.isfile(source):
+        return source + '\n'
     return open(source).read()
+
+def exec_source(source):
+    return parser.parse(source)
+
+def sota_exec(args):
+    source = load_source(args['<source>'])
+    return exec_source(source)
+
+def stdin_readline():
+    line = ''
+    c = os.read(0, 1)
+    while '\n' != c:
+        line += c
+        c = os.read(0, 1)
+    return line
+
+def sota_repl(args):
+    exitcode = 0
+    prompt = 'sota> '
+
+    print 'sota %s repl:' % VERSION
+    print 'ctrl+c | ctrl+d, return to exit'
+    print
+    while True:
+        os.write(1, prompt)
+        source = None
+        try:
+            source = stdin_readline()
+        except KeyboardInterrupt:
+            break
+        except EOFError:
+            break
+        if not source:
+            break
+
+        print source
+
+    return exitcode
 
 #######################################################
 
@@ -48,9 +90,10 @@ def entry_point(argv):
             args[rffi.charp2str(clitoken.c_name)] = rffi.charp2str(clitoken.c_value)
 
     if '<source>' in args:
-        source = args['<source>']
-        source = loadfile(source) if os.path.isfile(source) else source + '\n'
-        exitcode = parser.parse(source)
+        exitcode = sota_exec(args)
+    else:
+        exitcode = sota_repl(args)
+
     return exitcode
 
 def target(*args):
