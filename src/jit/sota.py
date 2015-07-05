@@ -11,6 +11,13 @@ from rpython.translator.tool.cbuild import ExternalCompilationInfo
 import parser
 from version import SOTA_VERSION
 
+REPL_USAGE = '''
+sota: state of the art
+version: %s
+exit: ctrl+c | ctrl+d, return
+welcome to the sota repl!
+''' % SOTA_VERSION
+
 cli_dir = os.path.join(os.getcwd(), 'src/cli')
 cli_eci = ExternalCompilationInfo(
     include_dirs=[cli_dir],
@@ -32,6 +39,14 @@ c_parse = rffi.llexternal(
     rffi.LONG,
     compilation_info=cli_eci)
 
+def stdin_readline():
+    line = ''
+    c = os.read(0, 1)
+    while '\n' != c:
+        line += c
+        c = os.read(0, 1)
+    return line
+
 def load_source(source):
     if os.path.isfile(source):
         return open(source).read()
@@ -45,21 +60,10 @@ def sota_exec(args):
     source = load_source(source)
     return exec_source(source)
 
-def stdin_readline():
-    line = ''
-    c = os.read(0, 1)
-    while '\n' != c:
-        line += c
-        c = os.read(0, 1)
-    return line
-
 def sota_repl(args):
     exitcode = 0
     prompt = 'sota> '
-
-    print 'sota %s repl:' % SOTA_VERSION
-    print 'ctrl+c | ctrl+d, return to exit'
-    print
+    print REPL_USAGE.strip()
     while True:
         os.write(1, prompt)
         source = None
