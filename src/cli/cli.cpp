@@ -20,6 +20,9 @@ R"(sota: state of the art
     options:
       -h --help     show this screen
       --version     show version
+
+    source:
+      text | file
 )";
 
 extern "C" int parse(int argc, char *argv[], struct CliToken **tokens) {
