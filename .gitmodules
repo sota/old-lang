@@ -1,12 +1,12 @@
 [submodule "src/pypy"]
-	path = src/pypy
+	path = lib/pypy
 	url = https://github.com/sota/pypy
 	branch = master
 [submodule "src/ragel"]
-	path = src/ragel
+	path = lib/ragel
 	url = https://github.com/sota/ragel
 	branch = master
 [submodule "src/docopt.cpp"]
-	path = src/docopt.cpp
+	path = lib/docopt
 	url = https://github.com/sota/docopt.cpp
 	branch = master

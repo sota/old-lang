@@ -9,7 +9,7 @@
 #include <algorithm>
 
 #include "version.h"
-#include "docopt.cpp/docopt.h"
+#include "docopt.h"
 
 static const char USAGE[] =
 R"(sota: state of the art

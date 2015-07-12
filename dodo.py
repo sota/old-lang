@@ -36,13 +36,13 @@ sotasrc = 'sota.cpp'
 sotajit = 'sota-jit'
 python = 'python' if call('which pypy', throw=False)[0] else 'pypy'
 python = 'python' # FIXME:  its slower; doing this for now ... -sai
-rpython = 'src/pypy/rpython/bin/rpython'
+rpython = 'lib/pypy/rpython/bin/rpython'
 
 versionh = 'src/cli/version.h'
 versionpy = 'src/version.py'
 
 CC = 'g++'
-CXXFLAGS = '-Wall -Werror -O2 -std=c++11 -g -I../ -I../docopt.cpp'
+CXXFLAGS = '-Wall -Werror -O2 -std=c++11 -g -I../ -I../../lib/docopt'
 PRE = 'tests/pre'
 POST = 'tests/post'
 
@@ -121,12 +121,12 @@ def task_ragel():
     '''
     return {
         'file_dep': [dodo],
-        'task_dep': ['submod:src/ragel'],
+        'task_dep': ['submod:lib/ragel'],
         'actions': [
-            'cd src/ragel && ./autogen.sh',
-            'cd src/ragel && ./configure --prefix='+os.getcwd(),
-            'cd src/ragel && make',
-            'cd src/ragel && make install',
+            'cd lib/ragel && ./autogen.sh',
+            'cd lib/ragel && ./configure --prefix='+os.getcwd(),
+            'cd lib/ragel && make',
+            'cd lib/ragel && make install',
         ],
         'targets': [ragel],
         'clean': [clean_targets],
@@ -138,9 +138,9 @@ def task_libcli():
     '''
     return {
         'file_dep': [dodo] + rglob('src/cli/*.{h,c,cpp}'),
-        'task_dep': ['submod:src/docopt.cpp'],
+        'task_dep': ['submod:lib/docopt'],
         'actions': [
-            'cd src/cli && %(CC)s %(CXXFLAGS)s -c ../docopt.cpp/docopt.cpp -o docopt.o' % gl(),
+            'cd src/cli && %(CC)s %(CXXFLAGS)s -c ../../lib/docopt/docopt.cpp -o docopt.o' % gl(),
             'cd src/cli && %(CC)s %(CXXFLAGS)s -c cli.cpp -o cli.o' % gl(),
             'cd src/cli && ar crs libcli.a docopt.o cli.o',
             'cd src/cli && %(CC)s test.c libcli.a -o test' % gl(),
@@ -157,7 +157,7 @@ def task_liblexer():
         'file_dep': [dodo] + rglob('src/lexer/*.{h,rl,c}'),
         'task_dep': ['ragel'],
         'actions': [
-            'cd src/lexer && ../ragel/ragel/ragel lexer.rl -o lexer.cpp',
+            'cd src/lexer && ../../bin/ragel lexer.rl -o lexer.cpp',
             'cd src/lexer && %(CC)s %(CXXFLAGS)s -c lexer.cpp -o lexer.o' % gl(),
             'cd src/lexer && ar crs liblexer.a lexer.o',
             'cd src/lexer && %(CC)s test.c liblexer.a -o test' % gl(),
@@ -187,7 +187,7 @@ def task_sota():
             'src/cli/libcli.a',
             'src/lexer/liblexer.a',
         ] + rglob('%(targetdir)s/*.py' % gl()),
-        'task_dep': ['submod:src/pypy', 'pre'],
+        'task_dep': ['submod:lib/pypy', 'pre'],
         'actions': [
             '%(python)s -B %(rpython)s --output %(sota)s %(targetdir)s/%(targetsrc)s' % gl(),
         ],
