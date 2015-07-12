@@ -5,10 +5,12 @@ The target below specifies the sota dynamic programming language.
 '''
 import os
 
+os.environ['PYTHONPATH'] = 'src:src/pypy'
+
 from rpython.rtyper.lltypesystem import rffi, lltype
 from rpython.translator.tool.cbuild import ExternalCompilationInfo
 
-import parser
+import sast.parser
 from version import SOTA_VERSION
 
 REPL_USAGE = '''
@@ -53,7 +55,7 @@ def load_source(source):
     return source + '\n'
 
 def exec_source(source):
-    return parser.parse(source)
+    return sast.parser.parse(source)
 
 def sota_exec(args):
     source = args['<source>']

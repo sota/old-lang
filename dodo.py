@@ -28,8 +28,8 @@ submods = subs2shas().keys()
 dodo = 'dodo.py'
 sota = 'sota'
 ragel = 'bin/ragel'
-targetdir = 'src/jit'
-targetsrc = 'sota.py'
+targetdir = 'src'
+targetsrc = 'targetsota.py'
 sotadir = 'src/sota'
 sotasrc = 'sota.cpp'
 sotajit = 'sota-jit'
@@ -38,7 +38,7 @@ python = 'python' # FIXME:  its slower; doing this for now ... -sai
 rpython = 'src/pypy/rpython/bin/rpython'
 
 versionh = 'src/cli/version.h'
-versionpy = 'src/jit/version.py'
+versionpy = 'src/version.py'
 
 CC = 'g++'
 CXXFLAGS = '-Wall -Werror -O2 -std=c++11 -g -I../ -I../docopt.cpp'
