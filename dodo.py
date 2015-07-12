@@ -67,7 +67,7 @@ def task_version():
             'uptodate': [svu.uptodate],
         }
 
-def task_undo_version():
+def task_unversion():
     '''
     undo version replacement with 'UNKNOWN'
     '''
@@ -222,6 +222,11 @@ def task_tidy():
     '''
     clean submods and sota/lang repo
     '''
+    yield {
+        'task_dep': ['unversion'],
+        'name': 'sota/lang',
+        'actions': ['git clean -xfd'],
+    }
     for submod in submods:
         yield {
             'name': submod,
@@ -229,8 +234,4 @@ def task_tidy():
                 'cd %(submod)s && git reset --hard HEAD && git clean -xfd' % gl()
             ],
         }
-    yield {
-        'name': 'sota/lang',
-        'actions': ['git clean -xfd'],
-    }
 
