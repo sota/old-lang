@@ -64,6 +64,3 @@ docs/_build/
 
 # py.test
 __pycache__
-
-# sota
-sota*
