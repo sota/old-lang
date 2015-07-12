@@ -2,7 +2,7 @@
 
 import os
 import sys
-sys.dont_write_bytecode = True
+os.environ['PYTHONDONTWRITEBYTECODE'] = '1'
 
 SCRIPT_PATH, BASENAME = os.path.split(os.path.realpath(__file__) )
 SCRIPT_NAME, SCRIPT_EXT = os.path.splitext(os.path.basename(BASENAME) )
