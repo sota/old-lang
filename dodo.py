@@ -2,11 +2,12 @@
 
 import os
 import sys
+srcpath = os.path.abspath('src')
+sys.path.insert(0, srcpath)
+pythonpath = os.environ.get('PYTHONPATH', '')
+pythonpath += ':' + srcpath
+os.environ['PYTHONPATH'] = pythonpath
 os.environ['PYTHONDONTWRITEBYTECODE'] = '1'
-
-SCRIPT_PATH, BASENAME = os.path.split(os.path.realpath(__file__) )
-SCRIPT_NAME, SCRIPT_EXT = os.path.splitext(os.path.basename(BASENAME) )
-sys.path.insert(0, 'src')
 
 from utils.git import subs2shas
 from utils.shell import call, rglob
