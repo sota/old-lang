@@ -7,45 +7,12 @@ import inspect
 
 from subprocess import Popen, PIPE, CalledProcessError
 from contextlib import contextmanager
-from types import ModuleType, FunctionType, GeneratorType
 
-def isstr(obj):
-    return isinstance(obj, str)
-
-def isunicode(obj):
-    return isinstance(obj, unicode)
-
-def isint(obj):
-    return isinstance(obj, int)
-
-def islong(obj):
-    return isinstance(obj, long)
-
-def isfloat(obj):
-    return isinstance(obj, float)
-
-def ismodule(obj):
-    return isinstance(obj, ModuleType)
-
-def isfunction(obj):
-    return isinstance(obj, FunctionType)
-
-def isgenerator(obj):
-    return isinstance(obj, GeneratorType)
-
-def isscalar(obj):
-    return  obj is None or \
-            isstr(obj) or \
-            isunicode(obj) or \
-            isint(obj) or \
-            islong(obj) or \
-            isfloat(obj)
-
-def islist(obj):
-    return isinstance(obj, list)
-
-def isdict(obj):
-    return isinstance(obj, dict)
+from isinstance import (
+    isstr,
+    isdict,
+    islist,
+    isscalar)
 
 def expand(obj, env):
     if isstr(obj):
