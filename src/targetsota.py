@@ -89,10 +89,10 @@ def sota_repl(args):
 def entry_point(argv):
     exitcode = 0
     args = {}
-    with lltype.scoped_alloc(CLITOKENPP.TO, 1) as cclitokenpp:
-        result = c_parse(len(argv), rffi.liststr2charpp(argv), cclitokenpp)
+    with lltype.scoped_alloc(CLITOKENPP.TO, 1) as c_clitokenpp:
+        result = c_parse(len(argv), rffi.liststr2charpp(argv), c_clitokenpp)
         for i in range(result):
-            clitoken = cclitokenpp[0][i]
+            clitoken = c_clitokenpp[0][i]
             args[rffi.charp2str(clitoken.c_name)] = rffi.charp2str(clitoken.c_value)
 
     if '<source>' in args:
