@@ -1,2 +1,4 @@
 doit>=0.28
-pytest>=2.6.4
+pytest>=2.7.2
+pytest-cov>=1.8.1
+pylint>=1.4.4
