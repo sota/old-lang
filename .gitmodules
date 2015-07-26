@@ -6,7 +6,7 @@
 	path = lib/ragel
 	url = https://github.com/sota/ragel
 	branch = master
-[submodule "lib/docopt.cpp"]
+[submodule "lib/docopt"]
 	path = lib/docopt
 	url = https://github.com/sota/docopt.cpp
 	branch = master
