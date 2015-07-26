@@ -12,17 +12,18 @@
 #include "docopt.h"
 
 static const char USAGE[] =
-R"(sota: state of the art
+R"(
+usage:
+    sota [options] [<source>]
 
-    usage:
-      sota [options] [<source>]
+options:
+    -h --help     show this screen
+    --version     show version
 
-    options:
-      -h --help     show this screen
-      --version     show version
+source:
+    text | file
 
-    source:
-      text | file
+sota is state of the art
 )";
 
 extern "C" int parse(int argc, char *argv[], struct CliToken **tokens) {
