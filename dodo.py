@@ -2,11 +2,12 @@
 
 import os
 import sys
-srcpath = os.path.abspath('src')
-sys.path.insert(0, srcpath)
-pythonpath = os.environ.get('PYTHONPATH', '')
-pythonpath += ':' + srcpath
-os.environ['PYTHONPATH'] = pythonpath
+import glob
+SRCPATH = os.path.abspath('src')
+sys.path.insert(0, SRCPATH)
+PYTHONPATH = os.environ.get('PYTHONPATH', '')
+PYTHONPATH += ':' + SRCPATH
+os.environ['PYTHONPATH'] = PYTHONPATH
 os.environ['PYTHONDONTWRITEBYTECODE'] = '1'
 
 from utils.git import subs2shas
@@ -14,51 +15,57 @@ from utils.shell import call, rglob
 from utils.updater import SotaVersionUpdater
 from utils.globalslocals import gl
 from doit.task import clean_targets
-from doit.reporter import ConsoleReporter
-class MyReporter(ConsoleReporter):
-    def execute_task(self, task):
-        self.outstream.write('MyReporter --> %s\n' % task.title())
 
 DOIT_CONFIG = {
     'verbosity': 2,
     'default_tasks': ['success'],
-    #'reporter': MyReporter,
 }
 
-submods = subs2shas().keys()
-dodo = 'dodo.py'
-sota = 'sota'
-ragel = 'bin/ragel'
-targetdir = 'src'
-targetsrc = 'targetsota.py'
-sotadir = 'src/sota'
-sotasrc = 'sota.cpp'
-sotajit = 'sota-jit'
-python = 'python' if call('which pypy', throw=False)[0] else 'pypy'
-python = 'python' # FIXME:  its slower; doing this for now ... -sai
-rpython = 'lib/pypy/rpython/bin/rpython'
+SUBMODS = subs2shas().keys()
+DODO = 'dodo.py'
+SOTA = 'sota'
+RAGEL = 'bin/ragel'
+TARGETDIR = 'src'
+TARGETSRC = 'targetsota.py'
+SOTADIR = 'src/sota'
+SOTASRC = 'sota.cpp'
+SOTAJIT = 'sota-jit'
+PYTHON = 'python' if call('which pypy', throw=False)[0] else 'pypy'
+PYTHON = 'python' # FIXME:  its slower; doing this for now ... -sai pylint: disable=fixme
+RPYTHON = 'lib/pypy/rpython/bin/rpython'
 
-versionh = 'src/cli/version.h'
-versionpy = 'src/version.py'
+VERSIONH = 'src/cli/version.h'
+VERSIONPY = 'src/version.py'
 
 CC = 'g++'
 CXXFLAGS = '-Wall -Werror -O2 -std=c++11 -g -I../ -I../../lib/docopt'
 PRE = 'tests/pre'
 POST = 'tests/post'
 
+ENVS = [
+    'PYTHONPATH=.:src:$PYTHONPATH',
+]
+ENVS = ' '.join(ENVS)
+
 try:
     SOTA_VERSION = open('VERSION').read().strip()
-except:
+except: #pylint: disable=bare-except
     try:
         SOTA_VERSION = call('git describe')[1].strip()
-    except:
+    except: #pylint: disable=bare-except
         SOTA_VERSION = 'UNKNOWN'
+
+def globs(*paths):
+    '''
+    returns a set of all paths glob-matched
+    '''
+    return set([item for item in [glob.glob(path) for path in paths] for item in item])
 
 def task_version():
     '''
     replace version strings in files
     '''
-    for filename in [versionh, versionpy]:
+    for filename in [VERSIONH, VERSIONPY]:
         svu = SotaVersionUpdater(filename, SOTA_VERSION)
         yield {
             'name': filename,
@@ -72,7 +79,7 @@ def task_unversion():
     '''
     undo version replacement with 'UNKNOWN'
     '''
-    for filename in [versionh, versionpy]:
+    for filename in [VERSIONH, VERSIONPY]:
         svu = SotaVersionUpdater(filename, 'UNKNOWN')
         yield {
             'name': filename,
@@ -84,21 +91,21 @@ def task_pyflakes():
     '''
     run pyflakes on files
     '''
-    for pyfile in rglob('%(targetdir)s/*.py' % gl()):
+    for pyfile in rglob('%(TARGETDIR)s/*.py' % gl()):
         yield {
             'name': pyfile,
             'actions': ['pyflakes ' + pyfile],
         }
 
 def is_initd():
-    return all([call('git config --get submodule.%s.url' % submod, throw=False)[1] for submod in submods])
+    return all([call('git config --get submodule.%s.url' % submod, throw=False)[1] for submod in SUBMODS])
 
 def task_init():
     '''
     run git submodule init on submods
     '''
     return {
-        'actions': ['git submodule init ' + ' '.join(submods)],
+        'actions': ['git submodule init ' + ' '.join(SUBMODS)],
         'targets': ['.git/config'],
         'uptodate': [is_initd],
     }
@@ -107,10 +114,10 @@ def task_submod():
     '''
     run git submodule update on submods
     '''
-    for submod in submods:
+    for submod in SUBMODS:
         yield {
             'name': submod,
-            'file_dep': [dodo],
+            'file_dep': [DODO],
             'task_dep': ['init'],
             'actions': ['git submodule update %(submod)s' % gl()],
         }
@@ -120,7 +127,7 @@ def task_ragel():
     build ragel binary for use in build
     '''
     return {
-        'file_dep': [dodo],
+        'file_dep': [DODO],
         'task_dep': ['submod:lib/ragel'],
         'actions': [
             'cd lib/ragel && ./autogen.sh',
@@ -128,7 +135,7 @@ def task_ragel():
             'cd lib/ragel && make',
             'cd lib/ragel && make install',
         ],
-        'targets': [ragel],
+        'targets': [RAGEL],
         'clean': [clean_targets],
     }
 
@@ -137,7 +144,7 @@ def task_libcli():
     build libary for use as sota's commandline interface
     '''
     return {
-        'file_dep': [dodo] + rglob('src/cli/*.{h,c,cpp}'),
+        'file_dep': [DODO] + rglob('src/cli/*.{h,c,cpp}'),
         'task_dep': ['submod:lib/docopt'],
         'actions': [
             'cd src/cli && %(CC)s %(CXXFLAGS)s -c ../../lib/docopt/docopt.cpp -o docopt.o' % gl(),
@@ -154,7 +161,7 @@ def task_liblexer():
     build lexer library with ragel
     '''
     return {
-        'file_dep': [dodo] + rglob('src/lexer/*.{h,rl,c}'),
+        'file_dep': [DODO] + rglob('src/lexer/*.{h,rl,c}'),
         'task_dep': ['ragel'],
         'actions': [
             'cd src/lexer && ../../bin/ragel lexer.rl -o lexer.cpp',
@@ -166,15 +173,48 @@ def task_liblexer():
         'clean': [clean_targets],
     }
 
-def task_pre():
+def task_pytest():
     '''
-    run pre tests
+    run 'py.test --verbose tests/pre/'
     '''
     return {
-        'file_dep': [dodo],
-        'actions': ['py.test -v %(PRE)s > %(PRE)s/results' % gl()],
-        'targets': ['%(PRE)s/results' % gl()],
-        'clean': [clean_targets],
+        'actions': ['%(ENVS)s py.test --verbose tests/pre/' % gl()],
+    }
+
+def task_pycov():
+    '''
+    run 'py.test --cov=<pyfile> tests/pre/<pyfile>'
+    '''
+    def hastests(pyfile):
+        return os.path.exists(os.path.join('tests/pre', pyfile))
+    excludes = ['lib/__init__.py', 'dodo.py']
+    pyfiles = globs('*.py', 'lib/*.py') - globs(*excludes)
+    for pyfile in sorted(pyfiles, key=hastests):
+        covcmd = '%(ENVS)s py.test --verbose --cov=%(pyfile)s tests/pre/%(pyfile)s'
+        msgcmd = 'echo "no tests found (tests/pre/%(pyfile)s to run coverage on %(pyfile)s"'
+        yield {
+            'name': pyfile,
+            'actions': [(covcmd if hastests(pyfile) else msgcmd) % gl()],
+        }
+
+def task_pylint():
+    '''
+    run pylint on all pyfiles
+    '''
+    excludes = ['lib/__init__.py']
+    for pyfile in globs('*.py', 'lib/*.py', 'tests/pre/*.py') - globs(*excludes):
+        yield {
+            'name': pyfile,
+            'actions': ['%(ENVS)s pylint -j4 --rcfile tests/pre/pylint.rc %(pyfile)s' % gl()],
+        }
+
+def task_pre():
+    '''
+    run pre tests: pytest, pycov and pylint
+    '''
+    return {
+        'task_dep': ['pytest', 'pycov', 'pylint'],
+        'actions': ['echo "sota pre tests successfully tested!"'],
     }
 
 def task_sota():
@@ -183,15 +223,15 @@ def task_sota():
     '''
     return {
         'file_dep': [
-            dodo,
+            DODO,
             'src/cli/libcli.a',
             'src/lexer/liblexer.a',
-        ] + rglob('%(targetdir)s/*.py' % gl()),
+        ] + rglob('%(TARGETDIR)s/*.py' % gl()),
         'task_dep': ['submod:lib/pypy', 'pre'],
         'actions': [
-            '%(python)s -B %(rpython)s --output %(sota)s %(targetdir)s/%(targetsrc)s' % gl(),
+            '%(PYTHON)s -B %(RPYTHON)s --output %(SOTA)s %(TARGETDIR)s/%(TARGETSRC)s' % gl(),
         ],
-        'targets': [sota],
+        'targets': [SOTA],
         'clean': [clean_targets],
     }
 
@@ -200,7 +240,7 @@ def task_post():
     run post tests
     '''
     return {
-        'file_dep': [dodo],
+        'file_dep': [DODO],
         'task_dep': ['sota'],
         'actions': ['py.test -v %(POST)s > %(POST)s/results' % gl()],
         'targets': ['%(POST)s/results' % gl()],
@@ -214,7 +254,7 @@ def task_success():
     return {
         'task_dep': ['sota', 'post'],
         'actions': [
-            './%(sota)s --help > /dev/null 2>&1' % gl(),
+            './%(SOTA)s --help > /dev/null 2>&1' % gl(),
             'echo "sota build success!"',
         ],
     }
@@ -228,7 +268,7 @@ def task_tidy():
         'name': 'sota/lang',
         'actions': ['git clean -xfd'],
     }
-    for submod in submods:
+    for submod in SUBMODS:
         yield {
             'name': submod,
             'actions': [
