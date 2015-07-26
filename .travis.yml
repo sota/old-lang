@@ -3,10 +3,9 @@ python:
     - "2.7"
 git:
     submodules: false
-before_install:
-  - bash -x .travis.deps
 install:
-    "pip install -r requirements.txt"
+  - bash -x .travis.deps
+  - pip install -r requirements.txt
 sudo: true
 script:
     doit -n4
