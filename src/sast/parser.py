@@ -1,4 +1,4 @@
-import lexer
+import sast.lexer
 
 def debug(msg):
     print 'debug:', msg
@@ -19,10 +19,10 @@ def printtoken(token):
         print '[%s,%s %s %s]' % (token.line, token.pos, token.name, token.value)
 
 def parse(source):
-    tokens = lexer.scan(source)
+    tokens = sast.lexer.scan(source)
     for token in tokens:
         printtoken(token)
     return 0
 
 def repl(prompt='sota>'):
-    pass
+    print prompt

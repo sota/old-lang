@@ -7,7 +7,7 @@ class SotaVersionUpdater(object):
     def __init__(self, filename, version):
         self.filename = filename
         self.version = version
-        self.pattern = '''(.*SOTA_VERSION += +["'])([\w\-\.]+)(["'])'''
+        self.pattern = r'''(.*SOTA_VERSION += +["'])([\w\-\.]+)(["'])'''
         self.regex = re.compile(self.pattern)
         self.replace = r'\1' + version + r'\3'
         self.contents = open(filename).read()
@@ -20,6 +20,6 @@ class SotaVersionUpdater(object):
         updated = self.regex.sub(self.replace, self.contents)
         if not updated:
             raise Exception('VersionUpdater.update produced empty updated string')
-        with open(self.filename, 'w') as f:
-            f.write(updated)
+        with open(self.filename, 'w') as file_:
+            file_.write(updated)
 

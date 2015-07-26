@@ -1,5 +1,5 @@
 
-class SotaToken(object):
+class SotaToken(object): #pylint: disable=too-few-public-methods
     def __init__(self, name, value, line, pos):
         self.name = name
         self.value = value

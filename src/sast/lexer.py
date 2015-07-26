@@ -3,13 +3,15 @@ import os
 from rpython.rtyper.lltypesystem import rffi, lltype
 from rpython.translator.tool.cbuild import ExternalCompilationInfo
 
-from tokens import SotaToken
+from sast.tokens import SotaToken
 
-lexer_dir = os.path.join(os.getcwd(), 'src/lexer')
-lexer_eci = ExternalCompilationInfo(
-    include_dirs=[lexer_dir],
+#pylint: disable=invalid-name
+
+LEXER_DIR = os.path.join(os.getcwd(), 'src/lexer')
+LEXER_ECI = ExternalCompilationInfo(
+    include_dirs=[LEXER_DIR],
     includes=['lexer.h'],
-    library_dirs=[lexer_dir],
+    library_dirs=[LEXER_DIR],
     libraries=['lexer'],
     use_cpp_linker=True)
 
@@ -23,23 +25,17 @@ CSOTATOKEN = rffi.CStruct(
 CSOTATOKENP = rffi.CArrayPtr(CSOTATOKEN)
 CSOTATOKENPP = rffi.CArrayPtr(CSOTATOKENP)
 
-c_scan = rffi.llexternal(
-    'scan',
-    [rffi.CONST_CCHARP, CSOTATOKENPP],
-    rffi.LONG,
-    compilation_info=lexer_eci)
-
 def deref(obj):
     return obj[0]
 
 def escape(old):
     new = ''
-    for c in old:
-        if c == '\n':
+    for char in old:
+        if char == '\n':
             new += '\\'
             new += 'n'
         else:
-            new += c
+            new += char
     return new
 
 def scan(source):
@@ -47,6 +43,11 @@ def scan(source):
     tokens = []
     with lltype.scoped_alloc(CSOTATOKENPP.TO, 1) as csotatokenpp:
         csource = rffi.cast(rffi.CONST_CCHARP, rffi.str2charp(source))
+        c_scan = rffi.llexternal(
+            'scan',
+            [rffi.CONST_CCHARP, CSOTATOKENPP],
+            rffi.LONG,
+            compilation_info=LEXER_ECI)
         result = c_scan(csource, csotatokenpp)
         for i in range(result):
             ctoken = deref(csotatokenpp)[i]

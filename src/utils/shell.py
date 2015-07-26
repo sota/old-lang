@@ -3,15 +3,18 @@ shell utilities
 '''
 import os
 import re
+import sys
 import fnmatch
 from subprocess import Popen, PIPE, CalledProcessError
 from contextlib import contextmanager
+
+#pylint: disable=invalid-name
 
 def expandpath(path):
     return os.path.realpath(os.path.expanduser(path))
 
 def inversepath(path):
-    return '/'.join(['..' for node in path.split('/')])
+    return '/'.join(['..' for _ in path.split('/')])
 
 @contextmanager
 def cd(*args, **kwargs):
@@ -52,7 +55,7 @@ def call(cmd, stdout=PIPE, stderr=PIPE, shell=True, nerf=False, throw=True, verb
         if stderr:
             print stderr
     if throw and exitcode:
-        raise CalledProcessError(exitcode, 'cmd=%(cmd)s; stdout=%(stdout)s; stderr=%(stderr)s' % locals() )
+        raise CalledProcessError(exitcode, 'cmd=%(cmd)s; stdout=%(stdout)s; stderr=%(stderr)s' % locals())
     return exitcode, stdout, stderr
 
 def rglob(pattern):
@@ -66,8 +69,8 @@ def rglob(pattern):
             matches += rglob(prefix + alternate.strip() + suffix)
         return matches
     # support for recursive glob
-    for r, ds, fs in os.walk(os.path.dirname(pattern)):
+    for r, _, fs in os.walk(os.path.dirname(pattern)):
         for f in fnmatch.filter(fs, os.path.basename(pattern)):
-            matches.append(os.path.join(r, f) )
+            matches.append(os.path.join(r, f))
     return matches
 

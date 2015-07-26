@@ -43,7 +43,7 @@ PRE = 'tests/pre'
 POST = 'tests/post'
 
 ENVS = [
-    'PYTHONPATH=.:src:$PYTHONPATH',
+    'PYTHONPATH=.:src:lib/pypy:$PYTHONPATH',
 ]
 ENVS = ' '.join(ENVS)
 
@@ -187,8 +187,8 @@ def task_pycov():
     '''
     def hastests(pyfile):
         return os.path.exists(os.path.join('tests/pre', pyfile))
-    excludes = ['lib/__init__.py', 'dodo.py']
-    pyfiles = globs('*.py', 'lib/*.py') - globs(*excludes)
+    excludes = ['dodo.py']
+    pyfiles = globs('src/*/*.py') - globs(*excludes)
     for pyfile in sorted(pyfiles, key=hastests):
         covcmd = '%(ENVS)s py.test --verbose --cov=%(pyfile)s tests/pre/%(pyfile)s'
         msgcmd = 'echo "no tests found (tests/pre/%(pyfile)s to run coverage on %(pyfile)s"'
@@ -201,8 +201,8 @@ def task_pylint():
     '''
     run pylint on all pyfiles
     '''
-    excludes = ['lib/__init__.py']
-    for pyfile in globs('*.py', 'lib/*.py', 'tests/pre/*.py') - globs(*excludes):
+    excludes = []
+    for pyfile in globs('*.py', 'src/*/*.py', 'tests/pre/*/*.py') - globs(*excludes):
         yield {
             'name': pyfile,
             'actions': ['%(ENVS)s pylint -j4 --rcfile tests/pre/pylint.rc %(pyfile)s' % gl()],

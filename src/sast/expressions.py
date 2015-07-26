@@ -1,4 +1,6 @@
 
+#pylint: disable=no-self-use,invalid-name
+
 class SotaExpr(object):
 
     def to_string(self):
