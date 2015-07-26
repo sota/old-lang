@@ -25,6 +25,11 @@ CSOTATOKEN = rffi.CStruct(
 CSOTATOKENP = rffi.CArrayPtr(CSOTATOKEN)
 CSOTATOKENPP = rffi.CArrayPtr(CSOTATOKENP)
 
+c_scan = rffi.llexternal( #pylint: disable=invalid-name
+    'scan',
+    [rffi.CONST_CCHARP, CSOTATOKENPP],
+    rffi.LONG,
+    compilation_info=LEXER_ECI)
 def deref(obj):
     return obj[0]
 
@@ -43,11 +48,6 @@ def scan(source):
     tokens = []
     with lltype.scoped_alloc(CSOTATOKENPP.TO, 1) as csotatokenpp:
         csource = rffi.cast(rffi.CONST_CCHARP, rffi.str2charp(source))
-        c_scan = rffi.llexternal(
-            'scan',
-            [rffi.CONST_CCHARP, CSOTATOKENPP],
-            rffi.LONG,
-            compilation_info=LEXER_ECI)
         result = c_scan(csource, csotatokenpp)
         for i in range(result):
             ctoken = deref(csotatokenpp)[i]
