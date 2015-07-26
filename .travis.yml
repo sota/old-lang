@@ -9,4 +9,4 @@ install:
     "pip install -r requirements.txt"
 sudo: true
 script:
-    doit
+    doit -n4

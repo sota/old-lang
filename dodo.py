@@ -178,6 +178,7 @@ def task_pytest():
     run 'py.test --verbose tests/pre/'
     '''
     return {
+        'task_dep': ['submod'],
         'actions': ['%(ENVS)s py.test --verbose tests/pre/' % gl()],
     }
 
@@ -194,6 +195,7 @@ def task_pycov():
         msgcmd = 'echo "no tests found (tests/pre/%(pyfile)s to run coverage on %(pyfile)s"'
         yield {
             'name': pyfile,
+            'task_dep': ['submod'],
             'actions': [(covcmd if hastests(pyfile) else msgcmd) % gl()],
         }
 
@@ -205,6 +207,7 @@ def task_pylint():
     for pyfile in globs('*.py', 'src/*/*.py', 'tests/pre/*/*.py') - globs(*excludes):
         yield {
             'name': pyfile,
+            'task_dep': ['submod'],
             'actions': ['%(ENVS)s pylint -j4 --rcfile tests/pre/pylint.rc %(pyfile)s' % gl()],
         }
 
