@@ -179,7 +179,7 @@ def task_pytest():
     '''
     return {
         'task_dep': ['submod'],
-        'actions': ['%(ENVS)s py.test --verbose tests/pre/' % gl()],
+        'actions': ['py.test -s -vv tests/pre/' % gl()],
     }
 
 def task_pycov():
@@ -190,8 +190,9 @@ def task_pycov():
         return os.path.exists(os.path.join('tests/pre', pyfile))
     excludes = ['dodo.py']
     pyfiles = globs('src/*/*.py') - globs(*excludes)
+    print 'pyfiles =', pyfiles
     for pyfile in sorted(pyfiles, key=hastests):
-        covcmd = '%(ENVS)s py.test --verbose --cov=%(pyfile)s tests/pre/%(pyfile)s'
+        covcmd = 'py.test -s -vv --cov=%(pyfile)s tests/pre/%(pyfile)s'
         msgcmd = 'echo "no tests found (tests/pre/%(pyfile)s to run coverage on %(pyfile)s"'
         yield {
             'name': pyfile,
@@ -208,7 +209,7 @@ def task_pylint():
         yield {
             'name': pyfile,
             'task_dep': ['submod'],
-            'actions': ['%(ENVS)s pylint -j4 --rcfile tests/pre/pylint.rc %(pyfile)s' % gl()],
+            'actions': ['%(ENVS)s pylint -E -j4 --rcfile tests/pre/pylint.rc %(pyfile)s' % gl()],
         }
 
 def task_pre():
