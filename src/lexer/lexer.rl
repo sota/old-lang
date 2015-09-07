@@ -68,36 +68,33 @@ inline void write(const char *data, int len) {
 }
 
 %%{
-    machine sota;
+    machine sast;
 
     whitespace      = ' '+;
+    tab             = '\t';
+    hash            = '#';
+    doublequote     = '"';
     newline         = "\n\r"|'\n'|'\r';
     number          = digit+ ('.' digit+)?;
     syntax          = '"'|"'"|'.'|','|'('|')'|'['|']'|'{'|'}'|';';
     symbol          = (any - ('#'|whitespace|newline|syntax))+;
-
     counter         = (any | newline @{AddNewline(fpc);})*;
 
     commenter := |*
         ("##" (any - newline)* newline) & counter => {
-            Token(TokenType::Comment);
+            Token(TokenKind::Comment);
             fgoto body;
         };
 
         ('#' (any - '#')* '#') & counter => {
-            Token(TokenType::Comment);
+            Token(TokenKind::Comment);
             fgoto body;
         };
     *|;
 
-    literal := |*
+    string := |*
         ('"' (any - '"')* '"') & counter => {
-            Token(TokenType::Literal);
-            fgoto body;
-        };
-
-        ("'" (any - "'")* "'") & counter => {
-            Token(TokenType::Literal);
+            Token(TokenKind::String);
             fgoto body;
         };
     *|;
@@ -107,28 +104,20 @@ inline void write(const char *data, int len) {
         whitespace => {
         };
 
-        ';'? ' '* newline & counter => {
-            if (nesting == 0) {
-                Token(TokenType::EOS);
-                fgoto denter;
-            }
+        ' '* newline & counter => {
         };
 
-        ';' => {
-            Token(TokenType::EOS);
-        };
-
-        '#' => {
+        hash => {
             fhold;
             fgoto commenter;
         };
 
-        '"' | "'" => {
+        doublequote => {
             fhold;
-            fgoto literal;
+            fgoto string;
         };
 
-        '\t' => {
+        tab => {
             printf("TAB ERROR\n");
             exit(-1);
         };
@@ -136,63 +125,25 @@ inline void write(const char *data, int len) {
         '{'|'['|'(' => {
             Token(fc);
             ++nesting;
-            if ('{' == fc)
-                fcall body;
         };
 
         '}'|']'|')' => {
             Token(fc);
             --nesting;
-            if ('}' == fc)
-                fret;
         };
 
         number => {
-            Token(TokenType::Number);
+            Token(TokenKind::Number);
         };
 
         symbol => {
-            Token(TokenType::Symbol);
+            Token(TokenKind::Symbol);
         };
 
         syntax => {
             Token(fc);
         };
 
-    *|;
-
-    denter := |*
-        whitespace* => {
-
-            switch (IsDent(te-ts)) {
-                case 1:
-                    Token(TokenType::Indent);
-                    break;
-                case -1:
-                    Token(TokenType::Dedent);
-                    break;
-                default:
-                    break;
-            }
-            fgoto body;
-        };
-
-        /./ => {
-            fhold;
-            switch (IsDent(te-ts-1)) {
-                case 1:
-                    //ignored on purpose
-                    //otherwise file starts with
-                    //erroneous indent
-                    break;
-                case -1:
-                    Token(TokenType::Dedent);
-                    break;
-                default:
-                    break;
-            }
-            fgoto body;
-        };
     *|;
 
     write data nofinal;
@@ -213,7 +164,7 @@ class Lexer {
     int dentsize;
     int nesting;
     std::vector<const char *> newlines;
-    std::vector<CSotaToken> tokens;
+    std::vector<CToken> tokens;
 
 public:
     Lexer(char const* const source)
@@ -286,25 +237,25 @@ public:
         return 0;
     }
 
-    void Token(long ti, long trim=0) {
+    void Token(long kind, long trim=0) {
         tokens.push_back({
             ts - source + trim,
             te - source - trim,
-            ti,
+            kind,
             Line(ts),
             Pos(ts)});
     }
 
-    long Scan(CSotaToken **tokens) {
+    long Scan(CToken **tokens) {
         %% write exec;
-        *tokens = (struct CSotaToken *)malloc(this->tokens.size() * sizeof(struct CSotaToken));
+        *tokens = (struct CToken *)malloc(this->tokens.size() * sizeof(struct CToken));
         copy(this->tokens.begin(), this->tokens.end(), *tokens);
         return this->tokens.size();
     }
 
 };
 
-extern "C" long scan(const char *source, struct CSotaToken **tokens) {
+extern "C" long scan(const char *source, struct CToken **tokens) {
     std::ios::sync_with_stdio(false);
     Lexer lexer(source);
     return lexer.Scan(tokens);

@@ -1,13 +1,26 @@
 
-class SotaToken(object): #pylint: disable=too-few-public-methods
-    def __init__(self, name, value, line, pos):
+from rpython.rtyper.lltypesystem import rffi, lltype
+
+class Token(object): #pylint: disable=too-few-public-methods
+
+    def __init__(self, name, value, kind, line, pos, skip):
         self.name = name
         self.value = value
+        self.kind = kind
         self.line = line
         self.pos = pos
+        self.skip = skip
 
-    def __str__(self):
-        return '[%(name)s %(value)s]' % vars(self)
+    def to_string(self):
+        return '[name=%s value=%s kind=%d line=%d pos=%d skip=%s]' % (
+            self.name,
+            self.value,
+            self.kind,
+            self.line,
+            self.pos,
+            self.skip)
 
-    def __repr__(self):
-        return self.__str__()
+    def is_kind(self, name):
+        if name:
+            return self.name == name
+        return False

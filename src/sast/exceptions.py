@@ -1,29 +1,32 @@
 
-class SotaException(Exception):
+class SastException(Exception):
     pass
 
-class SotaUnboundVariable(SotaException):
+class SastUnboundVariable(SastException):
     def __str__(self):
-        return 'unbound variable %s' % self.args[0]
+        return "Unbound variable %s" % (self.args[0], )
 
-class SotaNotCallable(SotaException):
+class SastNotCallable(SastException):
     def __str__(self):
-        return '%s is not callable' % self.args[0].to_string()
+        return "%s is not a callable" % (self.args[0].to_string(), )
 
-class SotaWrongArgsNumber(SotaException):
+class SastWrongArgsNumber(SastException):
     def __str__(self):
         if len(self.args) == 2:
-            return 'wrong number of args:  received %d, expected %s' % (self.args[0], self.args[1])
+            return ("Wrong number of args. Got: %d, expected: %s" %
+                (self.args[0], self.args[1]))
         else:
-            return 'wrong number of args'
+            return "Wrong number of args."
 
-class SotaWrongArgType(SotaException):
+class SastWrongArgType(SastException):
     def __str__(self):
-        return 'wrong arg type: %s is not %s' % (self.args[0].to_string(), self.args[1])
+        return "Wrong argument type: %s is not %s" % \
+                (self.args[0].to_string(), self.args[1])
 
-class SotaSyntaxError(SotaException):
+class SastSyntaxError(SastException):
     def __str__(self):
-        return 'syntax error'
+        return "Syntax error"
 
-class SotaQuit(SotaException):
+class SastQuit(SastException):
+    """raised on (quit) evaluation"""
     pass

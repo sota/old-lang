@@ -1,5 +1,5 @@
-#ifndef __SOTA_LEXER__
-#define __SOTA_LEXER__ = 1
+#ifndef __LEXER__
+#define __LEXER__ = 1
 
 #ifdef __cplusplus
 extern "C" {
@@ -7,10 +7,10 @@ extern "C" {
 
 #include "token.h"
 
-long scan(const char *source, struct CSotaToken **tokens);
+long scan(const char *source, struct CToken **tokens);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /*__SOTA_LEXER__*/
+#endif /*__LEXER__*/

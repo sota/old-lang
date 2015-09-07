@@ -3,33 +3,22 @@ import os
 from rpython.rtyper.lltypesystem import rffi, lltype
 from rpython.translator.tool.cbuild import ExternalCompilationInfo
 
-from sast.tokens import SotaToken
+from sast.tokens import Token
 
 #pylint: disable=invalid-name
 
-LEXER_DIR = os.path.join(os.getcwd(), 'src/lexer')
-LEXER_ECI = ExternalCompilationInfo(
-    include_dirs=[LEXER_DIR],
-    includes=['lexer.h'],
-    library_dirs=[LEXER_DIR],
-    libraries=['lexer'],
-    use_cpp_linker=True)
-
-CSOTATOKEN = rffi.CStruct(
-    'CSotaToken',
-    ('ts', rffi.LONG),
-    ('te', rffi.LONG),
-    ('ti', rffi.LONG),
+CTOKEN = rffi.CStruct(
+    'CToken',
+    ('start', rffi.LONG),
+    ('end', rffi.LONG),
+    ('kind', rffi.LONG),
     ('line', rffi.LONG),
-    ('pos', rffi.LONG))
-CSOTATOKENP = rffi.CArrayPtr(CSOTATOKEN)
-CSOTATOKENPP = rffi.CArrayPtr(CSOTATOKENP)
+    ('pos', rffi.LONG),
+    ('skip', rffi.LONG))
 
-c_scan = rffi.llexternal( #pylint: disable=invalid-name
-    'scan',
-    [rffi.CONST_CCHARP, CSOTATOKENPP],
-    rffi.LONG,
-    compilation_info=LEXER_ECI)
+CTOKENP = rffi.CArrayPtr(CTOKEN)
+CTOKENPP = rffi.CArrayPtr(CTOKENP)
+
 def deref(obj):
     return obj[0]
 
@@ -43,37 +32,95 @@ def escape(old):
             new += char
     return new
 
-def scan(source):
+lexer_dir = os.path.join(os.getcwd(), 'src/lexer')
+lexer_eci = ExternalCompilationInfo(
+    include_dirs=[lexer_dir],
+    includes=['lexer.h'],
+    library_dirs=[lexer_dir],
+    libraries=['lexer'],
+    use_cpp_linker=True)
 
-    tokens = []
-    with lltype.scoped_alloc(CSOTATOKENPP.TO, 1) as csotatokenpp:
-        csource = rffi.cast(rffi.CONST_CCHARP, rffi.str2charp(source))
-        result = c_scan(csource, csotatokenpp)
-        for i in range(result):
-            ctoken = deref(csotatokenpp)[i]
-            ts = rffi.cast(rffi.SIZE_T, ctoken.c_ts)
-            te = rffi.cast(rffi.SIZE_T, ctoken.c_te)
-            value = escape(source[ts:te])
-            if ctoken.c_ti == 257:
-                name = 'EOS'
-            elif ctoken.c_ti == 258:
-                name = 'EOE'
-            elif ctoken.c_ti == 259:
-                name = 'INDENT'
-            elif ctoken.c_ti == 260:
-                name = 'DEDENT'
-            elif ctoken.c_ti == 261:
-                name = 'SYM'
-            elif ctoken.c_ti == 262:
-                name = 'NUM'
-            elif ctoken.c_ti == 263:
-                name = 'LIT'
-            elif ctoken.c_ti == 264:
-                name = 'CMT'
-            elif ctoken.c_ti == 265:
-                name = '->'
+c_scan = rffi.llexternal( #pylint: disable=invalid-name
+    'scan',
+    [rffi.CONST_CCHARP, CTOKENPP],
+    rffi.LONG,
+    compilation_info=lexer_eci)
+
+class LookaheadBeyondEndOfTokens(Exception):
+    pass
+
+class NeedTokensOrSource(Exception):
+    pass
+
+class Lexer(object):
+
+    def __init__(self):
+        self.source = None
+        self.tokens = []
+        self.index = 0
+        self.kind2name = {
+            261: 'sym',
+            262: 'num',
+            263: 'str',
+            264: 'cmt',
+        }
+        for c in xrange(40, 127):
+            self.kind2name[c] = chr(c)
+
+    def scan(self, source):
+
+        self.index = 0
+        self.source = source
+        del self.tokens[:]
+        with lltype.scoped_alloc(CTOKENPP.TO, 1) as ctokenpp:
+            csource = rffi.cast(rffi.CONST_CCHARP, rffi.str2charp(source))
+            result = c_scan(csource, ctokenpp)
+            for i in range(result):
+                ctoken  = deref(ctokenpp)[i]
+                start   = rffi.cast(lltype.Signed, ctoken.c_start)
+                end     = rffi.cast(lltype.Signed, ctoken.c_end)
+                kind    = rffi.cast(lltype.Signed, ctoken.c_kind)
+                line    = rffi.cast(lltype.Signed, ctoken.c_line)
+                pos     = rffi.cast(lltype.Signed, ctoken.c_pos)
+                skip    = rffi.cast(lltype.Signed, ctoken.c_skip) != 0
+                name    = self.kind2name.get(kind, None)
+                assert start >= 0
+                assert end >= 0
+                value   = self.source[start:end]
+                self.tokens.append(Token(name, value, kind, line, pos, skip))
+        return self.tokens
+
+    def lookahead(self, distance, expect=None, skips=False):
+        index = self.index
+        token = None
+        while distance:
+            if index < len(self.tokens):
+                token = self.tokens[index]
             else:
-                name = value
-            tokens.append(SotaToken(name, value, ctoken.c_line, ctoken.c_pos))
-    return tokens
+                break
+            if token:
+                if skips or not token.skip:
+                    distance -= 1
+            index += 1
+        distance = index - self.index
+        return token, distance, (token.kind == expect) if token and expect else expect
+
+    def lookahead1(self, expect=None):
+        return self.lookahead(1, expect)
+
+    def lookahead2(self, expect=None):
+        return self.lookahead(2, expect)
+
+    def consume(self, *expects):
+        token, distance, _ = self.lookahead1()
+        if not token:
+            raise Exception
+        if len(expects):
+            for expect in expects:
+                if expect == token.name:
+                    self.index += distance
+                    return token
+            return None
+        self.index += distance
+        return token
 

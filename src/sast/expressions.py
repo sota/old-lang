@@ -1,114 +1,78 @@
 
-#pylint: disable=no-self-use,invalid-name
+class SastExpr(object):
 
-class SotaExpr(object):
+    def __init__(self):
+        self.value = None
 
     def to_string(self):
-        return '<%r>' % (self,)
+        return str(self.value)
 
-    def to_repr(self):
-        return '#<unknown>'
+class SastUndefined(SastExpr):
 
-    def __repr__(self):
-        return '<%s %s>' % (self.__class__.__name__, self.to_string())
+    def __init__(self):
+        self.value = '<undefined>'
 
-    def call(self, *args, **kwargs):
-        print 'call: ', args, kwargs
-
-class SotaUndefined(SotaExpr):
-    def to_repr(self):
-        return '#<undefined>'
-
-class SotaBoolean(SotaExpr):
-    def __new__(cls, value):
-        if value:
-            return true
-        else:
-            return false
-
-class SotaTrue(SotaBoolean):
-    _true = None
-    def __new__(cls, value):
-        if cls._true is None:
-            cls._true = SotaExpr.__new__(cls)
-        return cls._true
+class SastAtom(SastExpr):
 
     def __init__(self, value):
-        assert value
+        self.value = value
 
-    def to_string(self):
-        return 'true'
-
-    to_repr = to_string
-
-true = SotaTrue(True)
-
-class SotaFalse(SotaBoolean):
-    _false = None
-    def __new__(cls, value):
-        if cls._false is None:
-            cls._false = SotaExpr.__new__(cls)
-        return cls._false
+class SastFixnum(SastAtom):
 
     def __init__(self, value):
-        assert not value
+        self.value = value
+
+class SastString(SastAtom):
+
+    def __init__(self, value):
+        self.value = value
 
     def to_string(self):
-        return 'false'
+        return '"' + self.value + '"'
 
-    to_repr = to_string
+class SastSymbol(SastAtom):
 
-false = SotaFalse(False)
+    _table = {}
 
-class SotaFixnum(SotaExpr):
+    def __new__(cls, value):
+        symbol = cls._table.get(value, None)
+        if not symbol:
+            cls._table[value] = symbol = super(SastSymbol, cls).__new__(cls, value)
+        return symbol
+
+    def __init__(self, value):
+        self.value = value
+
+class SastList(SastExpr):
     pass
 
-class SotaString(SotaExpr):
-    pass
+class SastNil(SastList):
 
-class SotaSymbol(SotaExpr):
-    Table = {}
+    _nil = None
 
-    def __init__(self, name):
-        self.name = name
+    def __new__(cls):
+        if not cls._nil:
+            cls._nil = super(SastNil, cls).__new__(cls)
+        return cls._nil
+
+    def __values__(self):
+        return []
 
     def to_string(self):
-        return self.name
+        return '()'
 
-    to_repr = to_string
+nil = SastNil()
 
-def symbol(name):
+class SastPair(SastList):
 
-    sym = SotaSymbol.Table.get(name, None)
-    if sym is None:
-        sym = SotaSymbol(name)
-        SotaSymbol.Table[name] = sym
-
-    return sym
-
-class SotaCons(SotaExpr):
-    def __init__(self, car, cdr):
+    def __init__(self, car, cdr=nil):
         self.car = car
         self.cdr = cdr
 
-class SotaTuple(SotaExpr):
-    pass
+    def __values__(self):
+        values = [self.car]
+        values.extend(self.cdr.__values__())
+        return values
 
-class SotaSeq(SotaExpr):
-    pass
-
-class SotaList(SotaExpr):
-    pass
-
-class SotaDict(SotaExpr):
-    pass
-
-class SotaEnum(SotaExpr):
-    pass
-
-class SotaFunc(SotaExpr):
-    pass
-
-class SotaType(SotaExpr):
-    pass
-
+    def to_string(self):
+        return '(' + ' '.join([value.to_string() for value in self.__values__()]) + ')'

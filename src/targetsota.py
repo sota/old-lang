@@ -10,15 +10,8 @@ os.environ['PYTHONPATH'] = 'src:src/pypy'
 from rpython.rtyper.lltypesystem import rffi, lltype
 from rpython.translator.tool.cbuild import ExternalCompilationInfo
 
-import sast.parser
-from version import SOTA_VERSION
-
-REPL_USAGE = '''
-sota: state of the art
-version: %s
-exit: ctrl+c | ctrl+d, return
-welcome to the sota repl!
-''' % SOTA_VERSION
+from sast.lexer import Lexer
+from sast.parser import Parser
 
 cli_dir = os.path.join(os.getcwd(), 'src/cli')
 cli_eci = ExternalCompilationInfo(
@@ -41,46 +34,10 @@ c_parse = rffi.llexternal(
     rffi.LONG,
     compilation_info=cli_eci)
 
-def stdin_readline():
-    line = ''
-    c = os.read(0, 1)
-    while '\n' != c:
-        line += c
-        c = os.read(0, 1)
-    return line
-
 def load_source(source):
     if os.path.isfile(source):
         return open(source).read()
-    return source + '\n'
-
-def exec_source(source):
-    return sast.parser.parse(source)
-
-def sota_exec(args):
-    source = args['<source>']
-    source = load_source(source)
-    return exec_source(source)
-
-def sota_repl(args):
-    exitcode = 0
-    prompt = 'sota> '
-    print REPL_USAGE.strip()
-    while True:
-        os.write(1, prompt)
-        source = None
-        try:
-            source = stdin_readline()
-        except KeyboardInterrupt:
-            break
-        except EOFError:
-            break
-        if not source:
-            break
-
-        print source
-
-    return exitcode
+    return source
 
 #######################################################
 
@@ -95,10 +52,13 @@ def entry_point(argv):
             clitoken = c_clitokenpp[0][i]
             args[rffi.charp2str(clitoken.c_name)] = rffi.charp2str(clitoken.c_value)
 
+    lexer = Lexer()
+    parser = Parser(lexer)
+
     if '<source>' in args:
-        exitcode = sota_exec(args)
+        exitcode = parser.parse(load_source(args['<source>']))
     else:
-        exitcode = sota_repl(args)
+        exitcode = parser.repl()
 
     return exitcode
 
