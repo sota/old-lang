@@ -190,7 +190,6 @@ def task_pycov():
         return os.path.exists(os.path.join('tests/pre', pyfile))
     excludes = ['dodo.py']
     pyfiles = globs('src/*/*.py') - globs(*excludes)
-    print 'pyfiles =', pyfiles
     for pyfile in sorted(pyfiles, key=hastests):
         covcmd = 'py.test -s -vv --cov=%(pyfile)s tests/pre/%(pyfile)s'
         msgcmd = 'echo "no tests found (tests/pre/%(pyfile)s to run coverage on %(pyfile)s"'

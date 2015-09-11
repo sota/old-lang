@@ -1,50 +1,304 @@
 
+import operator as op
+from sast.exceptions import *
+
+def cons(car, cdr):
+    return SastPair(car, cdr)
+
+def car(expr):
+    return expr.car
+
+def cdr(expr):
+    return expr.cdr
+
+def caar(expr):
+    return car(car(expr))
+
+def cadr(expr):
+    return car(cdr(expr))
+
+def cdar(expr):
+    return cdr(car(expr))
+
+def cddr(expr):
+    return cdr(cdr(expr))
+
+def caaar(expr):
+    car(car(car(expr)))
+
+def caadr(expr):
+    car(car(cdr(expr)))
+
+def cadar(expr):
+    car(cdr(car(expr)))
+
+def caddr(expr):
+    car(cdr(cdr(expr)))
+
+def cdaar(expr):
+    cdr(car(car(expr)))
+
+def cdadr(expr):
+    cdr(car(cdr(expr)))
+
+def cddar(expr):
+    cdr(cdr(car(expr)))
+
+def cdddr(expr):
+    cdr(cdr(cdr(expr)))
+
+def caaaar(expr):
+    car(car(car(car(expr))))
+
+def caaadr(expr):
+    car(car(car(cdr(expr))))
+
+def caadar(expr):
+    car(car(cdr(car(expr))))
+
+def caaddr(expr):
+    car(car(cdr(cdr(expr))))
+
+def cadaar(expr):
+    car(cdr(car(car(expr))))
+
+def cadadr(expr):
+    car(cdr(car(cdr(expr))))
+
+def caddar(expr):
+    car(cdr(cdr(car(expr))))
+
+def cadddr(expr):
+    car(cdr(cdr(cdr(expr))))
+
+def cdaaar(expr):
+    cdr(car(car(car(expr))))
+
+def cdaadr(expr):
+    cdr(car(car(cdr(expr))))
+
+def cdadar(expr):
+    cdr(car(cdr(car(expr))))
+
+def cdaddr(expr):
+    cdr(car(cdr(cdr(expr))))
+
+def cddaar(expr):
+    cdr(cdr(car(car(expr))))
+
+def cddadr(expr):
+    cdr(cdr(car(cdr(expr))))
+
+def cdddar(expr):
+    cdr(cdr(cdr(car(expr))))
+
+def cddddr(expr):
+    cdr(cdr(cdr(cdr(expr))))
+
+def set_car(expr, value):
+    expr.car = value
+
+def set_cdr(expr, value):
+    expr.cdr = value
+
 class SastExpr(object):
 
     def __init__(self):
         self.value = None
 
-    def to_string(self):
-        return str(self.value)
+    def is_undefined(self):
+        return isinstance(self, SastUndefined)
+
+    def is_atom(self):
+        return isinstance(self, SastAtom)
+
+    def is_bool(self):
+        return isinstance(self, SastBool)
+
+    def is_true(self):
+        return isinstance(self, SastTrue)
+
+    def is_false(self):
+        return isinstance(self, SastFalse)
+
+    def is_fixnum(self):
+        return isinstance(self, SastFixnum)
+
+    def is_string(self):
+        return isinstance(self, SastString)
+
+    def is_symbol(self):
+        return isinstance(self, SastSymbol)
+
+    def is_args(self):
+        if self.is_symbol():
+            if len(self.value) > 1:
+                f, s = self.value[0:1]
+                return f == '*' and s != '*'
+        return False
+
+    def is_kwargs(self):
+        if self.is_symbol():
+            if len(self.value) > 2:
+                f, s = self.value[0:1]
+                return f == '*' and s == '*'
+        return False
+
+    def is_list(self):
+        return isinstance(self, SastList)
+
+    def is_pair(self):
+        return isinstance(self, SastPair)
+
+    def is_nil(self):
+        return isinstance(self, SastNil)
+
+    def is_tagged(self, tag=None):
+        return False
+
+    def is_dict(self):
+        return isinstance(self, SastDict)
+
+    def to_format(self):
+        return self.value
+
+    def eval(self, env):
+        return self
+
+class SastCallable(SastExpr):
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def call(self, exprs, env):
+        raise NotImplementedError
 
 class SastUndefined(SastExpr):
 
     def __init__(self):
         self.value = '<undefined>'
 
-class SastAtom(SastExpr):
+undefined_symbol = SastUndefined()
+
+class SastAtom(SastCallable):
 
     def __init__(self, value):
+        assert isinstance(value, str)
         self.value = value
+
+    def call(self, exprs, env):
+        return self
+
+class SastBool(SastAtom):
+
+    def __new__(cls, value):
+        if value:
+            return true
+        else:
+            return false
+
+    def __init__(self, value):
+        pass
+
+class SastTrue(SastBool):
+
+    _true = None
+    def __new__(cls, value):
+        if cls._true is None:
+            cls._true = SastExpr.__new__(cls)
+        return cls._true
+
+    def __init__(self, value):
+        assert value
+        self.value = 'true'
+
+true = SastTrue(True)
+
+class SastFalse(SastBool):
+
+    _false = None
+    def __new__(cls, value):
+        if cls._false is None:
+            cls._false = SastExpr.__new__(cls)
+        return cls._false
+
+    def __init__(self, value):
+        assert not value
+        self.value = 'false'
+
+false = SastFalse(False)
 
 class SastFixnum(SastAtom):
 
     def __init__(self, value):
+        assert isinstance(value, str)
         self.value = value
 
 class SastString(SastAtom):
 
     def __init__(self, value):
+        assert isinstance(value, str)
         self.value = value
 
-    def to_string(self):
+    def to_format(self):
         return '"' + self.value + '"'
 
 class SastSymbol(SastAtom):
 
-    _table = {}
+    Table = {}
 
     def __new__(cls, value):
-        symbol = cls._table.get(value, None)
+        symbol = cls.Table.get(value, None)
         if not symbol:
-            cls._table[value] = symbol = super(SastSymbol, cls).__new__(cls, value)
+            cls.Table[value] = symbol = super(SastSymbol, cls).__new__(cls, value)
         return symbol
 
     def __init__(self, value):
+        assert isinstance(value, str)
         self.value = value
 
+    def eval(self, env):
+        return env.lookup(self)
+
+#class SastArgs(SastSymbol):
+#
+#    def __new__(cls, value):
+#        symbol = cls.Table.get(value, None)
+#        if not symbol:
+#            cls.Table[value] = symbol = super(SastArgs, cls).__new__(cls, value)
+#        return symbol
+#
+#    def __init__(self, value):
+#        super(SastArgs, self).__init__(value)
+#
+#class SastKwargs(SastSymbol):
+#
+#    def __new__(cls, value):
+#        symbol = cls.Table.get(value, None)
+#        if not symbol:
+#            cls.Table[value] = symbol = super(SastKwargs, cls).__new__(cls, value)
+#        return symbol
+#
+#    def __init__(self, value):
+#        super(SastKwargs, self).__init__(value)
+
+assign_symbol   = SastSymbol('=')
+lambda_symbol   = SastSymbol('->')
+quote_symbol    = SastSymbol("'")
+block_symbol    = SastSymbol('block')
+as_symbol       = SastSymbol('as')
+if_symbol       = SastSymbol('if')
+in_symbol       = SastSymbol('in')
+is_symbol       = SastSymbol('is')
+or_symbol       = SastSymbol('or')
+and_symbol      = SastSymbol('and')
+range_symbol    = SastSymbol('..')
+ellipses_symbol = SastSymbol('...')
+
 class SastList(SastExpr):
-    pass
+
+    def __init__(self):
+        pass
 
 class SastNil(SastList):
 
@@ -55,11 +309,11 @@ class SastNil(SastList):
             cls._nil = super(SastNil, cls).__new__(cls)
         return cls._nil
 
+    def __init__(self):
+        self.value = '()'
+
     def __values__(self):
         return []
-
-    def to_string(self):
-        return '()'
 
 nil = SastNil()
 
@@ -69,10 +323,116 @@ class SastPair(SastList):
         self.car = car
         self.cdr = cdr
 
-    def __values__(self):
-        values = [self.car]
-        values.extend(self.cdr.__values__())
-        return values
+    def to_format(self):
+        result = ''
+        expr = self
+        while True:
+            result += expr.car.to_format()
+            if expr.cdr.is_nil():
+                break
+            elif not expr.cdr.is_pair():
+                result += ' . ' + expr.cdr.to_format()
+                break
+            result += ' '
+            expr = expr.cdr
+        return '(' + result + ')'
 
-    def to_string(self):
-        return '(' + ' '.join([value.to_string() for value in self.__values__()]) + ')'
+    def is_tagged(self, tag=None):
+        if self.is_pair():
+            if self.car.is_symbol():
+                if self.cdr.is_pair():
+                    if tag and self.car != tag:
+                        return False
+                    return True
+        return False
+
+class SastQuote(SastPair):
+
+    def __init__(self, cdr):
+        self.car = quote_symbol
+        self.cdr = cdr
+        #super(SastQuote, self).__init__(quote_symbol, cdr=cdr)
+
+    def eval(self, env):
+        return self.cdr
+
+class SastDict(SastExpr):
+
+    def __init__(self):
+        self._dict = {}
+
+    def lookup(self, symbol, default=undefined_symbol):
+        value = self._dict.get(symbol.value, default)
+        if value is None and default is None:
+            raise Exception
+        return value
+
+    def assign(self, symbol, expr):
+        self._dict[symbol.value] = expr
+
+    def to_format(self):
+        result = []
+        for key, value in self._dict.iteritems():
+            result += [key + ': ' + value.to_format()]
+        return '{' + ' '.join(result) + '}'
+
+class SastEnv(SastDict):
+    pass
+
+Env = SastEnv()
+Env.assign(SastSymbol("a"), SastFixnum("1"))
+Env.assign(SastSymbol("b"), SastFixnum("2"))
+Env.assign(SastSymbol("c"), SastFixnum("3"))
+
+class SastBlock(SastExpr):
+
+    def __init__(self, env, stmts):
+        assert isinstance(env, SastEnv)
+        assert isinstance(stmts, SastPair)
+        self.env = env
+        self.stmts = stmts
+
+    def to_format(self, *args, **kwargs):
+        result = ' '.join([stmt.to_format() for stmt in self.stmts])
+        return '{' + result[1:-1] + '}'
+
+class SastLambda(SastExpr):
+
+    def __init__(self, formals, block):
+        self.formals = formals
+        self.block = block
+
+class SastOp(SastLambda):
+
+    def __init__(self, env, formals, block, name):
+        super(SastOp, self).__init__(env, formals, block, name=name)
+
+def list2pairs(*pylist, **kwargs):
+    cdr = kwargs.pop('cdr', nil)
+    pylist = list(pylist)
+    pylist.reverse()
+    for item in pylist:
+        cdr = SastPair(item, cdr)
+    return cdr
+
+def pairs2list(sastpairs):
+    pylist = []
+    pair = sastpairs
+    while pair != nil:
+        if not pair.is_pair():
+            raise SastWrongArgType(pair, 'list')
+        pylist.append(pair.car)
+        pair = pair.cdr
+    return pylist
+
+def builtin(op, *args):
+    acc, args = int(args[0]), args[1:]
+    for arg in args:
+        acc = op(acc, int(arg))
+    return acc
+
+#add_func = SastOp(
+#    SastEnv(),
+#    list2pairs(SastSymbol('x'), SastSymbol('y'), ellipses_symbol),
+#    name='+',
+#    call=lambda *args: builtin(op.add, *args))

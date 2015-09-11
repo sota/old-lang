@@ -11,7 +11,7 @@ class Token(object): #pylint: disable=too-few-public-methods
         self.pos = pos
         self.skip = skip
 
-    def to_string(self):
+    def to_format(self):
         return '[name=%s value=%s kind=%d line=%d pos=%d skip=%s]' % (
             self.name,
             self.value,
@@ -20,7 +20,7 @@ class Token(object): #pylint: disable=too-few-public-methods
             self.pos,
             self.skip)
 
-    def is_kind(self, name):
+    def is_name(self, name):
         if name:
             return self.name == name
         return False
