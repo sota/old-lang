@@ -104,7 +104,7 @@ def set_cdr(expr, value):
 class SastExpr(object):
 
     def __init__(self):
-        self.value = None
+        pass
 
     def is_undefined(self):
         return isinstance(self, SastUndefined)
@@ -131,18 +131,10 @@ class SastExpr(object):
         return isinstance(self, SastSymbol)
 
     def is_args(self):
-        if self.is_symbol():
-            if len(self.value) > 1:
-                f, s = self.value[0:1]
-                return f == '*' and s != '*'
-        return False
+        raise NotImplementedError
 
     def is_kwargs(self):
-        if self.is_symbol():
-            if len(self.value) > 2:
-                f, s = self.value[0:1]
-                return f == '*' and s == '*'
-        return False
+        raise NotImplementedError
 
     def is_list(self):
         return isinstance(self, SastList)
@@ -159,35 +151,50 @@ class SastExpr(object):
     def is_dict(self):
         return isinstance(self, SastDict)
 
+    def is_lambda(self):
+        return isinstance(self, SastLambda)
+
+    def is_builtin(self):
+        return isinstance(self, SastBuiltin)
+
     def to_format(self):
-        return self.value
+        raise NotImplementedError
 
     def eval(self, env):
         return self
 
-class SastCallable(SastExpr):
+    def call(self, env, exprs):
+        return self
 
-    def __init__(self, *args, **kwargs):
-        pass
-
-    def call(self, exprs, env):
-        raise NotImplementedError
-
-class SastUndefined(SastExpr):
-
-    def __init__(self):
-        self.value = '<undefined>'
-
-undefined_symbol = SastUndefined()
-
-class SastAtom(SastCallable):
+class SastAtom(SastExpr):
 
     def __init__(self, value):
         assert isinstance(value, str)
         self.value = value
 
-    def call(self, exprs, env):
-        return self
+    def to_format(self):
+        return self.value
+
+    def is_args(self):
+        if self.is_symbol():
+            if len(self.value) > 1:
+                f, s = self.value[0:1]
+                return f == '*' and s != '*'
+        return False
+
+    def is_kwargs(self):
+        if self.is_symbol():
+            if len(self.value) > 2:
+                f, s = self.value[0:1]
+                return f == '*' and s == '*'
+        return False
+
+class SastUndefined(SastAtom):
+
+    def __init__(self):
+        self.value = '<undefined>'
+
+undefined_symbol = SastUndefined()
 
 class SastBool(SastAtom):
 
@@ -282,18 +289,19 @@ class SastSymbol(SastAtom):
 #    def __init__(self, value):
 #        super(SastKwargs, self).__init__(value)
 
-assign_symbol   = SastSymbol('=')
-lambda_symbol   = SastSymbol('->')
+assign_symbol   = SastSymbol("=")
+lambda_symbol   = SastSymbol("->")
 quote_symbol    = SastSymbol("'")
-block_symbol    = SastSymbol('block')
-as_symbol       = SastSymbol('as')
-if_symbol       = SastSymbol('if')
-in_symbol       = SastSymbol('in')
-is_symbol       = SastSymbol('is')
-or_symbol       = SastSymbol('or')
-and_symbol      = SastSymbol('and')
-range_symbol    = SastSymbol('..')
-ellipses_symbol = SastSymbol('...')
+block_symbol    = SastSymbol("block")
+list_symbol     = SastSymbol("list")
+as_symbol       = SastSymbol("as")
+if_symbol       = SastSymbol("if")
+in_symbol       = SastSymbol("in")
+is_symbol       = SastSymbol("is")
+or_symbol       = SastSymbol("or")
+and_symbol      = SastSymbol("and")
+range_symbol    = SastSymbol("..")
+ellipses_symbol = SastSymbol("...")
 
 class SastList(SastExpr):
 
@@ -319,9 +327,15 @@ nil = SastNil()
 
 class SastPair(SastList):
 
-    def __init__(self, car, cdr=nil):
+    def __init__(self, car=nil, cdr=nil):
         self.car = car
         self.cdr = cdr
+
+    def is_args(self):
+        return False
+
+    def is_kwargs(self):
+        return False
 
     def to_format(self):
         result = ''
@@ -337,6 +351,25 @@ class SastPair(SastList):
             expr = expr.cdr
         return '(' + result + ')'
 
+    def to_pylist(self):
+        pylist = []
+        pair = self
+        while pair != nil:
+            if not pair.is_pair():
+                raise SastWrongArgType(pair, 'list')
+            pylist.append(pair.car)
+            pair = pair.cdr
+        return pylist
+
+    @staticmethod
+    def from_pylist(*args, **kwargs):
+        cdr = kwargs.pop('cdr', nil)
+        pylist = list(args)
+        pylist.reverse()
+        for car in pylist:
+            cdr = SastPair(car, cdr)
+        return cdr
+
     def is_tagged(self, tag=None):
         if self.is_pair():
             if self.car.is_symbol():
@@ -346,12 +379,15 @@ class SastPair(SastList):
                     return True
         return False
 
+    def eval(self, env):
+        expr = self.car.eval(env)
+        return expr.call(env, self.cdr)
+
 class SastQuote(SastPair):
 
     def __init__(self, cdr):
         self.car = quote_symbol
         self.cdr = cdr
-        #super(SastQuote, self).__init__(quote_symbol, cdr=cdr)
 
     def eval(self, env):
         return self.cdr
@@ -369,6 +405,9 @@ class SastDict(SastExpr):
 
     def assign(self, symbol, expr):
         self._dict[symbol.value] = expr
+
+    def remove(self, symbol):
+        del self._dict[symbol.value]
 
     def to_format(self):
         result = []
@@ -402,37 +441,29 @@ class SastLambda(SastExpr):
         self.formals = formals
         self.block = block
 
+class SastBuiltin(SastLambda):
+
+    def __init__(self, formals, call):
+        super(SastBuiltin, self).__init__(formals, None)
+        self._call = call
+
+    def to_format(self):
+        return '<builtin>'
+
+    def call(self, env, exprs):
+        return self._call(env, exprs.to_pylist())
+
 class SastOp(SastLambda):
 
     def __init__(self, env, formals, block, name):
         super(SastOp, self).__init__(env, formals, block, name=name)
 
-def list2pairs(*pylist, **kwargs):
-    cdr = kwargs.pop('cdr', nil)
-    pylist = list(pylist)
-    pylist.reverse()
-    for item in pylist:
-        cdr = SastPair(item, cdr)
-    return cdr
+def assign(env, args):
+    x, y = args
+    env.assign(x, y)
 
-def pairs2list(sastpairs):
-    pylist = []
-    pair = sastpairs
-    while pair != nil:
-        if not pair.is_pair():
-            raise SastWrongArgType(pair, 'list')
-        pylist.append(pair.car)
-        pair = pair.cdr
-    return pylist
+assign_builtin = SastBuiltin(
+    SastPair.from_pylist(SastSymbol("symbol"), SastSymbol("value")),
+    assign)
 
-def builtin(op, *args):
-    acc, args = int(args[0]), args[1:]
-    for arg in args:
-        acc = op(acc, int(arg))
-    return acc
-
-#add_func = SastOp(
-#    SastEnv(),
-#    list2pairs(SastSymbol('x'), SastSymbol('y'), ellipses_symbol),
-#    name='+',
-#    call=lambda *args: builtin(op.add, *args))
+Env.assign(SastSymbol("="), assign_builtin)
