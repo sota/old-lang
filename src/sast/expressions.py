@@ -160,6 +160,9 @@ class SastExpr(object):
     def to_format(self):
         raise NotImplementedError
 
+    def hashable(self):
+        raise NotImplementedError
+
     def eval(self, env):
         return self
 
@@ -171,9 +174,6 @@ class SastAtom(SastExpr):
     def __init__(self, value):
         assert isinstance(value, str)
         self.value = value
-
-    def to_format(self):
-        return self.value
 
     def is_args(self):
         if self.is_symbol():
@@ -192,7 +192,13 @@ class SastAtom(SastExpr):
 class SastUndefined(SastAtom):
 
     def __init__(self):
-        self.value = '<undefined>'
+        self.undefined = '<undefined>'
+
+    def to_format(self):
+        return self.undefined
+
+    def hashable(self):
+        return self.to_format()
 
 undefined_symbol = SastUndefined()
 
@@ -207,6 +213,12 @@ class SastBool(SastAtom):
     def __init__(self, value):
         pass
 
+    def to_format(self):
+        return 'boolean'
+
+    def hashable(self):
+        return self.to_format()
+
 class SastTrue(SastBool):
 
     _true = None
@@ -217,7 +229,12 @@ class SastTrue(SastBool):
 
     def __init__(self, value):
         assert value
-        self.value = 'true'
+
+    def to_format(self):
+        return 'true'
+
+    def hashable(self):
+        return self.to_format()
 
 true = SastTrue(True)
 
@@ -231,24 +248,77 @@ class SastFalse(SastBool):
 
     def __init__(self, value):
         assert not value
-        self.value = 'false'
+
+    def to_format(self):
+        return 'false'
+
+    def hashable(self):
+        return self.to_format()
 
 false = SastFalse(False)
 
 class SastFixnum(SastAtom):
 
     def __init__(self, value):
-        assert isinstance(value, str)
-        self.value = value
+        assert isinstance(value, int)
+        self.fixnum = value
+
+    def to_format(self):
+        return str(self.fixnum)
+
+    def hashable(self):
+        return self.to_format()
+
+    def add(self, right):
+        return right.add_fixnum(self)
+
+    def add_fixnum(self, left):
+        return SastFixnum(left.fixnum + self.fixnum)
+
+    def sub(self, right):
+        return right.sub_fixnum(self)
+
+    def sub_fixnum(self, left):
+        return SastFixnum(left.fixnum - self.fixnum)
+
+    def mul(self, right):
+        return right.mul_fixnum(self)
+
+    def mul_fixnum(self, left):
+        return SastFixnum(left.fixnum * self.fixnum)
+
+    def mul_string(self, left):
+        result = ""
+        for x in xrange(self.fixnum):
+            result += left.string
+        return SastString(result)
+
+    def div(self, right):
+        return right.div_fixnum(self)
+
+    def div_fixnum(self, left):
+        return SastFixnum(left.fixnum / self.fixnum)
 
 class SastString(SastAtom):
 
     def __init__(self, value):
         assert isinstance(value, str)
-        self.value = value
+        self.string = value
 
     def to_format(self):
-        return '"' + self.value + '"'
+        return '"' + self.string + '"'
+
+    def hashable(self):
+        return self.to_format()
+
+    def mul(self, right):
+        return right.mul_string(self)
+
+    def div(self, right):
+        return right.div_string(self)
+
+    def div_string(self, left):
+        return SastString(left.string + "/" + self.string)
 
 class SastSymbol(SastAtom):
 
@@ -262,7 +332,13 @@ class SastSymbol(SastAtom):
 
     def __init__(self, value):
         assert isinstance(value, str)
-        self.value = value
+        self.symbol = value
+
+    def to_format(self):
+        return self.symbol
+
+    def hashable(self):
+        return self.to_format()
 
     def eval(self, env):
         return env.lookup(self)
@@ -318,10 +394,13 @@ class SastNil(SastList):
         return cls._nil
 
     def __init__(self):
-        self.value = '()'
+        self.nil = '()'
 
-    def __values__(self):
-        return []
+    def to_format(self):
+        return self.nil
+
+    def hashable(self):
+        return self.to_format()
 
 nil = SastNil()
 
@@ -350,6 +429,9 @@ class SastPair(SastList):
             result += ' '
             expr = expr.cdr
         return '(' + result + ')'
+
+    def hashable(self):
+        return self.to_format()
 
     def to_pylist(self):
         pylist = []
@@ -389,6 +471,12 @@ class SastQuote(SastPair):
         self.car = quote_symbol
         self.cdr = cdr
 
+    def to_format(self):
+        return "'" + self.cdr.to_format()
+
+    def hashable(self):
+        return self.to_format()
+
     def eval(self, env):
         return self.cdr
 
@@ -397,36 +485,32 @@ class SastDict(SastExpr):
     def __init__(self):
         self._dict = {}
 
-    def lookup(self, symbol, default=undefined_symbol):
-        value = self._dict.get(symbol.value, default)
-        if value is None and default is None:
-            raise Exception
-        return value
-
-    def assign(self, symbol, expr):
-        self._dict[symbol.value] = expr
-
-    def remove(self, symbol):
-        del self._dict[symbol.value]
-
     def to_format(self):
         result = []
         for key, value in self._dict.iteritems():
             result += [key + ': ' + value.to_format()]
         return '{' + ' '.join(result) + '}'
 
-class SastEnv(SastDict):
-    pass
+    def hashable(self):
+        return self.to_format()
 
-Env = SastEnv()
-Env.assign(SastSymbol("a"), SastFixnum("1"))
-Env.assign(SastSymbol("b"), SastFixnum("2"))
-Env.assign(SastSymbol("c"), SastFixnum("3"))
+    def lookup(self, key, default=undefined_symbol):
+        value = self._dict.get(key.hashable(), default)
+        if value is None and default is None:
+            raise Exception
+        return value
+
+    def assign(self, key, value):
+        self._dict[key.hashable()] = value
+        return value
+
+    def remove(self, symbol):
+        del self._dict[symbol.value]
 
 class SastBlock(SastExpr):
 
     def __init__(self, env, stmts):
-        assert isinstance(env, SastEnv)
+        #assert isinstance(env, SastEnv)
         assert isinstance(stmts, SastPair)
         self.env = env
         self.stmts = stmts
@@ -435,11 +519,20 @@ class SastBlock(SastExpr):
         result = ' '.join([stmt.to_format() for stmt in self.stmts])
         return '{' + result[1:-1] + '}'
 
+    def hashable(self):
+        return self.to_format()
+
 class SastLambda(SastExpr):
 
     def __init__(self, formals, block):
         self.formals = formals
         self.block = block
+
+    def to_format(self):
+        return '<lambda>' #FIXME: improve...
+
+    def hashable(self):
+        return self.to_format()
 
 class SastBuiltin(SastLambda):
 
@@ -448,22 +541,11 @@ class SastBuiltin(SastLambda):
         self._call = call
 
     def to_format(self):
-        return '<builtin>'
+        return "<builtin>"
 
-    def call(self, env, exprs):
-        return self._call(env, exprs.to_pylist())
+    def hashable(self):
+        return "<builtin>"
+        #return self.to_format() + "_" + "_".join(self.formals.to_pylist())
 
-class SastOp(SastLambda):
-
-    def __init__(self, env, formals, block, name):
-        super(SastOp, self).__init__(env, formals, block, name=name)
-
-def assign(env, args):
-    x, y = args
-    env.assign(x, y)
-
-assign_builtin = SastBuiltin(
-    SastPair.from_pylist(SastSymbol("symbol"), SastSymbol("value")),
-    assign)
-
-Env.assign(SastSymbol("="), assign_builtin)
+    def call(self, env, expr):
+        return self._call(env, expr)

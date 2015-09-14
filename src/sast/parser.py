@@ -5,6 +5,7 @@ from rpython.rtyper.lltypesystem import lltype
 from sast.tokens import Token
 from sast.lexer import Lexer
 from sast.expressions import *
+from sast.environment import *
 
 from version import SOTA_VERSION
 
@@ -47,12 +48,13 @@ class Parser(object):
             source = None
             try:
                 source = stdin_readline()
+                if not source:
+                    print
+                    break
                 self._print(self._eval(self._read(source)))
             except KeyboardInterrupt:
                 break
             except EOFError:
-                break
-            if not source:
                 break
 
         return exitcode
@@ -91,7 +93,7 @@ class Parser(object):
         elif token.is_name('str'):
             return SastString(token.value)
         elif token.is_name('num'):
-            return SastFixnum(token.value)
+            return SastFixnum(int(token.value))
         elif token.is_name('('):
             return self._read_pair()
         return SastUndefined()
