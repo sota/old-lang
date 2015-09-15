@@ -42,6 +42,7 @@ class Parser(object):
 
     def repl(self):
         exitcode = 0
+        print REPL_USAGE.strip()
         prompt = 'sota> '
         while True:
             os.write(1, prompt)
