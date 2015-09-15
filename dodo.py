@@ -175,24 +175,24 @@ def task_liblexer():
 
 def task_pytest():
     '''
-    run 'py.test --verbose tests/pre/'
-    '''
+    run 'py.test --verbose %(PRE)s
+    ''' % gl()
     return {
         'task_dep': ['submod'],
-        'actions': ['py.test -s -vv tests/pre/' % gl()],
+        'actions': ['py.test -s -vv %(PRE)s > %(PRE)s/results' % gl()],
     }
 
 def task_pycov():
     '''
-    run 'py.test --cov=<pyfile> tests/pre/<pyfile>'
-    '''
+    run 'py.test --cov=<pyfile> %(PRE)s/<pyfile>'
+    ''' % gl()
     def hastests(pyfile):
-        return os.path.exists(os.path.join('tests/pre', pyfile))
+        return os.path.exists(os.path.join(PRE, pyfile))
     excludes = ['dodo.py']
     pyfiles = globs('src/*/*.py') - globs(*excludes)
     for pyfile in sorted(pyfiles, key=hastests):
-        covcmd = 'py.test -s -vv --cov=%(pyfile)s tests/pre/%(pyfile)s'
-        msgcmd = 'echo "no tests found (tests/pre/%(pyfile)s to run coverage on %(pyfile)s"'
+        covcmd = 'py.test -s -vv --cov=%(pyfile)s %(PRE)/%(pyfile)s'
+        msgcmd = 'echo "no tests found (%(PRE)s/%(pyfile)s to run coverage on %(pyfile)s"'
         yield {
             'name': pyfile,
             'task_dep': ['submod'],
@@ -204,11 +204,11 @@ def task_pylint():
     run pylint on all pyfiles
     '''
     excludes = []
-    for pyfile in globs('*.py', 'src/*/*.py', 'tests/pre/*/*.py') - globs(*excludes):
+    for pyfile in globs('*.py', 'src/*/*.py', '%(PRE)s/*/*.py' % gl()) - globs(*excludes):
         yield {
             'name': pyfile,
             'task_dep': ['submod'],
-            'actions': ['%(ENVS)s pylint -E -j4 --rcfile tests/pre/pylint.rc %(pyfile)s' % gl()],
+            'actions': ['%(ENVS)s pylint -E -j4 --rcfile %(PRE)s/pylint.rc %(pyfile)s' % gl()],
         }
 
 def task_pre():
@@ -245,7 +245,7 @@ def task_post():
     return {
         'file_dep': [DODO],
         'task_dep': ['sota'],
-        'actions': ['py.test -v %(POST)s > %(POST)s/results' % gl()],
+        'actions': ['py.test -s -vv %(POST)s > %(POST)s/results' % gl()],
         'targets': ['%(POST)s/results' % gl()],
         'clean': [clean_targets],
     }
