@@ -10,3 +10,7 @@
 	path = lib/docopt
 	url = https://github.com/sota/docopt.cpp
 	branch = master
+[submodule "lib/doit"]
+	path = lib/doit
+	url = https://github.com/sota/doit
+	branch = master
