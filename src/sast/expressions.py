@@ -343,28 +343,6 @@ class SastSymbol(SastAtom):
     def eval(self, env):
         return env.lookup(self)
 
-#class SastArgs(SastSymbol):
-#
-#    def __new__(cls, value):
-#        symbol = cls.Table.get(value, None)
-#        if not symbol:
-#            cls.Table[value] = symbol = super(SastArgs, cls).__new__(cls, value)
-#        return symbol
-#
-#    def __init__(self, value):
-#        super(SastArgs, self).__init__(value)
-#
-#class SastKwargs(SastSymbol):
-#
-#    def __new__(cls, value):
-#        symbol = cls.Table.get(value, None)
-#        if not symbol:
-#            cls.Table[value] = symbol = super(SastKwargs, cls).__new__(cls, value)
-#        return symbol
-#
-#    def __init__(self, value):
-#        super(SastKwargs, self).__init__(value)
-
 assign_symbol   = SastSymbol("=")
 lambda_symbol   = SastSymbol("->")
 quote_symbol    = SastSymbol("'")
@@ -510,7 +488,6 @@ class SastDict(SastExpr):
 class SastBlock(SastExpr):
 
     def __init__(self, env, stmts):
-        #assert isinstance(env, SastEnv)
         assert isinstance(stmts, SastPair)
         self.env = env
         self.stmts = stmts
@@ -545,7 +522,6 @@ class SastBuiltin(SastLambda):
 
     def hashable(self):
         return "<builtin>"
-        #return self.to_format() + "_" + "_".join(self.formals.to_pylist())
 
     def call(self, env, expr):
         return self._call(env, expr)
