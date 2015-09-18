@@ -43,7 +43,7 @@ class Parser(object):
     def repl(self):
         exitcode = 0
         print REPL_USAGE.strip()
-        prompt = 'sota> '
+        prompt = "sota> "
         while True:
             os.write(1, prompt)
             source = None
@@ -64,7 +64,7 @@ class Parser(object):
         token, distance, _ = self.lexer.lookahead1()
         if not token:
             raise MissingToken
-        if token.is_name(')'):
+        if token.is_name(")"):
             self.lexer.consume()
             return nil
         car = self._read()
@@ -83,19 +83,19 @@ class Parser(object):
         if source:
             self.lexer.scan(source)
         token = self.lexer.consume()
-        if token.is_name('sym'):
-            if token.value == 'true':
+        if token.is_name("sym"):
+            if token.value == "true":
                 return true
-            elif token.value == 'false':
+            elif token.value == "false":
                 return false
             if token.value in ("'", "quote"):
                 return SastQuote(self._read())
             return SastSymbol(token.value)
-        elif token.is_name('str'):
+        elif token.is_name("str"):
             return SastString(token.value)
-        elif token.is_name('num'):
+        elif token.is_name("num"):
             return SastFixnum(int(token.value))
-        elif token.is_name('('):
+        elif token.is_name("("):
             return self._read_pair()
         return SastUndefined()
 

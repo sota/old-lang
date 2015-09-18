@@ -11,48 +11,73 @@ def assign(env, expr):
     return env.assign(key, value.eval(env))
 
 Env.assign(
-    SastSymbol("="),
+    assign_symbol,
     SastBuiltin(
-        SastPair.from_pylist(SastSymbol("key"), SastSymbol("value")),
+        assign_symbol,
+        SastPair.from_pylist(SastSymbol("symbol"), SastSymbol("value")),
         assign))
 
-def add(env, expr):
-    x, y = expr.to_pylist()
-    return x.eval(env).add(y.eval(env))
+def add(env, expr, acc=None):
+    args = expr.to_pylist()
+    if not acc:
+        acc = args[0].eval(env)
+        args = args[1:]
+    for arg in args:
+        acc = acc.add(arg.eval(env))
+    return acc
 
 Env.assign(
-    SastSymbol("+"),
+    add_symbol,
     SastBuiltin(
-        SastPair.from_pylist(SastSymbol("x"), SastSymbol("y")),
+        add_symbol,
+        SastPair.from_pylist(SastSymbol("augend"), SastSymbol("*addends")),
         add))
 
-def sub(env, expr):
-    x, y = expr.to_pylist()
-    return x.eval(env).sub(y.eval(env))
+def sub(env, expr, acc=None):
+    args = expr.to_pylist()
+    if not acc:
+        acc = args[0].eval(env)
+        args = args[1:]
+    for arg in args:
+        acc = acc.sub(arg.eval(env))
+    return acc
 
 Env.assign(
-    SastSymbol("-"),
+    sub_symbol,
     SastBuiltin(
-        SastPair.from_pylist(SastSymbol("x"), SastSymbol("y")),
+        sub_symbol,
+        SastPair.from_pylist(SastSymbol("minuend"), SastSymbol("*subtrahends")),
         sub))
 
-def mul(env, expr):
-    x, y = expr.to_pylist()
-    return x.eval(env).mul(y.eval(env))
+def mul(env, expr, acc=None):
+    args = expr.to_pylist()
+    if not acc:
+        acc = args[0].eval(env)
+        args = args[1:]
+    for arg in args:
+        acc = acc.mul(arg.eval(env))
+    return acc
 
 Env.assign(
-    SastSymbol("*"),
+    mul_symbol,
     SastBuiltin(
-        SastPair.from_pylist(SastSymbol("x"), SastSymbol("y")),
+        mul_symbol,
+        SastPair.from_pylist(SastSymbol("multiplier"), SastSymbol("*multiplicands")),
         mul))
 
-def div(env, expr):
-    x, y = expr.to_pylist()
-    return x.eval(env).div(y.eval(env))
+def div(env, expr, acc=None):
+    args = expr.to_pylist()
+    if not acc:
+        acc = args[0].eval(env)
+        args = args[1:]
+    for arg in args:
+        acc = acc.div(arg.eval(env))
+    return acc
 
 Env.assign(
-    SastSymbol("/"),
+    div_symbol,
     SastBuiltin(
-        SastPair.from_pylist(SastSymbol("x"), SastSymbol("y")),
+        div_symbol,
+        SastPair.from_pylist(SastSymbol("dividend"), SastSymbol("*divisors")),
         div))
 

@@ -169,6 +169,9 @@ class SastExpr(object):
     def call(self, env, exprs):
         return self
 
+    def default(self):
+        raise NotImplementedError
+
 class SastAtom(SastExpr):
 
     def __init__(self, value):
@@ -179,20 +182,23 @@ class SastAtom(SastExpr):
         if self.is_symbol():
             if len(self.value) > 1:
                 f, s = self.value[0:1]
-                return f == '*' and s != '*'
+                return f == "*" and s != "*"
         return False
 
     def is_kwargs(self):
         if self.is_symbol():
             if len(self.value) > 2:
                 f, s = self.value[0:1]
-                return f == '*' and s == '*'
+                return f == "*" and s == "*"
         return False
+
+    def default(self):
+        raise NotImplementedError
 
 class SastUndefined(SastAtom):
 
     def __init__(self):
-        self.undefined = '<undefined>'
+        self.undefined = "<undefined>"
 
     def to_format(self):
         return self.undefined
@@ -213,8 +219,11 @@ class SastBool(SastAtom):
     def __init__(self, value):
         pass
 
+    def default(self):
+        return false
+
     def to_format(self):
-        return 'boolean'
+        return "boolean"
 
     def hashable(self):
         return self.to_format()
@@ -230,8 +239,11 @@ class SastTrue(SastBool):
     def __init__(self, value):
         assert value
 
+    def default(self):
+        return true
+
     def to_format(self):
-        return 'true'
+        return "true"
 
     def hashable(self):
         return self.to_format()
@@ -249,8 +261,11 @@ class SastFalse(SastBool):
     def __init__(self, value):
         assert not value
 
+    def default(self):
+        return false
+
     def to_format(self):
-        return 'false'
+        return "false"
 
     def hashable(self):
         return self.to_format()
@@ -262,6 +277,9 @@ class SastFixnum(SastAtom):
     def __init__(self, value):
         assert isinstance(value, int)
         self.fixnum = value
+
+    def default(self):
+        return zerofixnum
 
     def to_format(self):
         return str(self.fixnum)
@@ -299,11 +317,16 @@ class SastFixnum(SastAtom):
     def div_fixnum(self, left):
         return SastFixnum(left.fixnum / self.fixnum)
 
+zerofixnum = SastFixnum(0)
+
 class SastString(SastAtom):
 
     def __init__(self, value):
         assert isinstance(value, str)
         self.string = value
+
+    def default(self):
+        return emptystring
 
     def to_format(self):
         return '"' + self.string + '"'
@@ -320,6 +343,8 @@ class SastString(SastAtom):
     def div_string(self, left):
         return SastString(left.string + "/" + self.string)
 
+emptystring = SastString("")
+
 class SastSymbol(SastAtom):
 
     Table = {}
@@ -334,6 +359,9 @@ class SastSymbol(SastAtom):
         assert isinstance(value, str)
         self.symbol = value
 
+    def default(self):
+        raise NotImplementedError
+
     def to_format(self):
         return self.symbol
 
@@ -343,19 +371,24 @@ class SastSymbol(SastAtom):
     def eval(self, env):
         return env.lookup(self)
 
-assign_symbol   = SastSymbol("=")
-lambda_symbol   = SastSymbol("->")
-quote_symbol    = SastSymbol("'")
-block_symbol    = SastSymbol("block")
-list_symbol     = SastSymbol("list")
-as_symbol       = SastSymbol("as")
-if_symbol       = SastSymbol("if")
-in_symbol       = SastSymbol("in")
-is_symbol       = SastSymbol("is")
-or_symbol       = SastSymbol("or")
-and_symbol      = SastSymbol("and")
-range_symbol    = SastSymbol("..")
-ellipses_symbol = SastSymbol("...")
+assign_symbol       = SastSymbol("=")
+lambda_symbol       = SastSymbol("->")
+quote_symbol        = SastSymbol("'")
+block_symbol        = SastSymbol("block")
+list_symbol         = SastSymbol("list")
+as_symbol           = SastSymbol("as")
+if_symbol           = SastSymbol("if")
+in_symbol           = SastSymbol("in")
+is_symbol           = SastSymbol("is")
+or_symbol           = SastSymbol("or")
+and_symbol          = SastSymbol("and")
+range_symbol        = SastSymbol("..")
+ellipses_symbol     = SastSymbol("...")
+add_symbol          = SastSymbol("+")
+sub_symbol          = SastSymbol("-")
+mul_symbol          = SastSymbol("*")
+div_symbol          = SastSymbol("/")
+escape_symbol       = SastSymbol("\\")
 
 class SastList(SastExpr):
 
@@ -388,6 +421,9 @@ class SastPair(SastList):
         self.car = car
         self.cdr = cdr
 
+    def default(self):
+        return nil
+
     def is_args(self):
         return False
 
@@ -395,18 +431,18 @@ class SastPair(SastList):
         return False
 
     def to_format(self):
-        result = ''
+        result = ""
         expr = self
         while True:
             result += expr.car.to_format()
             if expr.cdr.is_nil():
                 break
             elif not expr.cdr.is_pair():
-                result += ' . ' + expr.cdr.to_format()
+                result += " . " + expr.cdr.to_format()
                 break
-            result += ' '
+            result += " "
             expr = expr.cdr
-        return '(' + result + ')'
+        return "(" + result + ")"
 
     def hashable(self):
         return self.to_format()
@@ -416,14 +452,14 @@ class SastPair(SastList):
         pair = self
         while pair != nil:
             if not pair.is_pair():
-                raise SastWrongArgType(pair, 'list')
+                raise SastWrongArgType(pair, "list")
             pylist.append(pair.car)
             pair = pair.cdr
         return pylist
 
     @staticmethod
     def from_pylist(*args, **kwargs):
-        cdr = kwargs.pop('cdr', nil)
+        cdr = kwargs.pop("cdr", nil)
         pylist = list(args)
         pylist.reverse()
         for car in pylist:
@@ -440,8 +476,8 @@ class SastPair(SastList):
         return False
 
     def eval(self, env):
-        expr = self.car.eval(env)
-        return expr.call(env, self.cdr)
+        func = self.car.eval(env)
+        return func.call(env, self.cdr)
 
 class SastQuote(SastPair):
 
@@ -463,11 +499,14 @@ class SastDict(SastExpr):
     def __init__(self):
         self._dict = {}
 
+    def default(self):
+        return emptydict
+
     def to_format(self):
         result = []
         for key, value in self._dict.iteritems():
-            result += [key + ': ' + value.to_format()]
-        return '{' + ' '.join(result) + '}'
+            result += [key + ": " + value.to_format()]
+        return "{" + " ".join(result) + "}"
 
     def hashable(self):
         return self.to_format()
@@ -485,43 +524,58 @@ class SastDict(SastExpr):
     def remove(self, symbol):
         del self._dict[symbol.value]
 
-class SastBlock(SastExpr):
+emptydict = SastDict()
+
+class SastBlock(SastPair):
 
     def __init__(self, env, stmts):
         assert isinstance(stmts, SastPair)
         self.env = env
-        self.stmts = stmts
+        self.car = block_symbol
+        self.cdr = stmts
 
     def to_format(self, *args, **kwargs):
-        result = ' '.join([stmt.to_format() for stmt in self.stmts])
-        return '{' + result[1:-1] + '}'
+        result = self.cdr.to_format()
+        return "{" + result[1:-1] + "}"
 
     def hashable(self):
         return self.to_format()
 
-class SastLambda(SastExpr):
+class SastLambda(SastPair):
 
-    def __init__(self, formals, block):
+    def __init__(self, definition):
+        self.car = lambda_symbol
+        self.cdr = definition
+
+    @property
+    def formals(self):
+        return car(self.cdr)
+
+    @property
+    def block(self):
+        return cadr(self.cdr)
+
+    def hashable(self):
+        return self.to_format()
+
+class SastBuiltin(SastExpr):
+
+    def __init__(self, symbol, formals, call):
+        self.symbol = symbol
         self.formals = formals
-        self.block = block
-
-    def to_format(self):
-        return '<lambda>' #FIXME: improve...
-
-    def hashable(self):
-        return self.to_format()
-
-class SastBuiltin(SastLambda):
-
-    def __init__(self, formals, call):
-        super(SastBuiltin, self).__init__(formals, None)
         self._call = call
 
+    @property
+    def block(self):
+        raise NotImplementedError
+
     def to_format(self):
-        return "<builtin>"
+        result = cons(self.symbol, self.formals).to_format()
+        return "<builtin " + result + ">"
 
     def hashable(self):
-        return "<builtin>"
+        return self.to_format()
 
     def call(self, env, expr):
         return self._call(env, expr)
+
