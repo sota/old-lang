@@ -7,8 +7,8 @@ The sota build system uses doit (http://pydoit.org) for compiling and running te
 - https://pypi.python.org/pypi/doit
 - https://github.com/pydoit/doit
 
-# Pip Dependencies
-Sota uses pyflakes and pytest and pytest-cov.
+# Test Dependencies
+Sota uses pyflakes, pytest and pytest-cov.
 - https://pypi.python.org/pypi/pyflakes
 - http://pytest.org
 
