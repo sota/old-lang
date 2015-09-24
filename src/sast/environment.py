@@ -1,83 +1,88 @@
-
+from sast.exceptions import *
 from sast.expressions import *
+from sast.expressions import _list
+
+import sast.builtins as builtins
 
 class SastEnv(SastDict):
     pass
 
 Env = SastEnv()
 
-def assign(env, expr):
-    key, value = expr.to_pylist()
-    return env.assign(key, value.eval(env))
-
-Env.assign(
-    assign_symbol,
+Env.put(
+    Cons,
     SastBuiltin(
-        assign_symbol,
+        Cons,
+        SastPair.from_pylist(SastSymbol("car"), SastSymbol("cdr")),
+        builtins.cons))
+
+Env.put(
+    List,
+    SastBuiltin(
+        List,
+        SastPair.from_pylist(SastSymbol("*items")),
+        builtins.list))
+
+Env.put(
+    Assign,
+    SastBuiltin(
+        Assign,
         SastPair.from_pylist(SastSymbol("symbol"), SastSymbol("value")),
-        assign))
+        builtins.assign))
 
-def add(env, expr, acc=None):
-    args = expr.to_pylist()
-    if not acc:
-        acc = args[0].eval(env)
-        args = args[1:]
-    for arg in args:
-        acc = acc.add(arg.eval(env))
-    return acc
-
-Env.assign(
-    add_symbol,
+Env.put(
+    Add,
     SastBuiltin(
-        add_symbol,
+        Add,
         SastPair.from_pylist(SastSymbol("augend"), SastSymbol("*addends")),
-        add))
+        builtins.add))
 
-def sub(env, expr, acc=None):
-    args = expr.to_pylist()
-    if not acc:
-        acc = args[0].eval(env)
-        args = args[1:]
-    for arg in args:
-        acc = acc.sub(arg.eval(env))
-    return acc
-
-Env.assign(
-    sub_symbol,
+Env.put(
+    Sub,
     SastBuiltin(
-        sub_symbol,
+        Sub,
         SastPair.from_pylist(SastSymbol("minuend"), SastSymbol("*subtrahends")),
-        sub))
+        builtins.sub))
 
-def mul(env, expr, acc=None):
-    args = expr.to_pylist()
-    if not acc:
-        acc = args[0].eval(env)
-        args = args[1:]
-    for arg in args:
-        acc = acc.mul(arg.eval(env))
-    return acc
-
-Env.assign(
-    mul_symbol,
+Env.put(
+    Mul,
     SastBuiltin(
-        mul_symbol,
+        Mul,
         SastPair.from_pylist(SastSymbol("multiplier"), SastSymbol("*multiplicands")),
-        mul))
+        builtins.mul))
 
-def div(env, expr, acc=None):
-    args = expr.to_pylist()
-    if not acc:
-        acc = args[0].eval(env)
-        args = args[1:]
-    for arg in args:
-        acc = acc.div(arg.eval(env))
-    return acc
-
-Env.assign(
-    div_symbol,
+Env.put(
+    Div,
     SastBuiltin(
-        div_symbol,
+        Div,
         SastPair.from_pylist(SastSymbol("dividend"), SastSymbol("*divisors")),
-        div))
+        builtins.div))
+
+Env.put(
+    AddAssign,
+    SastBuiltin(
+        AddAssign,
+        SastPair.from_pylist(SastSymbol("symbol"), SastSymbol("*addends")),
+        builtins.add_assign))
+
+Env.put(
+    SubAssign,
+    SastBuiltin(
+        SubAssign,
+        SastPair.from_pylist(SastSymbol("symbol"), SastSymbol("*subtrahends")),
+        builtins.sub_assign))
+
+Env.put(
+    MulAssign,
+    SastBuiltin(
+        MulAssign,
+        SastPair.from_pylist(SastSymbol("symbol"), SastSymbol("*multiplicands")),
+        builtins.mul_assign))
+
+Env.put(
+    DivAssign,
+    SastBuiltin(
+        DivAssign,
+        SastPair.from_pylist(SastSymbol("symbol"), SastSymbol("*divisors")),
+        builtins.div_assign))
 

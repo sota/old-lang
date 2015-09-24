@@ -1,9 +1,30 @@
 
 import operator as op
+from rpython.rlib.objectmodel import compute_identity_hash
+#from rpython.rlib.objectmodel import _hash_float, _hash_string, specialize
+from rpython.rlib.rarithmetic import LONG_BIT, intmask, ovfcheck
+from rpython.rlib.objectmodel import import_from_mixin, r_ordereddict
+
 from sast.exceptions import *
 
-def cons(car, cdr):
+def _hash_string(string):
+    # Cribbed from RPython's _hash_string.
+    length = len(string)
+    if length == 0:
+        return -1
+    x = ord(string[0]) << 7
+    i = 0
+    while i < length:
+        x = intmask((1000003 * x) ^ ord(string[i]))
+        i += 1
+    x ^= length
+    return intmask(x)
+
+def _cons(car, cdr):
     return SastPair(car, cdr)
+
+def _list(*items):
+    return SastPair.from_pylist(items)
 
 def car(expr):
     return expr.car
@@ -151,6 +172,9 @@ class SastExpr(object):
     def is_dict(self):
         return isinstance(self, SastDict)
 
+    def is_block(self):
+        return isinstance(self, SastBlock)
+
     def is_lambda(self):
         return isinstance(self, SastLambda)
 
@@ -160,8 +184,11 @@ class SastExpr(object):
     def to_format(self):
         raise NotImplementedError
 
-    def hashable(self):
+    def to_string(self):
         raise NotImplementedError
+
+    def hashfn(self):
+        return compute_identity_hash(self)
 
     def eval(self, env):
         return self
@@ -203,10 +230,22 @@ class SastUndefined(SastAtom):
     def to_format(self):
         return self.undefined
 
-    def hashable(self):
-        return self.to_format()
+    def to_string(self):
+        return self.undefined
 
-undefined_symbol = SastUndefined()
+    def add(self, right):
+        return undefined
+
+    def sub(self, right):
+        return undefined
+
+    def mul(self, right):
+        return undefined
+
+    def div(self, right):
+        return undefined
+
+undefined = SastUndefined()
 
 class SastBool(SastAtom):
 
@@ -221,12 +260,6 @@ class SastBool(SastAtom):
 
     def default(self):
         return false
-
-    def to_format(self):
-        return "boolean"
-
-    def hashable(self):
-        return self.to_format()
 
 class SastTrue(SastBool):
 
@@ -245,8 +278,8 @@ class SastTrue(SastBool):
     def to_format(self):
         return "true"
 
-    def hashable(self):
-        return self.to_format()
+    def to_string(self):
+        return SastString("true")
 
 true = SastTrue(True)
 
@@ -267,8 +300,8 @@ class SastFalse(SastBool):
     def to_format(self):
         return "false"
 
-    def hashable(self):
-        return self.to_format()
+    def to_string(self):
+        return SastString("false")
 
 false = SastFalse(False)
 
@@ -279,13 +312,16 @@ class SastFixnum(SastAtom):
         self.fixnum = value
 
     def default(self):
-        return zerofixnum
+        return SastFixnum.zero
+
+    def to_string(self):
+        return SastString(str(self.fixnum))
 
     def to_format(self):
         return str(self.fixnum)
 
-    def hashable(self):
-        return self.to_format()
+    def hashfn(self):
+        return self.fixnum
 
     def add(self, right):
         return right.add_fixnum(self)
@@ -314,10 +350,13 @@ class SastFixnum(SastAtom):
     def div(self, right):
         return right.div_fixnum(self)
 
+    def div_string(self, left):
+        return left.div(self.to_string())
+
     def div_fixnum(self, left):
         return SastFixnum(left.fixnum / self.fixnum)
 
-zerofixnum = SastFixnum(0)
+SastFixnum.zero = SastFixnum(0)
 
 class SastString(SastAtom):
 
@@ -326,13 +365,22 @@ class SastString(SastAtom):
         self.string = value
 
     def default(self):
-        return emptystring
+        return SastString.empty
+
+    def to_string(self):
+        return self
 
     def to_format(self):
         return '"' + self.string + '"'
 
-    def hashable(self):
-        return self.to_format()
+    def hashfn(self):
+        return _hash_string('"' + self.string + '"')
+
+    def add(self, right):
+        return right.add_string(self)
+
+    def add_string(self, left):
+        return SastString(left.string + self.string)
 
     def mul(self, right):
         return right.mul_string(self)
@@ -343,7 +391,10 @@ class SastString(SastAtom):
     def div_string(self, left):
         return SastString(left.string + "/" + self.string)
 
-emptystring = SastString("")
+    def div_fixnum(self, left):
+        return left.to_string().div(self)
+
+SastString.empty = SastString("")
 
 class SastSymbol(SastAtom):
 
@@ -362,38 +413,48 @@ class SastSymbol(SastAtom):
     def default(self):
         raise NotImplementedError
 
+    def to_string(self):
+        return SastString(self.symbol)
+
     def to_format(self):
         return self.symbol
 
-    def hashable(self):
-        return self.to_format()
+    def hashfn(self):
+        return _hash_string(self.symbol) or 0
 
     def eval(self, env):
-        return env.lookup(self)
+        return env.get(self)
 
-assign_symbol       = SastSymbol("=")
-lambda_symbol       = SastSymbol("->")
-quote_symbol        = SastSymbol("'")
-block_symbol        = SastSymbol("block")
-list_symbol         = SastSymbol("list")
-as_symbol           = SastSymbol("as")
-if_symbol           = SastSymbol("if")
-in_symbol           = SastSymbol("in")
-is_symbol           = SastSymbol("is")
-or_symbol           = SastSymbol("or")
-and_symbol          = SastSymbol("and")
-range_symbol        = SastSymbol("..")
-ellipses_symbol     = SastSymbol("...")
-add_symbol          = SastSymbol("+")
-sub_symbol          = SastSymbol("-")
-mul_symbol          = SastSymbol("*")
-div_symbol          = SastSymbol("/")
-escape_symbol       = SastSymbol("\\")
+Cons        = SastSymbol("cons")
+Assign      = SastSymbol("=")
+Lambda      = SastSymbol("->")
+Quote       = SastSymbol("'")
+Block       = SastSymbol("block")
+List        = SastSymbol("list")
+As          = SastSymbol("as")
+If          = SastSymbol("if")
+In          = SastSymbol("in")
+Is          = SastSymbol("is")
+Or          = SastSymbol("or")
+And         = SastSymbol("and")
+Range       = SastSymbol("..")
+Ellipses    = SastSymbol("...")
+Add         = SastSymbol("+")
+Sub         = SastSymbol("-")
+Mul         = SastSymbol("*")
+Div         = SastSymbol("/")
+AddAssign   = SastSymbol("+=")
+SubAssign   = SastSymbol("-=")
+MulAssign   = SastSymbol("*=")
+DivAssign   = SastSymbol("/=")
 
 class SastList(SastExpr):
 
     def __init__(self):
         pass
+
+    def length(self):
+        raise NotImplementedError
 
 class SastNil(SastList):
 
@@ -407,11 +468,11 @@ class SastNil(SastList):
     def __init__(self):
         self.nil = '()'
 
+    def length(self):
+        return 0
+
     def to_format(self):
         return self.nil
-
-    def hashable(self):
-        return self.to_format()
 
 nil = SastNil()
 
@@ -420,6 +481,14 @@ class SastPair(SastList):
     def __init__(self, car=nil, cdr=nil):
         self.car = car
         self.cdr = cdr
+
+    def length(self):
+        result = 0
+        if self.car:
+            result += 1
+        if self.cdr:
+            result += self.cdr.length()
+        return result
 
     def default(self):
         return nil
@@ -444,9 +513,6 @@ class SastPair(SastList):
             expr = expr.cdr
         return "(" + result + ")"
 
-    def hashable(self):
-        return self.to_format()
-
     def to_pylist(self):
         pylist = []
         pair = self
@@ -458,10 +524,10 @@ class SastPair(SastList):
         return pylist
 
     @staticmethod
-    def from_pylist(*args, **kwargs):
-        cdr = kwargs.pop("cdr", nil)
+    def from_pylist(*args):
         pylist = list(args)
         pylist.reverse()
+        cdr = nil
         for car in pylist:
             cdr = SastPair(car, cdr)
         return cdr
@@ -482,47 +548,51 @@ class SastPair(SastList):
 class SastQuote(SastPair):
 
     def __init__(self, cdr):
-        self.car = quote_symbol
+        self.car = Quote
         self.cdr = cdr
 
     def to_format(self):
         return "'" + self.cdr.to_format()
 
-    def hashable(self):
-        return self.to_format()
+    def hashfn(self):
+        return 1
 
     def eval(self, env):
         return self.cdr
 
+def hashfn(expr):
+    return expr.hashfn()
+
+def hasheq(expr1, expr2):
+    return expr1.hashfn() == expr2.hashfn()
+
 class SastDict(SastExpr):
 
     def __init__(self):
-        self._dict = {}
+        self.od = r_ordereddict(hasheq, hashfn)
 
     def default(self):
         return emptydict
 
     def to_format(self):
         result = []
-        for key, value in self._dict.iteritems():
-            result += [key + ": " + value.to_format()]
+        for key, value in self.od.iteritems():
+            result += [key.to_format() + ": " + value.to_format()]
         return "{" + " ".join(result) + "}"
 
-    def hashable(self):
-        return self.to_format()
-
-    def lookup(self, key, default=undefined_symbol):
-        value = self._dict.get(key.hashable(), default)
-        if value is None and default is None:
-            raise Exception
+    def get(self, key, default=undefined):
+        value = self.od.get(key, default)
+        if value is None:
+            if default is None:
+                raise Exception
         return value
 
-    def assign(self, key, value):
-        self._dict[key.hashable()] = value
+    def put(self, key, value):
+        self.od[key] = value
         return value
 
-    def remove(self, symbol):
-        del self._dict[symbol.value]
+    def rem(self, key):
+        del self.od[key]
 
 emptydict = SastDict()
 
@@ -531,32 +601,26 @@ class SastBlock(SastPair):
     def __init__(self, env, stmts):
         assert isinstance(stmts, SastPair)
         self.env = env
-        self.car = block_symbol
+        self.car = Block
         self.cdr = stmts
 
     def to_format(self, *args, **kwargs):
         result = self.cdr.to_format()
         return "{" + result[1:-1] + "}"
 
-    def hashable(self):
-        return self.to_format()
-
 class SastLambda(SastPair):
 
     def __init__(self, definition):
-        self.car = lambda_symbol
+        self.car = Lambda
         self.cdr = definition
 
     @property
     def formals(self):
-        return car(self.cdr)
+        return cadr(self)
 
     @property
     def block(self):
-        return cadr(self.cdr)
-
-    def hashable(self):
-        return self.to_format()
+        return caddr(self)
 
 class SastBuiltin(SastExpr):
 
@@ -570,11 +634,8 @@ class SastBuiltin(SastExpr):
         raise NotImplementedError
 
     def to_format(self):
-        result = cons(self.symbol, self.formals).to_format()
+        result = SastPair(self.symbol, self.formals).to_format()
         return "<builtin " + result + ">"
-
-    def hashable(self):
-        return self.to_format()
 
     def call(self, env, expr):
         return self._call(env, expr)
