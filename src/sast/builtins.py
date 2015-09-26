@@ -1,104 +1,59 @@
 from sast.exceptions import *
 from sast.expressions import *
 
+from sast.expressions import _list
 
-def _add(env, expr, acc):
-    if expr.length() < 2:
-        raise SastSyntaxError
-    args = expr.to_pylist()
-    if acc is undefined:
-        acc = args[0].eval(env)
-        args = args[1:]
-    for arg in args:
-        acc = acc.add(arg.eval(env))
-    return acc
 
-def _sub(env, expr, acc):
-    if expr.length() < 2:
-        raise SastSyntaxError
-    args = expr.to_pylist()
-    if acc is undefined:
-        acc = args[0].eval(env)
-        args = args[1:]
-    for arg in args:
-        acc = acc.sub(arg.eval(env))
-    return acc
-
-def _mul(env, expr, acc):
-    if expr.length() < 2:
-        raise SastSyntaxError
-    args = expr.to_pylist()
-    if acc is undefined:
-        acc = args[0].eval(env)
-        args = args[1:]
-    for arg in args:
-        acc = acc.mul(arg.eval(env))
-    return acc
-
-def _div(env, expr, acc):
-    if expr.length() < 2:
-        raise SastSyntaxError
-    args = expr.to_pylist()
-    if acc is undefined:
-        acc = args[0].eval(env)
-        args = args[1:]
-    for arg in args:
-        acc = acc.div(arg.eval(env))
-    return acc
+def op(env, expr, acc, func):
+    if expr.length():
+        args = expr.to_pylist()
+        if acc is undefined:
+            acc = args[0].eval(env)
+            args = args[1:]
+        for arg in args:
+            acc = func(acc, arg.eval(env))
+        return acc
+    raise SastSyntaxError
 
 def assign(env, expr):
     if expr.length() != 2:
+        raise SastSyntaxError
+    if not car(expr).is_symbol():
         raise SastSyntaxError
     key, value = expr.to_pylist()
     return env.put(key, value.eval(env))
 
 def add(env, expr):
-    return _add(env, expr, undefined)
+    return op(env, expr, undefined, lambda acc, arg: acc.add(arg))
 
 def sub(env, expr):
-    return _sub(env, expr, undefined)
+    return op(env, expr, undefined, lambda acc, arg: acc.sub(arg))
 
 def mul(env, expr):
-    return _mul(env, expr, undefined)
+    return op(env, expr, undefined, lambda acc, arg: acc.mul(arg))
 
 def div(env, expr):
-    return _div(env, expr, undefined)
+    return op(env, expr, undefined, lambda acc, arg: acc.div(arg))
 
 def add_assign(env, expr):
-    if expr.length() < 2:
-        raise SastSyntaxError
     symbol = car(expr)
-    addends = cdr(expr)
-    augend = env.get(symbol)
-    result = _add(env, addends, augend)
-    return env.put(symbol, result)
+    result = op(env, cdr(expr), env.get(symbol), lambda acc, arg: acc.add(arg))
+    return assign(env, _list(symbol, result))
 
 def sub_assign(env, expr):
-    if expr.length() < 2:
-        raise SastSyntaxError
     symbol = car(expr)
-    subtrahends = cdr(expr)
-    minuend = env.get(symbol)
-    result = _sub(env, subtrahends, minuend)
-    return env.put(symbol, result)
+    result = op(env, cdr(expr), env.get(symbol), lambda acc, arg: acc.sub(arg))
+    return assign(env, _list(symbol, result))
 
 def mul_assign(env, expr):
-    if expr.length() < 2:
-        raise SastSyntaxError
     symbol = car(expr)
-    multiplicands = cdr(expr)
-    multiplier = env.get(symbol)
-    result = _mul(env, multiplicands, multiplier)
-    return env.put(symbol, result)
+    result = op(env, cdr(expr), env.get(symbol), lambda acc, arg: acc.mul(arg))
+    return assign(env, _list(symbol, result))
 
 def div_assign(env, expr):
-    if expr.length() < 2:
-        raise SastSyntaxError
     symbol = car(expr)
-    divisors = cdr(expr)
-    dividend = env.get(symbol)
-    result = _mul(env, divisors, dividend)
-    return env.put(symbol, result)
+    result = op(env, cdr(expr), env.get(symbol), lambda acc, arg: acc.mul(arg))
+    return assign(env, _list(symbol, result))
 
 def cons(env, expr):
     if not isinstance(expr, SastPair):

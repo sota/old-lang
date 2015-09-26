@@ -1,5 +1,4 @@
 
-import operator as op
 from rpython.rlib.objectmodel import compute_identity_hash
 #from rpython.rlib.objectmodel import _hash_float, _hash_string, specialize
 from rpython.rlib.rarithmetic import LONG_BIT, intmask, ovfcheck
@@ -24,7 +23,7 @@ def _cons(car, cdr):
     return SastPair(car, cdr)
 
 def _list(*items):
-    return SastPair.from_pylist(items)
+    return SastPair.from_pylist(*items)
 
 def car(expr):
     return expr.car
