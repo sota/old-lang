@@ -199,30 +199,7 @@ class SastExpr(object):
     def default(self):
         raise NotImplementedError
 
-class SastAtom(SastExpr):
-
-    def __init__(self, value):
-        assert isinstance(value, str)
-        self.value = value
-
-    def is_args(self):
-        if self.is_symbol():
-            if len(self.value) > 1:
-                f, s = self.value[0:1]
-                return f == "*" and s != "*"
-        return False
-
-    def is_kwargs(self):
-        if self.is_symbol():
-            if len(self.value) > 2:
-                f, s = self.value[0:1]
-                return f == "*" and s == "*"
-        return False
-
-    def default(self):
-        raise NotImplementedError
-
-class SastUndefined(SastAtom):
+class SastUndefined(SastExpr):
 
     def __init__(self):
         self.undefined = "<undefined>"
@@ -246,6 +223,51 @@ class SastUndefined(SastAtom):
         return undefined
 
 undefined = SastUndefined()
+
+class SastObject(SastExpr):
+
+    def __init__(self):
+        self.slots = r_ordereddict(hasheq, hashfn)
+
+    def default(self):
+        return None
+
+    def insert(self, key, value):
+        self.slots[key] = value
+        return value
+
+    def lookup(self, key, default=undefined):
+        value = self.slots.get(key, default)
+        if value is None:
+            if default is None:
+                raise Exception
+        return value
+
+    def remove(self, key):
+        del self.slots[key]
+
+class SastAtom(SastObject):
+
+    def __init__(self, value):
+        assert isinstance(value, str)
+        self.value = value
+
+    def is_args(self):
+        if self.is_symbol():
+            if len(self.value) > 1:
+                f, s = self.value[0:1]
+                return f == "*" and s != "*"
+        return False
+
+    def is_kwargs(self):
+        if self.is_symbol():
+            if len(self.value) > 2:
+                f, s = self.value[0:1]
+                return f == "*" and s == "*"
+        return False
+
+    def default(self):
+        raise NotImplementedError
 
 class SastBool(SastAtom):
 
@@ -448,7 +470,7 @@ SubAssign   = SastSymbol("-=")
 MulAssign   = SastSymbol("*=")
 DivAssign   = SastSymbol("/=")
 
-class SastList(SastExpr):
+class SastList(SastObject):
 
     def __init__(self):
         pass
@@ -566,33 +588,28 @@ def hashfn(expr):
 def hasheq(expr1, expr2):
     return expr1.hashfn() == expr2.hashfn()
 
-class SastDict(SastExpr):
+class SastDict(SastObject):
 
     def __init__(self):
-        self.od = r_ordereddict(hasheq, hashfn)
+        super(SastDict, self).__init__()
 
     def default(self):
         return emptydict
 
     def to_format(self):
         result = []
-        for key, value in self.od.iteritems():
+        for key, value in self.slots.iteritems():
             result += [key.to_format() + ": " + value.to_format()]
         return "{" + " ".join(result) + "}"
 
-    def get(self, key, default=undefined):
-        value = self.od.get(key, default)
-        if value is None:
-            if default is None:
-                raise Exception
-        return value
-
     def put(self, key, value):
-        self.od[key] = value
-        return value
+        return self.insert(key, value)
+
+    def get(self, key, default=undefined):
+        return self.lookup(key, default)
 
     def rem(self, key):
-        del self.od[key]
+        return self.remove(key)
 
 emptydict = SastDict()
 
