@@ -2,6 +2,6 @@
 #define __SOTA_VERSION__
 
 #include <string>
-static const std::string SOTA_VERSION = "v0.3-18-gb7a6930";
+static const std::string SOTA_VERSION = "UNKNOWN";
 
 #endif /*__SOTA_VERSION__*/
