@@ -4,7 +4,7 @@ divine = (component, branch, cfg)
     result = branch
     for k,v in cfg
         if m/branch/k/
-            result v
+            result = v
             break
     result
 
