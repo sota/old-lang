@@ -406,6 +406,9 @@ class SastString(SastAtom):
     def mul(self, right):
         return right.mul_string(self)
 
+    def mul_fixnum(self, left):
+        return left.mul_string(self)
+
     def div(self, right):
         return right.div_string(self)
 
