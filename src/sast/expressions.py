@@ -350,6 +350,9 @@ class SastFixnum(SastAtom):
     def add_fixnum(self, left):
         return SastFixnum(left.fixnum + self.fixnum)
 
+    def add_string(self, left):
+        return SastString(left.string + str(self.fixnum))
+
     def sub(self, right):
         return right.sub_fixnum(self)
 
@@ -402,6 +405,9 @@ class SastString(SastAtom):
 
     def add_string(self, left):
         return SastString(left.string + self.string)
+
+    def add_fixnum(self, left):
+        return SastString(str(left.fixnum) + self.string)
 
     def mul(self, right):
         return right.mul_string(self)
