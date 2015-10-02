@@ -20,7 +20,8 @@ class Token(object): #pylint: disable=too-few-public-methods
             self.pos,
             self.skip)
 
-    def is_name(self, name):
-        if name:
-            return self.name == name
+    def is_name(self, *names):
+        for name in list(names):
+            if name == self.name:
+                return True
         return False

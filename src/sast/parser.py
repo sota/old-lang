@@ -37,7 +37,11 @@ class Parser(object):
 
     def parse(self, source):
         exitcode = 0
-        self._print(self._eval(self._read(source)))
+        try:
+            self._eval(self._read(source))
+        except Exception as ex:
+            print "parse exception"
+            print ex
         return exitcode
 
     def repl(self):
@@ -50,18 +54,22 @@ class Parser(object):
             try:
                 source = stdin_readline()
                 if not source:
-                    print
+                    print "goodbye!"
                     break
-                self._print(self._eval(self._read(source)))
+                code = self._read(source)
+                expr = self._eval(code)
+                if expr is None:
+                    print "goodbye!"
+                    break
+                self._print(expr)
             except KeyboardInterrupt:
                 break
             except EOFError:
                 break
-
         return exitcode
 
     def _read_pair(self):
-        token, distance, _ = self.lexer.lookahead1()
+        token, _, _ = self.lexer.lookahead1()
         if not token:
             raise MissingToken
         if token.is_name(")"):
@@ -70,13 +78,26 @@ class Parser(object):
         car = self._read()
         token, _, _ = self.lexer.lookahead1()
         assert token
-        if token.is_name('.'):
+        if token.is_name("."):
             self.lexer.consume()
             cdr = self._read()
-            if not self.lexer.consume(')'):
+            if not self.lexer.consume(")"):
                 raise ImproperListNotFollowedByRightParen
         else:
             cdr = self._read_pair()
+        return SastPair(car, cdr)
+
+    def _read_block(self):
+        token, _, _ = self.lexer.lookahead1()
+        if not token:
+            raise MissingToken
+        if token.is_name("}"):
+            self.lexer.consume()
+            return nil
+        car = self._read()
+        token, _, _ = self.lexer.lookahead1()
+        assert token
+        cdr = self._read_block()
         return SastPair(car, cdr)
 
     def _read(self, source=None):
@@ -97,9 +118,17 @@ class Parser(object):
             return SastFixnum(int(token.value))
         elif token.is_name("("):
             return self._read_pair()
+        elif token.is_name("{"):
+            stmts = self._read_block()
+            return SastBlock(Env, stmts)
         return SastUndefined()
 
     def _eval(self, expr):
+        if expr.is_block():
+            result = undefined
+            for stmt in expr.cdr.to_pylist():
+                result = stmt.eval(Env)
+            return result
         return expr.eval(Env)
 
     def _print(self, expr):

@@ -84,8 +84,8 @@ class Lexer(object):
                 pos     = rffi.cast(lltype.Signed, ctoken.c_pos)
                 skip    = rffi.cast(lltype.Signed, ctoken.c_skip) != 0
                 name    = self.kind2name.get(kind, None)
-                assert start >= 0
-                assert end >= 0
+                assert start >= 0, "start not >= 0"
+                assert end >= 0, "end not >= 0"
                 value   = self.source[start:end]
                 self.tokens.append(Token(name, value, kind, line, pos, skip))
         return self.tokens

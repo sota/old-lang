@@ -54,7 +54,7 @@ static std::map<long, const char *> TokenMap = {
     TOKENS
 };
 #undef T
-#
+
 inline void write(const char *data) {
     cout << data;
 }
@@ -250,8 +250,20 @@ public:
             Pos(ts)});
     }
 
+    void Token(long start, long end, long kind, long line, long pos, long skip) {
+        tokens.push_back({
+            start,
+            end,
+            kind,
+            line,
+            pos,
+            skip});
+    }
+
     long Scan(CToken **tokens) {
+        Token(0, 0, '{', 0, 0, 0);
         %% write exec;
+        Token(0, 0, '}', eof - p, eof - p, 0);
         *tokens = (struct CToken *)malloc(this->tokens.size() * sizeof(struct CToken));
         copy(this->tokens.begin(), this->tokens.end(), *tokens);
         return this->tokens.size();

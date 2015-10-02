@@ -6,6 +6,8 @@ extern "C" {
 #endif
 
 #define TOKENS                          \
+T(EndOfFile,    EOF,    "<EOF>")        \
+T(StartOfFile,  260,    "<SOF>")        \
 T(Symbol,       261,    "<SYMBOL>")     \
 T(Number,       262,    "<NUMBER>")     \
 T(String,       263,    "<STRING>")     \

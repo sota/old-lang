@@ -547,7 +547,7 @@ class SastPair(SastList):
         pylist = []
         pair = self
         while pair != nil:
-            if not pair.is_pair():
+            if not pair.is_list():
                 raise SastWrongArgType(pair, "list")
             pylist.append(pair.car)
             pair = pair.cdr
@@ -629,9 +629,11 @@ class SastBlock(SastPair):
         self.car = Block
         self.cdr = stmts
 
-    def to_format(self, *args, **kwargs):
+    def to_format(self):
         result = self.cdr.to_format()
-        return "{" + result[1:-1] + "}"
+        if len(result) > 2:
+            return "{" + result + "}"
+        raise Exception("SastBlock.to_format: len of result not > 2")
 
 class SastLambda(SastPair):
 
