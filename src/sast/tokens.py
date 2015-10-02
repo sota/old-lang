@@ -11,7 +11,7 @@ class Token(object): #pylint: disable=too-few-public-methods
         self.pos = pos
         self.skip = skip
 
-    def to_format(self):
+    def pystr(self):
         return '[name=%s value=%s kind=%d line=%d pos=%d skip=%s]' % (
             self.name,
             self.value,

@@ -180,7 +180,7 @@ class SastExpr(object):
     def is_builtin(self):
         return isinstance(self, SastBuiltin)
 
-    def to_format(self):
+    def pystr(self):
         raise NotImplementedError
 
     def to_string(self):
@@ -203,7 +203,7 @@ class SastUndefined(SastExpr):
     def __init__(self):
         self.undefined = "<undefined>"
 
-    def to_format(self):
+    def pystr(self):
         return self.undefined
 
     def to_string(self):
@@ -296,7 +296,7 @@ class SastTrue(SastBool):
     def default(self):
         return true
 
-    def to_format(self):
+    def pystr(self):
         return "true"
 
     def to_string(self):
@@ -318,7 +318,7 @@ class SastFalse(SastBool):
     def default(self):
         return false
 
-    def to_format(self):
+    def pystr(self):
         return "false"
 
     def to_string(self):
@@ -338,7 +338,7 @@ class SastFixnum(SastAtom):
     def to_string(self):
         return SastString(str(self.fixnum))
 
-    def to_format(self):
+    def pystr(self):
         return str(self.fixnum)
 
     def hashfn(self):
@@ -394,7 +394,7 @@ class SastString(SastAtom):
     def to_string(self):
         return self
 
-    def to_format(self):
+    def pystr(self):
         return '"' + self.string + '"'
 
     def hashfn(self):
@@ -446,7 +446,7 @@ class SastSymbol(SastAtom):
     def to_string(self):
         return SastString(self.symbol)
 
-    def to_format(self):
+    def pystr(self):
         return self.symbol
 
     def hashfn(self):
@@ -501,7 +501,7 @@ class SastNil(SastList):
     def length(self):
         return 0
 
-    def to_format(self):
+    def pystr(self):
         return self.nil
 
 nil = SastNil()
@@ -529,15 +529,15 @@ class SastPair(SastList):
     def is_kwargs(self):
         return False
 
-    def to_format(self):
+    def pystr(self):
         result = ""
         expr = self
         while True:
-            result += expr.car.to_format()
+            result += expr.car.pystr()
             if expr.cdr.is_nil():
                 break
             elif not expr.cdr.is_pair():
-                result += " . " + expr.cdr.to_format()
+                result += " . " + expr.cdr.pystr()
                 break
             result += " "
             expr = expr.cdr
@@ -581,8 +581,8 @@ class SastQuote(SastPair):
         self.car = Quote
         self.cdr = cdr
 
-    def to_format(self):
-        return "'" + self.cdr.to_format()
+    def pystr(self):
+        return "'" + self.cdr.pystr()
 
     def hashfn(self):
         return 1
@@ -604,10 +604,10 @@ class SastDict(SastObject):
     def default(self):
         return emptydict
 
-    def to_format(self):
+    def pystr(self):
         result = []
         for key, value in self.slots.iteritems():
-            result += [key.to_format() + ": " + value.to_format()]
+            result += [key.pystr() + ": " + value.pystr()]
         return "{" + " ".join(result) + "}"
 
     def put(self, key, value):
@@ -629,11 +629,11 @@ class SastBlock(SastPair):
         self.car = Block
         self.cdr = stmts
 
-    def to_format(self):
-        result = self.cdr.to_format()
+    def pystr(self):
+        result = self.cdr.pystr()
         if len(result) > 2:
             return "{" + result + "}"
-        raise Exception("SastBlock.to_format: len of result not > 2")
+        raise Exception("SastBlock.pystr: len of result not > 2")
 
 class SastLambda(SastPair):
 
@@ -660,8 +660,8 @@ class SastBuiltin(SastExpr):
     def block(self):
         raise NotImplementedError
 
-    def to_format(self):
-        result = SastPair(self.symbol, self.formals).to_format()
+    def pystr(self):
+        result = SastPair(self.symbol, self.formals).pystr()
         return "<builtin " + result + ">"
 
     def call(self, env, expr):

@@ -133,5 +133,5 @@ class Parser(object):
 
     def _print(self, expr):
         if expr and isinstance(expr, SastExpr):
-            print expr.to_format()
+            print expr.pystr()
 
