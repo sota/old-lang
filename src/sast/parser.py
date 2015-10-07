@@ -35,16 +35,15 @@ class Parser(object):
     def __init__(self, lexer):
         self.lexer = lexer
 
-    def parse(self, source):
+    def Parse(self, source):
         exitcode = 0
         try:
-            self._eval(self._read(source))
+            self.Eval(self.Read(source))
         except Exception as ex:
-            print "parse exception"
-            print ex
+            raise
         return exitcode
 
-    def repl(self):
+    def Repl(self):
         exitcode = 0
         print REPL_USAGE
         prompt = "sota> "
@@ -56,51 +55,51 @@ class Parser(object):
                 if not source:
                     print "goodbye!"
                     break
-                code = self._read(source)
-                expr = self._eval(code)
-                if expr is None:
+                code = self.Read(source)
+                exp = self.Eval(code)
+                if exp is None:
                     print "goodbye!"
                     break
-                self._print(expr)
+                self.Print(exp)
             except KeyboardInterrupt:
                 break
             except EOFError:
                 break
         return exitcode
 
-    def _read_pair(self):
+    def ReadPair(self):
         token, _, _ = self.lexer.lookahead1()
         if not token:
             raise MissingToken
         if token.is_name(")"):
             self.lexer.consume()
             return nil
-        car = self._read()
+        car = self.Read()
         token, _, _ = self.lexer.lookahead1()
         assert token
         if token.is_name("."):
             self.lexer.consume()
-            cdr = self._read()
+            cdr = self.Read()
             if not self.lexer.consume(")"):
                 raise ImproperListNotFollowedByRightParen
         else:
-            cdr = self._read_pair()
+            cdr = self.ReadPair()
         return SastPair(car, cdr)
 
-    def _read_block(self):
+    def ReadBlock(self):
         token, _, _ = self.lexer.lookahead1()
         if not token:
             raise MissingToken
         if token.is_name("}"):
             self.lexer.consume()
             return nil
-        car = self._read()
+        car = self.Read()
         token, _, _ = self.lexer.lookahead1()
         assert token
-        cdr = self._read_block()
+        cdr = self.ReadBlock()
         return SastPair(car, cdr)
 
-    def _read(self, source=None):
+    def Read(self, source=None):
         if source:
             self.lexer.scan(source)
         token = self.lexer.consume()
@@ -110,28 +109,23 @@ class Parser(object):
             elif token.value == "false":
                 return false
             if token.value in ("'", "quote"):
-                return SastQuote(self._read())
+                return SastQuote(self.Read())
             return SastSymbol(token.value)
         elif token.is_name("str"):
             return SastString(token.value)
         elif token.is_name("num"):
             return SastFixnum(int(token.value))
         elif token.is_name("("):
-            return self._read_pair()
+            return self.ReadPair()
         elif token.is_name("{"):
-            stmts = self._read_block()
-            return SastBlock(Env, stmts)
+            stmts = self.ReadBlock()
+            return SastBlock(stmts)
         return SastUndefined()
 
-    def _eval(self, expr):
-        if expr.is_block():
-            result = undefined
-            for stmt in expr.cdr.to_pylist():
-                result = stmt.eval(Env)
-            return result
-        return expr.eval(Env)
+    def Eval(self, exp):
+        return exp.Eval(Env)
 
-    def _print(self, expr):
-        if expr and isinstance(expr, SastExpr):
-            print expr.pystr()
+    def Print(self, exp):
+        if exp and isinstance(exp, SastExp):
+            print exp.to_str()
 

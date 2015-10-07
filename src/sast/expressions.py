@@ -23,105 +23,105 @@ def _cons(car, cdr):
     return SastPair(car, cdr)
 
 def _list(*items):
-    return SastPair.from_pylist(*items)
+    return SastPair.from_pylist(list(items))
 
-def car(expr):
-    return expr.car
+def car(exp):
+    return exp.car
 
-def cdr(expr):
-    return expr.cdr
+def cdr(exp):
+    return exp.cdr
 
-def caar(expr):
-    return car(car(expr))
+def caar(exp):
+    return car(car(exp))
 
-def cadr(expr):
-    return car(cdr(expr))
+def cadr(exp):
+    return car(cdr(exp))
 
-def cdar(expr):
-    return cdr(car(expr))
+def cdar(exp):
+    return cdr(car(exp))
 
-def cddr(expr):
-    return cdr(cdr(expr))
+def cddr(exp):
+    return cdr(cdr(exp))
 
-def caaar(expr):
-    car(car(car(expr)))
+def caaar(exp):
+    car(car(car(exp)))
 
-def caadr(expr):
-    car(car(cdr(expr)))
+def caadr(exp):
+    car(car(cdr(exp)))
 
-def cadar(expr):
-    car(cdr(car(expr)))
+def cadar(exp):
+    car(cdr(car(exp)))
 
-def caddr(expr):
-    car(cdr(cdr(expr)))
+def caddr(exp):
+    car(cdr(cdr(exp)))
 
-def cdaar(expr):
-    cdr(car(car(expr)))
+def cdaar(exp):
+    cdr(car(car(exp)))
 
-def cdadr(expr):
-    cdr(car(cdr(expr)))
+def cdadr(exp):
+    cdr(car(cdr(exp)))
 
-def cddar(expr):
-    cdr(cdr(car(expr)))
+def cddar(exp):
+    cdr(cdr(car(exp)))
 
-def cdddr(expr):
-    cdr(cdr(cdr(expr)))
+def cdddr(exp):
+    cdr(cdr(cdr(exp)))
 
-def caaaar(expr):
-    car(car(car(car(expr))))
+def caaaar(exp):
+    car(car(car(car(exp))))
 
-def caaadr(expr):
-    car(car(car(cdr(expr))))
+def caaadr(exp):
+    car(car(car(cdr(exp))))
 
-def caadar(expr):
-    car(car(cdr(car(expr))))
+def caadar(exp):
+    car(car(cdr(car(exp))))
 
-def caaddr(expr):
-    car(car(cdr(cdr(expr))))
+def caaddr(exp):
+    car(car(cdr(cdr(exp))))
 
-def cadaar(expr):
-    car(cdr(car(car(expr))))
+def cadaar(exp):
+    car(cdr(car(car(exp))))
 
-def cadadr(expr):
-    car(cdr(car(cdr(expr))))
+def cadadr(exp):
+    car(cdr(car(cdr(exp))))
 
-def caddar(expr):
-    car(cdr(cdr(car(expr))))
+def caddar(exp):
+    car(cdr(cdr(car(exp))))
 
-def cadddr(expr):
-    car(cdr(cdr(cdr(expr))))
+def cadddr(exp):
+    car(cdr(cdr(cdr(exp))))
 
-def cdaaar(expr):
-    cdr(car(car(car(expr))))
+def cdaaar(exp):
+    cdr(car(car(car(exp))))
 
-def cdaadr(expr):
-    cdr(car(car(cdr(expr))))
+def cdaadr(exp):
+    cdr(car(car(cdr(exp))))
 
-def cdadar(expr):
-    cdr(car(cdr(car(expr))))
+def cdadar(exp):
+    cdr(car(cdr(car(exp))))
 
-def cdaddr(expr):
-    cdr(car(cdr(cdr(expr))))
+def cdaddr(exp):
+    cdr(car(cdr(cdr(exp))))
 
-def cddaar(expr):
-    cdr(cdr(car(car(expr))))
+def cddaar(exp):
+    cdr(cdr(car(car(exp))))
 
-def cddadr(expr):
-    cdr(cdr(car(cdr(expr))))
+def cddadr(exp):
+    cdr(cdr(car(cdr(exp))))
 
-def cdddar(expr):
-    cdr(cdr(cdr(car(expr))))
+def cdddar(exp):
+    cdr(cdr(cdr(car(exp))))
 
-def cddddr(expr):
-    cdr(cdr(cdr(cdr(expr))))
+def cddddr(exp):
+    cdr(cdr(cdr(cdr(exp))))
 
-def set_car(expr, value):
-    expr.car = value
+def set_car(exp, value):
+    exp.car = value
 
-def set_cdr(expr, value):
-    expr.cdr = value
+def set_cdr(exp, value):
+    exp.cdr = value
 
-class SastExpr(object):
+class SastExp(object):
 
     def __init__(self):
         pass
@@ -180,7 +180,7 @@ class SastExpr(object):
     def is_builtin(self):
         return isinstance(self, SastBuiltin)
 
-    def pystr(self):
+    def to_str(self):
         raise NotImplementedError
 
     def to_string(self):
@@ -189,21 +189,24 @@ class SastExpr(object):
     def hashfn(self):
         return compute_identity_hash(self)
 
-    def eval(self, env):
+    def Eval(self, env):
         return self
 
-    def call(self, env, exprs):
+    def EvalArgs(self, exp):
+        return exp
+
+    def Call(self, env, exp):
         return self
 
     def default(self):
         raise NotImplementedError
 
-class SastUndefined(SastExpr):
+class SastUndefined(SastExp):
 
     def __init__(self):
         self.undefined = "<undefined>"
 
-    def pystr(self):
+    def to_str(self):
         return self.undefined
 
     def to_string(self):
@@ -223,7 +226,7 @@ class SastUndefined(SastExpr):
 
 undefined = SastUndefined()
 
-class SastObject(SastExpr):
+class SastObject(SastExp):
 
     def __init__(self):
         self.slots = r_ordereddict(hasheq, hashfn)
@@ -287,7 +290,7 @@ class SastTrue(SastBool):
     _true = None
     def __new__(cls, value):
         if cls._true is None:
-            cls._true = SastExpr.__new__(cls)
+            cls._true = SastExp.__new__(cls)
         return cls._true
 
     def __init__(self, value):
@@ -296,7 +299,7 @@ class SastTrue(SastBool):
     def default(self):
         return true
 
-    def pystr(self):
+    def to_str(self):
         return "true"
 
     def to_string(self):
@@ -309,7 +312,7 @@ class SastFalse(SastBool):
     _false = None
     def __new__(cls, value):
         if cls._false is None:
-            cls._false = SastExpr.__new__(cls)
+            cls._false = SastExp.__new__(cls)
         return cls._false
 
     def __init__(self, value):
@@ -318,7 +321,7 @@ class SastFalse(SastBool):
     def default(self):
         return false
 
-    def pystr(self):
+    def to_str(self):
         return "false"
 
     def to_string(self):
@@ -338,7 +341,7 @@ class SastFixnum(SastAtom):
     def to_string(self):
         return SastString(str(self.fixnum))
 
-    def pystr(self):
+    def to_str(self):
         return str(self.fixnum)
 
     def hashfn(self):
@@ -394,7 +397,7 @@ class SastString(SastAtom):
     def to_string(self):
         return self
 
-    def pystr(self):
+    def to_str(self):
         return '"' + self.string + '"'
 
     def hashfn(self):
@@ -446,14 +449,14 @@ class SastSymbol(SastAtom):
     def to_string(self):
         return SastString(self.symbol)
 
-    def pystr(self):
+    def to_str(self):
         return self.symbol
 
     def hashfn(self):
         return _hash_string(self.symbol) or 0
 
-    def eval(self, env):
-        return env.get(self)
+    def Eval(self, env):
+        return env.Get(self)
 
 Cons        = SastSymbol("cons")
 Assign      = SastSymbol("=")
@@ -477,6 +480,7 @@ AddAssign   = SastSymbol("+=")
 SubAssign   = SastSymbol("-=")
 MulAssign   = SastSymbol("*=")
 DivAssign   = SastSymbol("/=")
+Print       = SastSymbol("print")
 
 class SastList(SastObject):
 
@@ -501,7 +505,7 @@ class SastNil(SastList):
     def length(self):
         return 0
 
-    def pystr(self):
+    def to_str(self):
         return self.nil
 
 nil = SastNil()
@@ -529,18 +533,18 @@ class SastPair(SastList):
     def is_kwargs(self):
         return False
 
-    def pystr(self):
+    def to_str(self):
         result = ""
-        expr = self
+        exp = self
         while True:
-            result += expr.car.pystr()
-            if expr.cdr.is_nil():
+            result += exp.car.to_str()
+            if exp.cdr.is_nil():
                 break
-            elif not expr.cdr.is_pair():
-                result += " . " + expr.cdr.pystr()
+            elif not exp.cdr.is_pair():
+                result += " . " + exp.cdr.to_str()
                 break
             result += " "
-            expr = expr.cdr
+            exp = exp.cdr
         return "(" + result + ")"
 
     def to_pylist(self):
@@ -554,13 +558,12 @@ class SastPair(SastList):
         return pylist
 
     @staticmethod
-    def from_pylist(*args):
-        pylist = list(args)
+    def from_pylist(pylist):
         pylist.reverse()
-        cdr = nil
-        for car in pylist:
-            cdr = SastPair(car, cdr)
-        return cdr
+        pair = nil
+        for item in pylist:
+            pair = SastPair(item, pair)
+        return pair
 
     def is_tagged(self, tag=None):
         if self.is_pair():
@@ -571,9 +574,10 @@ class SastPair(SastList):
                     return True
         return False
 
-    def eval(self, env):
-        func = self.car.eval(env)
-        return func.call(env, self.cdr)
+    def Eval(self, env):
+        func = car(self).Eval(env)
+        args = func.EvalArgs(cdr(self))
+        return func.Call(env, args)
 
 class SastQuote(SastPair):
 
@@ -581,20 +585,20 @@ class SastQuote(SastPair):
         self.car = Quote
         self.cdr = cdr
 
-    def pystr(self):
-        return "'" + self.cdr.pystr()
+    def to_str(self):
+        return "'" + self.cdr.to_str()
 
     def hashfn(self):
         return 1
 
-    def eval(self, env):
+    def Eval(self, env):
         return self.cdr
 
-def hashfn(expr):
-    return expr.hashfn()
+def hashfn(exp):
+    return exp.hashfn()
 
-def hasheq(expr1, expr2):
-    return expr1.hashfn() == expr2.hashfn()
+def hasheq(exp1, exp2):
+    return exp1.hashfn() == exp2.hashfn()
 
 class SastDict(SastObject):
 
@@ -604,16 +608,16 @@ class SastDict(SastObject):
     def default(self):
         return emptydict
 
-    def pystr(self):
+    def to_str(self):
         result = []
         for key, value in self.slots.iteritems():
-            result += [key.pystr() + ": " + value.pystr()]
-        return "{" + " ".join(result) + "}"
+            result += [key.to_str() + ": " + value.to_str()]
+        return "{ " + " ".join(result) + " }"
 
-    def put(self, key, value):
+    def Set(self, key, value):
         return self.insert(key, value)
 
-    def get(self, key, default=undefined):
+    def Get(self, key, default=undefined):
         return self.lookup(key, default)
 
     def rem(self, key):
@@ -623,47 +627,56 @@ emptydict = SastDict()
 
 class SastBlock(SastPair):
 
-    def __init__(self, env, stmts):
+    def __init__(self, stmts):
         assert isinstance(stmts, SastPair)
-        self.env = env
         self.car = Block
         self.cdr = stmts
 
-    def pystr(self):
-        result = self.cdr.pystr()
+    def to_str(self):
+        result = self.cdr.to_str()
         if len(result) > 2:
             return "{" + result + "}"
-        raise Exception("SastBlock.pystr: len of result not > 2")
+        raise SastBlockLengthError
 
-class SastLambda(SastPair):
+    def Eval(self, env):
+        exp = cdr(self)
+        while exp.length() > 1:
+            car(exp).Eval(env)
+            exp = cdr(exp)
+        exp = car(exp).Eval(env) #TODO: should be tail recursive
+        return exp
 
-    def __init__(self, definition):
-        self.car = Lambda
-        self.cdr = definition
+class SastFunc(SastExp):
 
-    @property
-    def formals(self):
-        return cadr(self)
-
-    @property
-    def block(self):
-        return caddr(self)
-
-class SastBuiltin(SastExpr):
-
-    def __init__(self, symbol, formals, call):
-        self.symbol = symbol
+    def __init__(self, env, formals):
+        self.env = env
         self.formals = formals
-        self._call = call
+        self.idx = 0
 
-    @property
-    def block(self):
+    def EvalArgs(self, exp):
+        args = exp.to_pylist()
+        return SastPair.from_pylist(args[:self.idx] + [arg.Eval(self.env) for arg in args[self.idx:]])
+
+    def Eval(self, env):
         raise NotImplementedError
 
-    def pystr(self):
-        result = SastPair(self.symbol, self.formals).pystr()
-        return "<builtin " + result + ">"
+class SastBuiltin(SastFunc):
 
-    def call(self, env, expr):
-        return self._call(env, expr)
+    def __init__(self, env):
+        super(SastBuiltin, self).__init__(env, None)
+
+    def to_str(self):
+        return "<builtin " + self.__class__.__name__ + ">"
+
+    def call(self, env, exp):
+        raise NotImplementedError
+
+    def Call(self, env, exp):
+        return self.call(env, exp)
+
+class SastLambda(SastFunc):
+
+    def __init__(self, env, formals, block):
+        super(SastLambda, self).__init__(env, formals)
+        self.block = block
 

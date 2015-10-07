@@ -1,88 +1,22 @@
 from sast.exceptions import *
 from sast.expressions import *
 from sast.expressions import _list
-
 import sast.builtins as builtins
 
 class SastEnv(SastDict):
     pass
 
 Env = SastEnv()
-
-Env.put(
-    Cons,
-    SastBuiltin(
-        Cons,
-        SastPair.from_pylist(SastSymbol("car"), SastSymbol("cdr")),
-        builtins.cons))
-
-Env.put(
-    List,
-    SastBuiltin(
-        List,
-        SastPair.from_pylist(SastSymbol("*items")),
-        builtins.list))
-
-Env.put(
-    Assign,
-    SastBuiltin(
-        Assign,
-        SastPair.from_pylist(SastSymbol("symbol"), SastSymbol("value")),
-        builtins.assign))
-
-Env.put(
-    Add,
-    SastBuiltin(
-        Add,
-        SastPair.from_pylist(SastSymbol("augend"), SastSymbol("*addends")),
-        builtins.add))
-
-Env.put(
-    Sub,
-    SastBuiltin(
-        Sub,
-        SastPair.from_pylist(SastSymbol("minuend"), SastSymbol("*subtrahends")),
-        builtins.sub))
-
-Env.put(
-    Mul,
-    SastBuiltin(
-        Mul,
-        SastPair.from_pylist(SastSymbol("multiplier"), SastSymbol("*multiplicands")),
-        builtins.mul))
-
-Env.put(
-    Div,
-    SastBuiltin(
-        Div,
-        SastPair.from_pylist(SastSymbol("dividend"), SastSymbol("*divisors")),
-        builtins.div))
-
-Env.put(
-    AddAssign,
-    SastBuiltin(
-        AddAssign,
-        SastPair.from_pylist(SastSymbol("symbol"), SastSymbol("*addends")),
-        builtins.add_assign))
-
-Env.put(
-    SubAssign,
-    SastBuiltin(
-        SubAssign,
-        SastPair.from_pylist(SastSymbol("symbol"), SastSymbol("*subtrahends")),
-        builtins.sub_assign))
-
-Env.put(
-    MulAssign,
-    SastBuiltin(
-        MulAssign,
-        SastPair.from_pylist(SastSymbol("symbol"), SastSymbol("*multiplicands")),
-        builtins.mul_assign))
-
-Env.put(
-    DivAssign,
-    SastBuiltin(
-        DivAssign,
-        SastPair.from_pylist(SastSymbol("symbol"), SastSymbol("*divisors")),
-        builtins.div_assign))
+Env.Set(Cons,       builtins.New("SastCons", env=Env, call=builtins.Cons))
+Env.Set(List,       builtins.New("SastList", env=Env, call=builtins.List))
+Env.Set(Print,      builtins.New("SastPrint", env=Env, call=builtins.Print))
+Env.Set(Add,        builtins.New("SastAdd", env=Env, call=builtins.Add))
+Env.Set(Sub,        builtins.New("SastSub", env=Env, call=builtins.Sub))
+Env.Set(Mul,        builtins.New("SastMul", env=Env, call=builtins.Mul))
+Env.Set(Div,        builtins.New("SastDiv", env=Env, call=builtins.Div))
+Env.Set(Assign,     builtins.New("SastAssign", env=Env, call=builtins.Assign))
+Env.Set(AddAssign,  builtins.New("SastAddAssign", env=Env, call=builtins.AddAssign))
+Env.Set(SubAssign,  builtins.New("SastSubAssign", env=Env, call=builtins.SubAssign))
+Env.Set(MulAssign,  builtins.New("SastMulAssign", env=Env, call=builtins.MulAssign))
+Env.Set(DivAssign,  builtins.New("SastDivAssign", env=Env, call=builtins.DivAssign))
 

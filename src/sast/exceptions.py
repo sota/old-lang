@@ -8,7 +8,7 @@ class SastUnboundVariable(SastException):
 
 class SastNotCallable(SastException):
     def __str__(self):
-        return "%s is not a callable" % (self.args[0].pystr(), )
+        return "%s is not a callable" % (self.args[0].to_str(), )
 
 class SastWrongArgsNumber(SastException):
     def __str__(self):
@@ -21,7 +21,11 @@ class SastWrongArgsNumber(SastException):
 class SastWrongArgType(SastException):
     def __str__(self):
         return "Wrong argument type: %s is not %s" % \
-                (self.args[0].pystr(), self.args[1])
+            (self.args[0].to_str(), self.args[1])
+
+class SastBlockLengthError(SastException):
+    def __str__(self):
+        return "SastBlock.to_str: len of result not > 2"
 
 class SastSyntaxError(SastException):
     def __str__(self):
