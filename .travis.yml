@@ -24,6 +24,7 @@ before_install:
   - $CC --version
   - $CXX --version
 install:
+  - pip install --upgrade pip
   - pip install -r requirements.txt
 script:
   - doit -n4
