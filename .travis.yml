@@ -3,9 +3,27 @@ python:
     - "2.7"
 git:
     submodules: false
+sudo: false
+addons:
+    apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - gcc-5
+          - g++-5
+          - libtool
+          - autoconf
+          - automake1.9
+before_install:
+  - if [ $TRAVIS_OS_NAME == "linux" ]; then
+        export CC="gcc-5";
+        export CXX="g++-5";
+        export LINK="gcc-5";
+        export LINKXX="g++-5";
+    fi
+  - $CC --version
+  - $CXX --version
 install:
-  - bash -x .travis.deps
   - pip install -r requirements.txt
-sudo: true
 script:
-    doit -n4
+  - doit -n4

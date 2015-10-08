@@ -34,7 +34,7 @@ RPYTHON = 'lib/pypy/rpython/bin/rpython'
 VERSIONH = 'src/cli/version.h'
 VERSIONPY = 'src/version.py'
 
-CC = 'g++'
+CC = os.getenv('CXX', 'g++')
 CXXFLAGS = '-Wall -Werror -O2 -std=c++11 -g -I../ -I../../lib/docopt'
 PRE = 'tests/pre'
 POST = 'tests/post'
