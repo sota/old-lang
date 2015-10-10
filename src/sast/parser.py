@@ -16,19 +16,33 @@ exit: ctrl+c | ctrl+d, return
 welcome to the sota repl!
 ''' % SOTA_VERSION
 
-def stdin_readline():
-    line = ''
-    char = os.read(0, 1)
-    while char not in ('', '\n'):
-        line += char
-        char = os.read(0, 1)
-    return line
-
 class MissingToken(Exception):
     pass
 
 class ImproperListNotFollowedByRightParen(Exception):
     pass
+
+class NestingError(Exception):
+    pass
+
+def get_input():
+    text = ""
+    nesting = 0
+    while True:
+        char = os.read(0, 1)
+        text += char
+        if char == '(':
+            nesting += 1
+        elif char == ')':
+            nesting -= 1
+        if char == '\n':
+            if nesting == 0:
+                break
+            elif nesting < 0:
+                raise NestingError
+        elif char == '':
+            raise EOFError
+    return text
 
 class Parser(object):
 
@@ -51,10 +65,9 @@ class Parser(object):
             os.write(1, prompt)
             source = None
             try:
-                source = stdin_readline()
-                if not source:
-                    print "goodbye!"
-                    break
+                source = get_input()
+                if source == '\n':
+                    continue
                 code = self.Read(source)
                 exp = self.Eval(code)
                 if exp is None:
@@ -64,6 +77,7 @@ class Parser(object):
             except KeyboardInterrupt:
                 break
             except EOFError:
+                print "goodbye!"
                 break
         return exitcode
 
