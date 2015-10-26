@@ -1,10 +1,15 @@
+#!/usr/bin/env python
+
 '''
 sota: State of the Art
 
 The target below specifies the sota dynamic programming language.
 '''
 import os
-
+import sys
+sys.path.insert(0, 'src')
+sys.path.insert(0, 'src/cli')
+sys.path.insert(0, 'lib/pypy')
 os.environ['PYTHONPATH'] = 'src:src/pypy'
 
 from rpython.rtyper.lltypesystem import rffi, lltype
@@ -64,3 +69,7 @@ def entry_point(argv):
 
 def target(*args):
     return entry_point
+
+if __name__ == '__main__':
+    ep = entry_point(sys.argv)
+    print 'hi'

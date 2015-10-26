@@ -25,8 +25,8 @@ SUBMODS = subs2shas().keys()
 DODO = 'dodo.py'
 SOTA = 'sota'
 RAGEL = 'bin/ragel'
-TARGETDIR = 'src'
-TARGETSRC = 'targetsota.py'
+TARGETDIR = '.'
+TARGETSRC = 'sota.py'
 PYTHON = 'python' if call('which pypy', throw=False)[0] else 'pypy'
 PYTHON = 'python' # FIXME:  its slower; doing this for now ... -sai pylint: disable=fixme
 RPYTHON = 'lib/pypy/rpython/bin/rpython'

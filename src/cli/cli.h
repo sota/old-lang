@@ -9,7 +9,7 @@ struct CliToken {
     char * name;
     char * value;
 };
-
+extern __attribute__((visibility("default")))
 int parse(int argc, char *argv[], struct CliToken **tokens);
 
 #ifdef __cplusplus
