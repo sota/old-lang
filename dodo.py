@@ -29,18 +29,18 @@ TARGETDIR = '.'
 TARGETSRC = 'sota.py'
 PYTHON = 'python' if call('which pypy', throw=False)[0] else 'pypy'
 PYTHON = 'python' # FIXME:  its slower; doing this for now ... -sai pylint: disable=fixme
-RPYTHON = 'lib/pypy/rpython/bin/rpython'
+RPYTHON = 'src/pypy/rpython/bin/rpython'
 
 VERSIONH = 'src/cli/version.h'
 VERSIONPY = 'src/version.py'
 
 CC = os.getenv('CXX', 'g++')
-CXXFLAGS = '-Wall -Werror -O2 -std=c++11 -g -I../ -I../../lib/docopt'
+CXXFLAGS = '-Wall -Werror -O2 -std=c++11 -g -I../ -I../docopt'
 PRE = 'tests/pre'
 POST = 'tests/post'
 
 ENVS = [
-    'PYTHONPATH=.:src:lib/pypy:$PYTHONPATH',
+    'PYTHONPATH=.:src:src/pypy:$PYTHONPATH',
 ]
 ENVS = ' '.join(ENVS)
 
@@ -125,12 +125,12 @@ def task_ragel():
     '''
     return {
         'file_dep': [DODO],
-        'task_dep': ['submod:lib/ragel'],
+        'task_dep': ['submod:src/ragel'],
         'actions': [
-            'cd lib/ragel && ./autogen.sh',
-            'cd lib/ragel && ./configure --prefix='+os.getcwd(),
-            'cd lib/ragel && make',
-            'cd lib/ragel && make install',
+            'cd src/ragel && ./autogen.sh',
+            'cd src/ragel && ./configure --prefix='+os.getcwd(),
+            'cd src/ragel && make',
+            'cd src/ragel && make install',
         ],
         'targets': [RAGEL],
         'clean': [clean_targets],
@@ -142,9 +142,9 @@ def task_libcli():
     '''
     return {
         'file_dep': [DODO] + rglob('src/cli/*.{h,c,cpp}'),
-        'task_dep': ['submod:lib/docopt'],
+        'task_dep': ['submod:src/docopt'],
         'actions': [
-            'cd src/cli && %(CC)s %(CXXFLAGS)s -c ../../lib/docopt/docopt.cpp -o docopt.o' % gl(),
+            'cd src/cli && %(CC)s %(CXXFLAGS)s -c ../docopt/docopt.cpp -o docopt.o' % gl(),
             'cd src/cli && %(CC)s %(CXXFLAGS)s -c cli.cpp -o cli.o' % gl(),
             'cd src/cli && ar crs libcli.a docopt.o cli.o',
             'cd src/cli && %(CC)s test.c libcli.a -o test' % gl(),
@@ -227,7 +227,7 @@ def task_sota():
             'src/cli/libcli.a',
             'src/lexer/liblexer.a',
         ] + rglob('%(TARGETDIR)s/*.py' % gl()),
-        'task_dep': ['submod:lib/pypy', 'pre'],
+        'task_dep': ['submod:src/pypy', 'pre'],
         'actions': [
             '%(PYTHON)s -B %(RPYTHON)s --output %(SOTA)s %(TARGETDIR)s/%(TARGETSRC)s' % gl(),
         ],
