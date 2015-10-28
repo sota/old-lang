@@ -32,11 +32,12 @@ def escape(old):
             new += char
     return new
 
+lib_dir = os.path.join(os.getcwd(), 'lib')
 lexer_dir = os.path.join(os.getcwd(), 'src/lexer')
 lexer_eci = ExternalCompilationInfo(
     include_dirs=[lexer_dir],
     includes=['lexer.h'],
-    library_dirs=[lexer_dir],
+    library_dirs=[lib_dir],
     libraries=['lexer'],
     use_cpp_linker=True)
 

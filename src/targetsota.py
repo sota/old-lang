@@ -18,11 +18,12 @@ from rpython.translator.tool.cbuild import ExternalCompilationInfo
 from sast.lexer import Lexer
 from sast.parser import Parser
 
+lib_dir = os.path.join(os.getcwd(), 'lib')
 cli_dir = os.path.join(os.getcwd(), 'src/cli')
 cli_eci = ExternalCompilationInfo(
     include_dirs=[cli_dir],
     includes=['cli.h'],
-    library_dirs=[cli_dir],
+    library_dirs=[lib_dir],
     libraries=['cli'],
     use_cpp_linker=True)
 

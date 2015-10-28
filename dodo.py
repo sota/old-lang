@@ -23,10 +23,9 @@ DOIT_CONFIG = {
 
 SUBMODS = subs2shas().keys()
 DODO = 'dodo.py'
-SOTA = 'sota'
 RAGEL = 'bin/ragel'
-TARGETDIR = '.'
-TARGETSRC = 'sota.py'
+TARGETDIR = 'src'
+TARGETSRC = 'targetsota.py'
 PYTHON = 'python' if call('which pypy', throw=False)[0] else 'pypy'
 PYTHON = 'python' # FIXME:  its slower; doing this for now ... -sai pylint: disable=fixme
 RPYTHON = 'src/pypy/rpython/bin/rpython'
@@ -35,7 +34,7 @@ VERSIONH = 'src/cli/version.h'
 VERSIONPY = 'src/version.py'
 
 CC = os.getenv('CXX', 'g++')
-CXXFLAGS = '-Wall -Werror -O2 -std=c++11 -g -I../ -I../docopt'
+CXXFLAGS = '-Wall -Werror -fPIC -O2 -std=c++11 -g -I../ -I../docopt'
 PRE = 'tests/pre'
 POST = 'tests/post'
 
@@ -138,18 +137,18 @@ def task_ragel():
 
 def task_libcli():
     '''
-    build libary for use as sota's commandline interface
+    build so libary for use as sota's commandline interface
     '''
     return {
         'file_dep': [DODO] + rglob('src/cli/*.{h,c,cpp}'),
         'task_dep': ['submod:src/docopt'],
-        'actions': [
-            'cd src/cli && %(CC)s %(CXXFLAGS)s -c ../docopt/docopt.cpp -o docopt.o' % gl(),
+        'actions': [                                                                               'cd src/cli && %(CC)s %(CXXFLAGS)s -c ../docopt/docopt.cpp -o docopt.o' % gl(),
             'cd src/cli && %(CC)s %(CXXFLAGS)s -c cli.cpp -o cli.o' % gl(),
-            'cd src/cli && ar crs libcli.a docopt.o cli.o',
-            'cd src/cli && %(CC)s test.c libcli.a -o test' % gl(),
+            'mkdir -p lib',
+            'cd src/cli && %(CC)s -shared -o ../../lib/libcli.so docopt.o cli.o' % gl(),
+            'cd src/cli && %(CC)s -Wall test.c -L../../lib -lcli -o test' % gl(),
         ],
-        'targets': ['src/cli/test', 'src/cli/libcli.a'],
+        'targets': ['src/cli/test', 'lib/libcli.so'],
         'clean': [clean_targets],
     }
 
@@ -163,10 +162,10 @@ def task_liblexer():
         'actions': [
             'cd src/lexer && ../../bin/ragel lexer.rl -o lexer.cpp',
             'cd src/lexer && %(CC)s %(CXXFLAGS)s -c lexer.cpp -o lexer.o' % gl(),
-            'cd src/lexer && ar crs liblexer.a lexer.o',
-            'cd src/lexer && %(CC)s test.c liblexer.a -o test' % gl(),
+            'cd src/lexer && %(CC)s -shared -o ../../lib/liblexer.so lexer.o' % gl(),
+            'cd src/lexer && %(CC)s -Wall test.c -L../../lib -llexer -o test' % gl(),
         ],
-        'targets': ['src/lexer/lexer.cpp', 'src/lexer/test', 'src/lexer/liblexer.a'],
+        'targets': ['src/lexer/lexer.cpp', 'src/lexer/test', 'lib/liblexer.so'],
         'clean': [clean_targets],
     }
 
@@ -224,14 +223,14 @@ def task_sota():
     return {
         'file_dep': [
             DODO,
-            'src/cli/libcli.a',
-            'src/lexer/liblexer.a',
+            'lib/libcli.so',
+            'lib/liblexer.so',
         ] + rglob('%(TARGETDIR)s/*.py' % gl()),
         'task_dep': ['submod:src/pypy', 'pre'],
         'actions': [
-            '%(PYTHON)s -B %(RPYTHON)s --output %(SOTA)s %(TARGETDIR)s/%(TARGETSRC)s' % gl(),
+            '%(PYTHON)s -B %(RPYTHON)s --output bin/sota %(TARGETDIR)s/%(TARGETSRC)s' % gl(),
         ],
-        'targets': [SOTA],
+        'targets': ['bin/sota'],
         'clean': [clean_targets],
     }
 
@@ -254,7 +253,7 @@ def task_success():
     return {
         'task_dep': ['sota', 'post'],
         'actions': [
-            './%(SOTA)s --help > /dev/null 2>&1' % gl(),
+            './sota --help > /dev/null 2>&1' % gl(),
             'echo "sota build success!"',
         ],
     }
