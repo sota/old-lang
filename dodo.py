@@ -241,7 +241,10 @@ def task_post():
     return {
         'file_dep': [DODO],
         'task_dep': ['sota'],
-        'actions': ['py.test -s -vv %(POST)s > %(POST)s/results' % gl()],
+        'actions': [
+            'py.test -s -vv %(POST)s' % gl(),
+            'py.test -s -vv %(POST)s > %(POST)s/results' % gl(),
+        ],
         'targets': ['%(POST)s/results' % gl()],
         'clean': [clean_targets],
     }
