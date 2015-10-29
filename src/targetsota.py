@@ -7,9 +7,10 @@ The target below specifies the sota dynamic programming language.
 '''
 import os
 import sys
-sys.path.insert(0, 'src')
-sys.path.insert(0, 'src/cli')
-sys.path.insert(0, 'lib/pypy')
+SCRIPT_PATH, BASENAME = os.path.split(os.path.realpath(__file__) )
+SCRIPT_NAME, SCRIPT_EXT = os.path.splitext(os.path.basename(BASENAME) )
+sys.path.insert(0, os.path.join(SCRIPT_PATH, 'cli'))
+sys.path.insert(0, os.path.join(SCRIPT_PATH, 'pypy'))
 os.environ['PYTHONPATH'] = 'src:src/pypy'
 
 from rpython.rtyper.lltypesystem import rffi, lltype
