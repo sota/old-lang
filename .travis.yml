@@ -28,3 +28,5 @@ install:
   - pip install -r requirements.txt
 script:
   - doit -n4
+notifications:
+    irc: "irc.freenode.org#sota"
