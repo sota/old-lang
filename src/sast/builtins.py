@@ -64,10 +64,8 @@ def Div(self, env, exp):
 
 def Assign(self, env, exp):
     if exp.length() != 2:
-        print 'a'
         raise SastSyntaxError
     if not car(exp).is_symbol():
-        print 'car(exp) =', car(exp).to_str(), ' != symbol'
         raise SastSyntaxError
     key, value = exp.to_pylist()
     return env.Set(key, value.Eval(env))

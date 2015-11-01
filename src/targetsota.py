@@ -41,11 +41,6 @@ c_parse = rffi.llexternal(
     rffi.LONG,
     compilation_info=cli_eci)
 
-def load_source(source):
-    if os.path.isfile(source):
-        return open(source).read()
-    return source
-
 #######################################################
 
 # __________  Entry point  __________
@@ -54,16 +49,18 @@ def entry_point(argv):
     exitcode = 0
     args = {}
     with lltype.scoped_alloc(CLITOKENPP.TO, 1) as c_clitokenpp:
-        result = c_parse(len(argv), rffi.liststr2charpp(argv), c_clitokenpp)
-        for i in range(result):
+        count = c_parse(len(argv), rffi.liststr2charpp(argv), c_clitokenpp)
+        for i in range(count):
             clitoken = c_clitokenpp[0][i]
-            args[rffi.charp2str(clitoken.c_name)] = rffi.charp2str(clitoken.c_value)
+            name = rffi.charp2str(clitoken.c_name)
+            value = rffi.charp2str(clitoken.c_value)
+            args[name] = value
 
     lexer = Lexer()
     parser = Parser(lexer)
 
     if '<source>' in args:
-        exitcode = parser.Parse(load_source(args['<source>']))
+        exitcode = parser.Parse(args['<source>'])
     else:
         exitcode = parser.Repl()
 
@@ -74,4 +71,3 @@ def target(*args):
 
 if __name__ == '__main__':
     ep = entry_point(sys.argv)
-    print 'hi'

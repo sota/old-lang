@@ -50,6 +50,11 @@ class Parser(object):
         self.lexer = lexer
 
     def Parse(self, source):
+        if os.path.isfile(source):
+            source = open(source).read()
+        else:
+            source = "(print " + source + ")"
+
         exitcode = 0
         try:
             self.Eval(self.Read(source))
@@ -137,7 +142,12 @@ class Parser(object):
         return SastUndefined()
 
     def Eval(self, exp):
-        return exp.Eval(Env)
+        env = Env
+        while True:
+            try:
+                return exp.Eval(env)
+            except SastTailCall, tailcall:
+                env, exp = tailcall.payload()
 
     def Print(self, exp):
         if exp and isinstance(exp, SastExp):

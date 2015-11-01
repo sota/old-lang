@@ -27,6 +27,7 @@ sota is state of the art
 )";
 
 extern "C" int parse(int argc, char *argv[], struct CliToken **tokens) {
+
     auto args = docopt::docopt(
         USAGE,
         {argv+1, argv+argc},
@@ -36,9 +37,11 @@ extern "C" int parse(int argc, char *argv[], struct CliToken **tokens) {
     std::vector<struct CliToken> tokenlist;
     for(auto const& arg : args) {
         if (arg.second.isString()) {
+            char *name = (char *)arg.first.c_str();
+            char *value = (char *)arg.second.asString().c_str();
             tokenlist.push_back({
-                name: (char *)arg.first.c_str(),
-                value: (char *)arg.second.asString().c_str()
+                name: name,
+                value: value
             });
         }
     }

@@ -121,6 +121,13 @@ def set_car(exp, value):
 def set_cdr(exp, value):
     exp.cdr = value
 
+class SastTailCall(Exception):
+    def __init__(self, env, exp):
+        self.env = env
+        self.exp = exp
+    def payload(self):
+        return self.env, self.exp
+
 class SastExp(object):
 
     def __init__(self):
@@ -643,8 +650,8 @@ class SastBlock(SastPair):
         while exp.length() > 1:
             car(exp).Eval(env)
             exp = cdr(exp)
-        exp = car(exp).Eval(env) #TODO: should be tail recursive
-        return exp
+        exp = car(exp)
+        raise SastTailCall(env, exp)
 
 class SastFunc(SastExp):
 

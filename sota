@@ -1,3 +1,23 @@
 #!/bin/bash
+spaces=" |'"
+program="bin/sota"
+commandline=()
+for arg in "$@"; do
+    case $arg in
+        --pdb)
+        program="python -m pdb src/targetsota.py"
+        ;;
+        --py)
+        program="python src/targetsota.py"
+        ;;
+        *)
+        if [[ $arg =~ $spaces ]]; then
+            arg="'$arg'"
+        fi
+        commandline+=("${arg}")
+        ;;
+    esac
+done
 
-LD_LIBRARY_PATH="$LD_LIBRARY_PATH:lib" bin/sota "$@"
+eval LD_LIBRARY_PATH="lib:$LD_LIBRARY_PATH" ${program} "$commandline"
+exit $?
