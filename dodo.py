@@ -142,9 +142,10 @@ def task_libcli():
     return {
         'file_dep': [DODO] + rglob('src/cli/*.{h,c,cpp}'),
         'task_dep': ['submod:src/docopt'],
-        'actions': [                                                                               'cd src/cli && %(CC)s %(CXXFLAGS)s -c ../docopt/docopt.cpp -o docopt.o' % gl(),
-            'cd src/cli && %(CC)s %(CXXFLAGS)s -c cli.cpp -o cli.o' % gl(),
+        'actions': [
             'mkdir -p lib',
+            'cd src/cli && %(CC)s %(CXXFLAGS)s -c ../docopt/docopt.cpp -o docopt.o' % gl(),
+            'cd src/cli && %(CC)s %(CXXFLAGS)s -c cli.cpp -o cli.o' % gl(),
             'cd src/cli && %(CC)s -shared -o ../../lib/libcli.so docopt.o cli.o' % gl(),
             'cd src/cli && %(CC)s -Wall test.c -L../../lib -lcli -o test' % gl(),
         ],
@@ -160,6 +161,7 @@ def task_liblexer():
         'file_dep': [DODO] + rglob('src/lexer/*.{h,rl,c}'),
         'task_dep': ['ragel'],
         'actions': [
+            'mkdir -p lib',
             'cd src/lexer && ../../bin/ragel lexer.rl -o lexer.cpp',
             'cd src/lexer && %(CC)s %(CXXFLAGS)s -c lexer.cpp -o lexer.o' % gl(),
             'cd src/lexer && %(CC)s -shared -o ../../lib/liblexer.so lexer.o' % gl(),
