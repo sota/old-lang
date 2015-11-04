@@ -14,3 +14,7 @@
 	path = src/doit
 	url = https://github.com/sota/doit
 	branch = master
+[submodule "src/ragel7"]
+	path = src/ragel7
+	url = https://github.com/sota/ragel7
+	branch = master
