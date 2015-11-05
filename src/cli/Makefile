@@ -15,14 +15,11 @@ lib: lib$(NAME).so
 lib$(NAME).so: $(NAME).o docopt.o
 	$(CXX) $(LDFLAGS) -o lib$(NAME).so $(NAME).o docopt.o
 
-$(NAME).o: uptodate $(NAME).cpp
+$(NAME).o: $(NAME).cpp
 	$(CXX) $(CXXFLAGS) -c $(NAME).cpp -o $(NAME).o
 
-docopt.o: uptodate
+docopt.o:
 	$(CXX) $(CXXFLAGS) -c $(DOCOPT_DIR)/docopt.cpp -o docopt.o
-
-uptodate:
-	test -s $(DOCOPT_DIR)/docopt.h || { echo "is submod (${DOCOPT_DIR}) up to date?"; }
 
 clean:
 	$(RM) *.o *.so* test
