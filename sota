@@ -1,6 +1,6 @@
 #!/bin/bash
 spaces=" |'"
-program="bin/sota"
+program="root/bin/sota"
 commandline=()
 for arg in "$@"; do
     case $arg in
@@ -19,5 +19,5 @@ for arg in "$@"; do
     esac
 done
 
-eval LD_LIBRARY_PATH="lib:$LD_LIBRARY_PATH" ${program} "$commandline"
+eval LD_LIBRARY_PATH="root/lib:$LD_LIBRARY_PATH" ${program} "$commandline"
 exit $?

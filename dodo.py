@@ -23,20 +23,22 @@ DOIT_CONFIG = {
 
 SUBMODS = subs2shas().keys()
 DODO = 'dodo.py'
-RAGEL = 'bin/ragel'
+RAGEL = 'src/ragel/bin/ragel'
 TARGETDIR = 'src'
 TARGETSRC = 'targetsota.py'
 PYTHON = 'python' if call('which pypy', throw=False)[0] else 'pypy'
 PYTHON = 'python' # FIXME:  its slower; doing this for now ... -sai pylint: disable=fixme
 RPYTHON = 'src/pypy/rpython/bin/rpython'
+BINDIR = 'root/bin'
+LIBDIR = 'root/lib'
+PREDIR = 'tests/pre'
+POSTDIR = 'tests/post'
 
 VERSIONH = 'src/cli/version.h'
 VERSIONPY = 'src/version.py'
 
 CC = os.getenv('CXX', 'g++')
 CXXFLAGS = '-Wall -Werror -fPIC -O2 -std=c++11 -g -I../ -I../docopt'
-PRE = 'tests/pre'
-POST = 'tests/post'
 
 ENVS = [
     'PYTHONPATH=.:src:src/pypy:$PYTHONPATH',
@@ -126,10 +128,7 @@ def task_ragel():
         'file_dep': [DODO],
         'task_dep': ['submod:src/ragel'],
         'actions': [
-            'cd src/ragel && ./autogen.sh',
-            'cd src/ragel && ./configure --prefix='+os.getcwd(),
-            'cd src/ragel && make',
-            'cd src/ragel && make install',
+            'cd src/ragel && make bin/ragel',
         ],
         'targets': [RAGEL],
         'clean': [clean_targets],
@@ -143,13 +142,13 @@ def task_libcli():
         'file_dep': [DODO] + rglob('src/cli/*.{h,c,cpp}'),
         'task_dep': ['submod:src/docopt'],
         'actions': [
-            'mkdir -p lib',
+            'mkdir -p %(LIBDIR)s' % gl(),
             'cd src/cli && %(CC)s %(CXXFLAGS)s -c ../docopt/docopt.cpp -o docopt.o' % gl(),
             'cd src/cli && %(CC)s %(CXXFLAGS)s -c cli.cpp -o cli.o' % gl(),
-            'cd src/cli && %(CC)s -shared -o ../../lib/libcli.so docopt.o cli.o' % gl(),
-            'cd src/cli && %(CC)s -Wall test.c -L../../lib -lcli -o test' % gl(),
+            'cd src/cli && %(CC)s -shared -o ../../%(LIBDIR)s/libcli.so docopt.o cli.o' % gl(),
+            'cd src/cli && %(CC)s -Wall test.c -L../../%(LIBDIR)s -lcli -o test' % gl(),
         ],
-        'targets': ['src/cli/test', 'lib/libcli.so'],
+        'targets': ['src/cli/test', '%(LIBDIR)s/libcli.so' % gl()],
         'clean': [clean_targets],
     }
 
@@ -161,36 +160,36 @@ def task_liblexer():
         'file_dep': [DODO] + rglob('src/lexer/*.{h,rl,c}'),
         'task_dep': ['ragel'],
         'actions': [
-            'mkdir -p lib',
-            'cd src/lexer && ../../bin/ragel lexer.rl -o lexer.cpp',
+            'mkdir -p %(LIBDIR)s' % gl(),
+            'cd src/lexer && ../../%(RAGEL)s lexer.rl -o lexer.cpp' % gl(),
             'cd src/lexer && %(CC)s %(CXXFLAGS)s -c lexer.cpp -o lexer.o' % gl(),
-            'cd src/lexer && %(CC)s -shared -o ../../lib/liblexer.so lexer.o' % gl(),
-            'cd src/lexer && %(CC)s -Wall test.c -L../../lib -llexer -o test' % gl(),
+            'cd src/lexer && %(CC)s -shared -o ../../%(LIBDIR)s/liblexer.so lexer.o' % gl(),
+            'cd src/lexer && %(CC)s -Wall test.c -L../../%(LIBDIR)s -llexer -o test' % gl(),
         ],
-        'targets': ['src/lexer/lexer.cpp', 'src/lexer/test', 'lib/liblexer.so'],
+        'targets': ['src/lexer/lexer.cpp', 'src/lexer/test', '%(LIBDIR)s/liblexer.so' % gl()],
         'clean': [clean_targets],
     }
 
 def task_pytest():
     '''
-    run 'py.test --verbose %(PRE)s
+    run 'py.test --verbose %(PREDIR)s
     ''' % gl()
     return {
         'task_dep': ['submod'],
-        'actions': ['py.test -s -vv %(PRE)s > %(PRE)s/results' % gl()],
+        'actions': ['py.test -s -vv %(PREDIR)s > %(PREDIR)s/results' % gl()],
     }
 
 def task_pycov():
     '''
-    run 'py.test --cov=<pyfile> %(PRE)s/<pyfile>'
+    run 'py.test --cov=<pyfile> %(PREDIR)s/<pyfile>'
     ''' % gl()
     def hastests(pyfile):
-        return os.path.exists(os.path.join(PRE, pyfile))
+        return os.path.exists(os.path.join(PREDIR, pyfile))
     excludes = ['dodo.py']
     pyfiles = globs('src/*/*.py') - globs(*excludes)
     for pyfile in sorted(pyfiles, key=hastests):
-        covcmd = 'py.test -s -vv --cov=%(pyfile)s %(PRE)/%(pyfile)s'
-        msgcmd = 'echo "no tests found (%(PRE)s/%(pyfile)s to run coverage on %(pyfile)s"'
+        covcmd = 'py.test -s -vv --cov=%(pyfile)s %(PREDIR)/%(pyfile)s'
+        msgcmd = 'echo "no tests found (%(PREDIR)s/%(pyfile)s to run coverage on %(pyfile)s"'
         yield {
             'name': pyfile,
             'task_dep': ['submod'],
@@ -202,11 +201,11 @@ def task_pylint():
     run pylint on all pyfiles
     '''
     excludes = []
-    for pyfile in globs('*.py', 'src/*/*.py', '%(PRE)s/*/*.py' % gl()) - globs(*excludes):
+    for pyfile in globs('*.py', 'src/*/*.py', '%(PREDIR)s/*/*.py' % gl()) - globs(*excludes):
         yield {
             'name': pyfile,
             'task_dep': ['submod'],
-            'actions': ['%(ENVS)s pylint -E -j4 --rcfile %(PRE)s/pylint.rc %(pyfile)s' % gl()],
+            'actions': ['%(ENVS)s pylint -E -j4 --rcfile %(PREDIR)s/pylint.rc %(pyfile)s' % gl()],
         }
 
 def task_pre():
@@ -225,14 +224,15 @@ def task_sota():
     return {
         'file_dep': [
             DODO,
-            'lib/libcli.so',
-            'lib/liblexer.so',
+            '%(LIBDIR)s/libcli.so' % gl(),
+            '%(LIBDIR)s/liblexer.so' % gl(),
         ] + rglob('%(TARGETDIR)s/*.py' % gl()),
         'task_dep': ['submod:src/pypy', 'pre'],
         'actions': [
-            '%(PYTHON)s -B %(RPYTHON)s --output bin/sota %(TARGETDIR)s/%(TARGETSRC)s' % gl(),
+            'mkdir -p %(BINDIR)s' % gl(),
+            '%(PYTHON)s -B %(RPYTHON)s --output %(BINDIR)s/sota %(TARGETDIR)s/%(TARGETSRC)s' % gl(),
         ],
-        'targets': ['bin/sota'],
+        'targets': ['%(BINDIR)s/sota' % gl()],
         'clean': [clean_targets],
     }
 
@@ -244,9 +244,9 @@ def task_post():
         'file_dep': [DODO],
         'task_dep': ['sota'],
         'actions': [
-            'py.test -s -vv %(POST)s > %(POST)s/results' % gl(),
+            'py.test -s -vv %(POSTDIR)s > %(POSTDIR)s/results' % gl(),
         ],
-        'targets': ['%(POST)s/results' % gl()],
+        'targets': ['%(POSTDIR)s/results' % gl()],
         'clean': [clean_targets],
     }
 

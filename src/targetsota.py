@@ -19,7 +19,7 @@ from rpython.translator.tool.cbuild import ExternalCompilationInfo
 from sast.lexer import Lexer
 from sast.parser import Parser
 
-lib_dir = os.path.join(os.getcwd(), 'lib')
+lib_dir = os.path.join(os.getcwd(), 'root/lib')
 cli_dir = os.path.join(os.getcwd(), 'src/cli')
 cli_eci = ExternalCompilationInfo(
     include_dirs=[cli_dir],
