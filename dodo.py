@@ -164,7 +164,7 @@ def task_liblexer():
         'file_dep': [DODO] + rglob('src/lexer/*.{h,rl,c}'),
         'task_dep': ['pre', 'ragel'],
         'actions': [
-            'cd src/lexer && make -j %(J)s' % gl(),
+            'cd src/lexer && make -j %(J)s RAGEL=../../src/ragel/bin/ragel' % gl(),
             'install -C -D src/lexer/liblexer.so %(LIBDIR)s/liblexer.so' % gl(),
         ],
         'targets': ['src/lexer/lexer.cpp', 'src/lexer/test', '%(LIBDIR)s/liblexer.so' % gl()],
