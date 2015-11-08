@@ -1,9 +1,9 @@
 .PHONY : test lib clean uptodate
 
-REPO_DIR = $(shell git rev-parse --show-toplevel)
-DOCOPT_DIR := $(REPO_DIR)/src/docopt
+REPOROOT = $(shell git rev-parse --show-toplevel)
+DOCOPTDIR := $(REPOROOT)/src/docopt
 NAME := $(notdir $(basename $(shell pwd)))
-CXXFLAGS := -std=c++11 -fPIC -O2 -g -Wall -Werror -I$(DOCOPT_DIR)
+CXXFLAGS := -std=c++11 -fPIC -O2 -g -Wall -Werror -I$(DOCOPTDIR)
 LDFLAGS := -shared
 
 test: lib
@@ -19,7 +19,7 @@ $(NAME).o: $(NAME).cpp
 	$(CXX) $(CXXFLAGS) -c $(NAME).cpp -o $(NAME).o
 
 docopt.o:
-	$(CXX) $(CXXFLAGS) -c $(DOCOPT_DIR)/docopt.cpp -o docopt.o
+	$(CXX) $(CXXFLAGS) -c $(DOCOPTDIR)/docopt.cpp -o docopt.o
 
 clean:
 	$(RM) *.o *.so* test

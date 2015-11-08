@@ -29,8 +29,9 @@ TARGETSRC = 'targetsota.py'
 PYTHON = 'python' if call('which pypy', throw=False)[0] else 'pypy'
 PYTHON = 'python' # FIXME:  its slower; doing this for now ... -sai pylint: disable=fixme
 RPYTHON = 'src/pypy/rpython/bin/rpython'
-BINDIR = 'root/bin'
-LIBDIR = 'root/lib'
+ROOTDIR = 'root'
+BINDIR = '%(ROOTDIR)s/bin' % gl()
+LIBDIR = '%(ROOTDIR)s/lib' % gl()
 PREDIR = 'tests/pre'
 POSTDIR = 'tests/post'
 
@@ -148,11 +149,8 @@ def task_libcli():
         'file_dep': [DODO] + rglob('src/cli/*.{h,c,cpp}'),
         'task_dep': ['pre', 'submod:src/docopt'],
         'actions': [
-            'mkdir -p %(LIBDIR)s' % gl(),
-            'cd src/cli && %(CC)s %(CXXFLAGS)s -c ../docopt/docopt.cpp -o docopt.o' % gl(),
-            'cd src/cli && %(CC)s %(CXXFLAGS)s -c cli.cpp -o cli.o' % gl(),
-            'cd src/cli && %(CC)s -shared -o ../../%(LIBDIR)s/libcli.so docopt.o cli.o' % gl(),
-            'cd src/cli && %(CC)s -Wall test.c -L../../%(LIBDIR)s -lcli -o test' % gl(),
+            'cd src/cli && make -j %(J)s' % gl(),
+            'install -C -D src/cli/libcli.so %(LIBDIR)s/libcli.so' % gl(),
         ],
         'targets': ['src/cli/test', '%(LIBDIR)s/libcli.so' % gl()],
         'clean': [clean_targets],
@@ -166,11 +164,8 @@ def task_liblexer():
         'file_dep': [DODO] + rglob('src/lexer/*.{h,rl,c}'),
         'task_dep': ['pre', 'ragel'],
         'actions': [
-            'mkdir -p %(LIBDIR)s' % gl(),
-            'cd src/lexer && ../../%(RAGEL)s lexer.rl -o lexer.cpp' % gl(),
-            'cd src/lexer && %(CC)s %(CXXFLAGS)s -c lexer.cpp -o lexer.o' % gl(),
-            'cd src/lexer && %(CC)s -shared -o ../../%(LIBDIR)s/liblexer.so lexer.o' % gl(),
-            'cd src/lexer && %(CC)s -Wall test.c -L../../%(LIBDIR)s -llexer -o test' % gl(),
+            'cd src/lexer && make -j %(J)s' % gl(),
+            'install -C -D src/lexer/liblexer.so %(LIBDIR)s/liblexer.so' % gl(),
         ],
         'targets': ['src/lexer/lexer.cpp', 'src/lexer/test', '%(LIBDIR)s/liblexer.so' % gl()],
         'clean': [clean_targets],

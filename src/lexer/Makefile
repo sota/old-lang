@@ -1,6 +1,6 @@
 .PHONY : test lib clean uptodate
 
-REPO_DIR = $(shell git rev-parse --show-toplevel)
+REPOROOT = $(shell git rev-parse --show-toplevel)
 NAME := $(notdir $(basename $(shell pwd)))
 CXXFLAGS := -std=c++11 -fPIC -O2 -g -Wall -Werror
 LDFLAGS := -shared
