@@ -132,7 +132,7 @@ def task_ragel():
     target = 'bin/rlhc' if os.environ.get('RAGEL') in ('7', '70') else 'bin/ragel'
     return {
         'file_dep': [DODO],
-        'task_dep': ['submod:src/ragel'],
+        'task_dep': ['pre', 'submod:src/ragel'],
         'actions': [
             'cd src/ragel && make -j %(J)s %(target)s' % gl(),
         ],
@@ -146,7 +146,7 @@ def task_libcli():
     '''
     return {
         'file_dep': [DODO] + rglob('src/cli/*.{h,c,cpp}'),
-        'task_dep': ['submod:src/docopt'],
+        'task_dep': ['pre', 'submod:src/docopt'],
         'actions': [
             'mkdir -p %(LIBDIR)s' % gl(),
             'cd src/cli && %(CC)s %(CXXFLAGS)s -c ../docopt/docopt.cpp -o docopt.o' % gl(),
@@ -164,7 +164,7 @@ def task_liblexer():
     '''
     return {
         'file_dep': [DODO] + rglob('src/lexer/*.{h,rl,c}'),
-        'task_dep': ['ragel'],
+        'task_dep': ['pre', 'ragel'],
         'actions': [
             'mkdir -p %(LIBDIR)s' % gl(),
             'cd src/lexer && ../../%(RAGEL)s lexer.rl -o lexer.cpp' % gl(),
