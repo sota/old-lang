@@ -46,6 +46,11 @@ ENVS = [
 ENVS = ' '.join(ENVS)
 
 try:
+    J = call('nproc')[1].strip()
+except: #pylint: disable=bare-except
+    J = 1
+
+try:
     SOTA_VERSION = open('VERSION').read().strip()
 except: #pylint: disable=bare-except
     try:
@@ -124,11 +129,12 @@ def task_ragel():
     '''
     build ragel binary for use in build
     '''
+    target = 'bin/rlhc' if os.environ.get('RAGEL') in ('7', '70') else 'bin/ragel'
     return {
         'file_dep': [DODO],
         'task_dep': ['submod:src/ragel'],
         'actions': [
-            'cd src/ragel && make bin/ragel',
+            'cd src/ragel && make -j %(J)s %(target)s' % gl(),
         ],
         'targets': [RAGEL],
         'clean': [clean_targets],
