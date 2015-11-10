@@ -11,7 +11,8 @@ src/cli/libcli.so: submods
 	(cd src/cli && make)
 
 submods:
-	git submodule update --init src/{docopt,pypy}
+	git submodule update --init src/docopt
+	git submodule update --init src/pypy
 
 clean:
 	(cd src/cli && make clean)
