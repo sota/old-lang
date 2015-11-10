@@ -8,18 +8,19 @@ import sys
 SCRIPT_PATH, BASENAME = os.path.split(os.path.realpath(__file__) )
 SCRIPT_NAME, SCRIPT_EXT = os.path.splitext(os.path.basename(BASENAME) )
 
+sys.path.insert(0, os.path.join(SCRIPT_PATH, 'src/pypy'))
 from rpython.rtyper.lltypesystem import rffi, lltype
 from rpython.translator.tool.cbuild import ExternalCompilationInfo
 
 test_eci = ExternalCompilationInfo(
     include_dirs=['.'],
-    includes=['cli.h'],
+    includes=['test.h'],
     library_dirs=['.'],
-    libraries=['cli'],
+    libraries=['test'],
     use_cpp_linker=True)
 
 CLITOKEN = rffi.CStruct(
-    'Test',
+    'Pair',
     ('name', rffi.CCHARP),
     ('value', rffi.CCHARP))
 CLITOKENP = rffi.CArrayPtr(CLITOKEN)
