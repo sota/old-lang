@@ -40,8 +40,8 @@ extern "C" int parse(int argc, char *argv[], struct CliToken **tokens) {
             char *name = (char *)arg.first.c_str();
             char *value = (char *)arg.second.asString().c_str();
             tokenlist.push_back({
-                name: name,
-                value: value
+                .name = name,
+                .value = value
             });
         }
     }
