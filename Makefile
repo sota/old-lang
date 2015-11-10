@@ -10,3 +10,6 @@ libtest.so: test.o
 
 test.o: test.h test.cpp
 	$(CXX) $(CXXFLAGS) -c test.cpp -o test.o
+
+clean:
+	git clean -xfd

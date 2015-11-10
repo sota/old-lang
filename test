@@ -1,0 +1,23 @@
+#!/bin/bash
+spaces=" |'"
+program="./test-c"
+commandline=()
+for arg in "$@"; do
+    case $arg in
+        --pdb)
+        program="python -m pdb test.py"
+        ;;
+        --py)
+        program="python test.py"
+        ;;
+        *)
+        if [[ $arg =~ $spaces ]]; then
+            arg="'$arg'"
+        fi
+        commandline+=("${arg}")
+        ;;
+    esac
+done
+
+eval LD_LIBRARY_PATH=".:$LD_LIBRARY_PATH" ${program} "$commandline"
+exit $?
