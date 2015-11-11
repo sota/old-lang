@@ -32,7 +32,7 @@ def escape(old):
             new += char
     return new
 
-lib_dir = os.path.join(os.getcwd(), 'lib')
+lib_dir = os.path.join(os.getcwd(), 'root/lib')
 lexer_dir = os.path.join(os.getcwd(), 'src/lexer')
 lexer_eci = ExternalCompilationInfo(
     include_dirs=[lexer_dir],

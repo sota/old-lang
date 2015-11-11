@@ -7,6 +7,7 @@
 #include <sstream>
 #include <iostream>
 #include <algorithm>
+#include <cstring>
 
 #include "version.h"
 #include "docopt.h"
@@ -37,8 +38,10 @@ extern "C" int parse(int argc, char *argv[], struct CliToken **tokens) {
     std::vector<struct CliToken> tokenlist;
     for(auto const& arg : args) {
         if (arg.second.isString()) {
-            char *name = (char *)arg.first.c_str();
-            char *value = (char *)arg.second.asString().c_str();
+            char *name = (char *)malloc(strlen(arg.first.c_str()) + 1);
+            std::strcpy(name, arg.first.c_str());
+            char *value = (char *)malloc(strlen(arg.second.asString().c_str()) + 1);
+            std::strcpy(value, arg.second.asString().c_str());
             tokenlist.push_back({
                 name: name,
                 value: value
