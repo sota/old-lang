@@ -1,6 +1,6 @@
 #!/bin/bash
 spaces=" |'"
-program="./test-c"
+program="./test-rpy"
 commandline=()
 for arg in "$@"; do
     case $arg in
@@ -9,6 +9,9 @@ for arg in "$@"; do
         ;;
         --py)
         program="python test.py"
+        ;;
+        --c)
+        program="./test-c"
         ;;
         *)
         if [[ $arg =~ $spaces ]]; then

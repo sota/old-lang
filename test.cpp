@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <vector>
 
-extern "C" int test(struct Pair **pairs) {
+std::vector<struct Pair> gen_pairs() {
     srand(time(NULL));
     std::vector<struct Pair> pairlist;
 
@@ -18,7 +18,19 @@ extern "C" int test(struct Pair **pairs) {
             .value = (char *)bar
         });
     }
+    return pairlist;
+}
+
+extern "C" int test1(struct Pair **pairs) {
+    std::vector<struct Pair> pairlist = gen_pairs();
     *pairs = (struct Pair *)malloc(pairlist.size() * sizeof(struct Pair));
     copy(pairlist.begin(), pairlist.end(), *pairs);
+    return pairlist.size();
+}
+
+extern "C" int test2(struct Pair *pairs) {
+    std::vector<struct Pair> pairlist = gen_pairs();
+    pairs = (struct Pair *)malloc(pairlist.size() * sizeof(struct Pair));
+    copy(pairlist.begin(), pairlist.end(), pairs);
     return pairlist.size();
 }

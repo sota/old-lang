@@ -10,7 +10,8 @@ struct Pair {
     char *value;
 };
 
-int test(struct Pair **pairs);
+int test1(struct Pair **pairs);
+int test2(struct Pair *pairs);
 
 #ifdef __cplusplus
 }
