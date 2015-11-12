@@ -50,12 +50,11 @@ class Parser(object):
         self.lexer = lexer
 
     def Parse(self, source):
+        exitcode = 0
         if os.path.isfile(source):
             source = open(source).read()
         else:
             source = "(print " + source + ")"
-
-        exitcode = 0
         try:
             self.Eval(self.Read(source))
         except Exception as ex:

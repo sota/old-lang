@@ -1,13 +1,9 @@
 #include "cli.h"
 
 #include <stdio.h>
-#include <map>
-#include <string>
-#include <fstream>
-#include <sstream>
-#include <iostream>
-#include <algorithm>
+#include <assert.h>
 #include <cstring>
+#include <vector>
 
 #include "version.h"
 #include "docopt.h"
@@ -27,7 +23,10 @@ source:
 sota is state of the art
 )";
 
-extern "C" int parse(int argc, char *argv[], struct CliToken **tokens) {
+extern "C" struct CliTokens * parse(int argc, char *argv[]) {
+
+    struct CliTokens *tokens = (struct CliTokens *)malloc(sizeof(struct CliTokens));
+    assert(tokens != NULL);
 
     auto args = docopt::docopt(
         USAGE,
@@ -49,8 +48,19 @@ extern "C" int parse(int argc, char *argv[], struct CliToken **tokens) {
         }
     }
 
-    *tokens = (struct CliToken *)malloc(tokenlist.size() * sizeof(struct CliToken));
-    copy(tokenlist.begin(), tokenlist.end(), *tokens);
+    tokens->count = tokenlist.size();
+    tokens->tokens = (struct CliToken *)malloc(tokenlist.size() * sizeof(struct CliToken));
+    copy(tokenlist.begin(), tokenlist.end(), tokens->tokens);
 
-    return tokenlist.size();
+    return tokens;
 }
+
+extern "C" int clean(struct CliTokens *tokens) {
+    for (int i=0; i<tokens->count; ++i) {
+        free(tokens->tokens[i].name);
+        free(tokens->tokens[i].value);
+    }
+    free(tokens);
+    return 0;
+}
+

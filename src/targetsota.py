@@ -27,19 +27,24 @@ cli_eci = ExternalCompilationInfo(
     library_dirs=[lib_dir],
     libraries=['cli'],
     use_cpp_linker=True)
-
-CLITOKEN = rffi.CStruct(
+CliToken = rffi.CStruct(
     'CliToken',
     ('name', rffi.CCHARP),
     ('value', rffi.CCHARP))
-CLITOKENP = rffi.CArrayPtr(CLITOKEN)
-CLITOKENPP = rffi.CArrayPtr(CLITOKENP)
-
+CliTokenPtr = rffi.CArrayPtr(CliToken)
+CliTokensPtr = rffi.CStructPtr(
+    'CliTokens',
+    ('count', rffi.LONG),
+    ('tokens', CliTokenPtr))
 c_parse = rffi.llexternal(
     'parse',
-    [rffi.LONG, rffi.CCHARPP, CLITOKENPP],
-    rffi.LONG,
+    [rffi.LONG, rffi.CCHARPP],
+    CliTokensPtr,
     compilation_info=cli_eci)
+c_clean = rffi.llexternal(
+    'clean',
+    [CliTokensPtr],
+    rffi.LONG)
 
 #######################################################
 
@@ -48,13 +53,16 @@ c_parse = rffi.llexternal(
 def entry_point(argv):
     exitcode = 0
     args = {}
-    with lltype.scoped_alloc(CLITOKENPP.TO, 1) as c_clitokenpp:
-        count = c_parse(len(argv), rffi.liststr2charpp(argv), c_clitokenpp)
-        for i in range(count):
-            clitoken = c_clitokenpp[0][i]
-            name = rffi.charp2str(clitoken.c_name)
-            value = rffi.charp2str(clitoken.c_value)
-            args[name] = value
+
+    tokens = c_parse(len(argv), rffi.liststr2charpp(argv))
+    for i in range(tokens.c_count):
+        token = tokens.c_tokens[i]
+        name = rffi.charp2str(token.c_name)
+        value = rffi.charp2str(token.c_value)
+        args[name] = value
+    result = c_clean(tokens)
+    if result:
+        print 'clean unsuccessful'
 
     lexer = Lexer()
     parser = Parser(lexer)

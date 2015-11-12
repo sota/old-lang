@@ -9,8 +9,14 @@ struct CliToken {
     char * name;
     char * value;
 };
-extern __attribute__((visibility("default")))
-int parse(int argc, char *argv[], struct CliToken **tokens);
+
+struct CliTokens {
+    int count;
+    struct CliToken *tokens;
+};
+
+struct CliTokens * parse(int argc, char *argv[]);
+int clean(struct CliTokens *tokens);
 
 #ifdef __cplusplus
 }

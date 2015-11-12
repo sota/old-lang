@@ -1,17 +1,18 @@
 #include <stdio.h>
+#include <assert.h>
 
 #include "cli.h"
 
-extern int parse(int argc, char *argv[], struct CliToken **tokens);
+extern CliTokens * parse(int argc, char *argv[]);
 
 int main(int argc, char *argv[]) {
     printf("test\n");
-    struct CliToken *tokens = NULL;
-    int result = parse(argc, argv, &tokens);
-    printf("result = %d\n", result);
-    for (int i=0; i<result; ++i) {
-        printf("CliToken {name=%s, value=%s}\n", tokens[i].name, tokens[i].value);
+    struct CliTokens *tokens = parse(argc, argv);
+    for (int i=0; i<tokens->count; ++i) {
+        printf("CliToken {name=%s, value=%s}\n", tokens->tokens[i].name, tokens->tokens[i].value);
     }
+    int result = clean(tokens);
+    assert(result == 0);
     printf("buh-bye\n");
     return 0;
 }
