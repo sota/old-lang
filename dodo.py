@@ -201,7 +201,7 @@ def task_pylint():
     '''
     run pylint on all pyfiles
     '''
-    excludes = []
+    excludes = ['src/doit/dodo.py']
     for pyfile in globs('*.py', 'src/*/*.py', '%(PREDIR)s/*/*.py' % gl()) - globs(*excludes):
         yield {
             'name': pyfile,

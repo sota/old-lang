@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.join(SCRIPT_PATH, 'cli'))
 sys.path.insert(0, os.path.join(SCRIPT_PATH, 'pypy'))
 os.environ['PYTHONPATH'] = 'src:src/pypy'
 
-from rpython.rtyper.lltypesystem import rffi, lltype
+from rpython.rtyper.lltypesystem import rffi
 from rpython.translator.tool.cbuild import ExternalCompilationInfo
 
 from sast.lexer import Lexer
