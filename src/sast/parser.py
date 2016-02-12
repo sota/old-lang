@@ -63,6 +63,7 @@ class Parser(object):
 
     def Repl(self):
         exitcode = 0
+        farewell = "so, ta-ta for now!"
         print REPL_USAGE
         prompt = "sota> "
         while True:
@@ -75,13 +76,13 @@ class Parser(object):
                 code = self.Read(source)
                 exp = self.Eval(code)
                 if exp is None:
-                    print "goodbye!"
+                    print farewell
                     break
                 self.Print(exp)
             except KeyboardInterrupt:
                 break
             except EOFError:
-                print "goodbye!"
+                print farewell
                 break
         return exitcode
 
