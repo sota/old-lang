@@ -56,11 +56,11 @@ docs/_build/
 # PyBuilder
 # target/ commented out... -sai
 
-# tup
-.tup
-
 # doit
 .doit.db
 
 # py.test
 __pycache__
+
+src/cli/version.h
+src/version.py

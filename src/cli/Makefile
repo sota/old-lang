@@ -3,7 +3,7 @@
 REPOROOT = $(shell git rev-parse --show-toplevel)
 DOCOPTDIR := $(REPOROOT)/src/docopt
 NAME := $(notdir $(basename $(shell pwd)))
-CXXFLAGS := -std=c++11 -fPIC -O2 -g -Wall -Werror -I$(DOCOPTDIR)
+CXXFLAGS := -std=c++11 -fPIC -O2 -g -Wall -Werror -Wno-unknown-pragmas -I$(DOCOPTDIR)
 LDFLAGS := -shared
 
 test: lib

@@ -21,9 +21,11 @@ DOIT_CONFIG = {
     'default_tasks': ['success'],
 }
 
+REPO = os.path.dirname(__file__)
 SUBMODS = subs2shas().keys()
 DODO = 'dodo.py'
-RAGEL = 'src/ragel/bin/ragel'
+COLM = 'bin/colm'
+RAGEL = 'bin/ragel'
 TARGETDIR = 'src'
 TARGETSRC = 'targetsota.py'
 PYTHON = 'python' if call('which pypy', throw=False)[0] else 'pypy'
@@ -126,16 +128,36 @@ def task_submod():
             'actions': ['git submodule update %(submod)s' % gl()],
         }
 
-def task_ragel():
+def task_colm():
     '''
-    build ragel binary for use in build
+    build colm binary for use in build
     '''
-    target = 'bin/rlhc' if os.environ.get('RAGEL') in ('7', '70') else 'bin/ragel'
     return {
         'file_dep': [DODO],
-        'task_dep': ['pre', 'submod:src/ragel'],
+        'task_dep': ['pre', 'submod:src/colm'],
         'actions': [
-            'cd src/ragel && make -j %(J)s %(target)s' % gl(),
+            'cd src/colm && ./autogen.sh',
+            'cd src/colm && ./configure --prefix=%(REPO)s' % gl(),
+            'cd src/colm && make && make install',
+        ],
+        'targets': [COLM],
+        'clean': [clean_targets],
+    }
+
+def task_ragel():
+    '''
+    build colm binary for use in build
+    '''
+    return {
+        'file_dep': [DODO],
+        'task_dep': ['pre', 'colm'],
+        'actions': [
+            #FIXME: this is needed until kelbt is available on travis ci
+            'curl http://www.colm.net/files/ragel/ragel-6.9.tar.gz | tar xz -C src/ragel --strip-components=1',
+            'cd src/ragel && echo "build_parsers=no;\nbuild_manual=no;\n" > DIST',
+            'cd src/ragel && ./autogen.sh',
+            'cd src/ragel && ./configure --prefix=%(REPO)s' % gl(),
+            'cd src/ragel && make && make install',
         ],
         'targets': [RAGEL],
         'clean': [clean_targets],
@@ -164,7 +186,7 @@ def task_liblexer():
         'file_dep': [DODO] + rglob('src/lexer/*.{h,rl,c}'),
         'task_dep': ['pre', 'ragel'],
         'actions': [
-            'cd src/lexer && make -j %(J)s RAGEL=../../src/ragel/bin/ragel' % gl(),
+            'cd src/lexer && make -j %(J)s RAGEL=%(REPO)s/%(RAGEL)s' % gl(),
             'install -C -D src/lexer/liblexer.so %(LIBDIR)s/liblexer.so' % gl(),
         ],
         'targets': ['src/lexer/lexer.cpp', 'src/lexer/test', '%(LIBDIR)s/liblexer.so' % gl()],
