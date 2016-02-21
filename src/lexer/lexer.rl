@@ -24,30 +24,6 @@ using std::cin;
 using std::endl;
 using std::copy;
 
-class DenterException: public std::runtime_error {
-    static std::ostringstream oss;
-    int spaces;
-    int indents;
-    int dentsize;
-public:
-    DenterException(int spaces, int indents, int dentsize)
-        : std::runtime_error("Denter Exception")
-        , spaces(spaces)
-        , indents(indents)
-        , dentsize(dentsize) {}
-
-    virtual const char * what() const throw() {
-        oss.str("");
-        oss
-            << std::runtime_error::what()
-            << ": spaces=" << this->spaces
-            << "indents=" << this->indents
-            << "dentsize=" << this->dentsize << std::endl;
-        return oss.str().c_str();
-    }
-};
-std::ostringstream DenterException::oss;
-
 #define T(t,i,v) {i,v},
 static std::map<long, const char *> TokenMap = {
     ASCII
@@ -164,8 +140,6 @@ class Lexer {
     int cs;
     int act;
     int top;
-    int indents;
-    int dentsize;
     int nesting;
     std::vector<const char *> newlines;
     std::vector<CToken> tokens;
@@ -176,8 +150,6 @@ public:
         , pe(source + strlen(source))
         , eof(source + strlen(source))
         , p(source)
-        , indents(0)
-        , dentsize(0)
         , nesting(0) {
         %% write init;
         //pretend newline before start of file
@@ -216,28 +188,6 @@ public:
         const char *nl = Newline(pchar);
         if (nl)
             return pchar - nl;
-        return 0;
-    }
-
-    int IsDent(int spaces) {
-        int result = 0;
-        if (dentsize == 0)
-            dentsize = spaces;
-        if (spaces == indents + dentsize)
-            result = 1;
-        else if (spaces == indents - dentsize)
-            result = -1;
-        else if (spaces == indents)
-            result = 0;
-        else
-            throw DenterException(spaces, indents, dentsize);
-        indents = spaces;
-        return result;
-    }
-
-    int Dents() {
-        if (dentsize)
-            return indents / dentsize;
         return 0;
     }
 
