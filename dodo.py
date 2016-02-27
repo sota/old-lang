@@ -153,7 +153,7 @@ def task_ragel():
         'task_dep': ['pre', 'colm'],
         'actions': [
             'cd src/ragel && ./autogen.sh',
-            'cd src/ragel && ./configure --prefix=%(REPO)s' % gl(),
+            'cd src/ragel && ./configure --prefix=%(REPO)s --disable-manual' % gl(),
             'cd src/ragel && make && make install',
         ],
         'targets': [RAGEL],
