@@ -152,9 +152,6 @@ def task_ragel():
         'file_dep': [DODO],
         'task_dep': ['pre', 'colm'],
         'actions': [
-            #FIXME: this is needed until kelbt is available on travis ci
-            'curl http://www.colm.net/files/ragel/ragel-6.9.tar.gz | tar xz -C src/ragel --strip-components=1',
-            'cd src/ragel && echo "build_parsers=no;\nbuild_manual=no;\n" > DIST',
             'cd src/ragel && ./autogen.sh',
             'cd src/ragel && ./configure --prefix=%(REPO)s' % gl(),
             'cd src/ragel && make && make install',
