@@ -5,6 +5,19 @@ import sast.builtins as builtins
 
 class SastEnv(SastDict):
     pass
+#    def __init__(self, keys=(), values=(), parent=None):
+#        self.parent = parent
+#        if len(keys) != len(values):
+#            raise TypeError("expected: %s, given: %s" % (keys, values))
+#        for i in xrange(len(keys)):
+#            self.insert(keys[i], values[i])
+#    def Get(self, symbol):
+#        value = super(SastEnv, self).Get(symbol)
+#        if value == undefined and parent:
+#            value = parent.Get(symbol)
+#        if value == undefined:
+#            raise TypeError("something effed up!")
+#        return value
 
 Env = SastEnv()
 Env.Set(Cons,       builtins.New("SastCons", env=Env, call=builtins.Cons))
@@ -19,4 +32,3 @@ Env.Set(AddAssign,  builtins.New("SastAddAssign", env=Env, call=builtins.AddAssi
 Env.Set(SubAssign,  builtins.New("SastSubAssign", env=Env, call=builtins.SubAssign))
 Env.Set(MulAssign,  builtins.New("SastMulAssign", env=Env, call=builtins.MulAssign))
 Env.Set(DivAssign,  builtins.New("SastDivAssign", env=Env, call=builtins.DivAssign))
-

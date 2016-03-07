@@ -39,6 +39,9 @@ class SastApply(SastBuiltin):
 class SastEval(SastBuiltin):
     pass
 
+class SastIf(SastBuiltin):
+    pass
+
 def op(env, exp, acc, func):
     if exp.length():
         args = exp.to_pylist()
@@ -89,4 +92,3 @@ def DivAssign(self, env, exp):
     symbol = car(exp)
     result = op(env, cdr(exp), env.Get(symbol), lambda acc, arg: acc.mul(arg))
     return Assign(self, env, _list(symbol, result))
-

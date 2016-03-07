@@ -1,6 +1,5 @@
 
 from rpython.rlib.objectmodel import compute_identity_hash
-#from rpython.rlib.objectmodel import _hash_float, _hash_string, specialize
 from rpython.rlib.rarithmetic import LONG_BIT, intmask, ovfcheck
 from rpython.rlib.objectmodel import import_from_mixin, r_ordereddict
 
@@ -121,71 +120,22 @@ def set_car(exp, value):
 def set_cdr(exp, value):
     exp.cdr = value
 
-class SastTailCall(Exception):
-    def __init__(self, env, exp):
-        self.env = env
-        self.exp = exp
-    def payload(self):
-        return self.env, self.exp
-
 class SastExp(object):
 
     def __init__(self):
         pass
 
-    def is_undefined(self):
-        return isinstance(self, SastUndefined)
+    def is_a(self, kind):
+        return isinstance(self, kind)
 
-    def is_atom(self):
-        return isinstance(self, SastAtom)
-
-    def is_bool(self):
-        return isinstance(self, SastBool)
-
-    def is_true(self):
-        return isinstance(self, SastTrue)
-
-    def is_false(self):
-        return isinstance(self, SastFalse)
-
-    def is_fixnum(self):
-        return isinstance(self, SastFixnum)
-
-    def is_string(self):
-        return isinstance(self, SastString)
-
-    def is_symbol(self):
-        return isinstance(self, SastSymbol)
+    def is_tagged(self, tag=None):
+        return False
 
     def is_args(self):
         raise NotImplementedError
 
     def is_kwargs(self):
         raise NotImplementedError
-
-    def is_list(self):
-        return isinstance(self, SastList)
-
-    def is_pair(self):
-        return isinstance(self, SastPair)
-
-    def is_nil(self):
-        return isinstance(self, SastNil)
-
-    def is_tagged(self, tag=None):
-        return False
-
-    def is_dict(self):
-        return isinstance(self, SastDict)
-
-    def is_block(self):
-        return isinstance(self, SastBlock)
-
-    def is_lambda(self):
-        return isinstance(self, SastLambda)
-
-    def is_builtin(self):
-        return isinstance(self, SastBuiltin)
 
     def to_str(self):
         raise NotImplementedError
@@ -262,14 +212,16 @@ class SastAtom(SastObject):
         self.value = value
 
     def is_args(self):
-        if self.is_symbol():
+        #if self.is_symbol():
+        if self.is_a(SastSymbol):
             if len(self.value) > 1:
                 f, s = self.value[0:1]
                 return f == "*" and s != "*"
         return False
 
     def is_kwargs(self):
-        if self.is_symbol():
+        #if self.is_symbol():
+        if self.is_a(SastSymbol):
             if len(self.value) > 2:
                 f, s = self.value[0:1]
                 return f == "*" and s == "*"
@@ -515,6 +467,11 @@ class SastNil(SastList):
     def to_str(self):
         return self.nil
 
+    def extend(self, *args):
+        #pylint: disable=notimplemented-raised
+        #pylint: disable=not-callable
+        raise NotImplemented("should not have extend")
+
 nil = SastNil()
 
 class SastPair(SastList):
@@ -545,9 +502,10 @@ class SastPair(SastList):
         exp = self
         while True:
             result += exp.car.to_str()
-            if exp.cdr.is_nil():
+            #if exp.cdr.is_nil():
+            if exp.cdr.is_a(SastNil):
                 break
-            elif not exp.cdr.is_pair():
+            elif not exp.cdr.is_a(SastPair):
                 result += " . " + exp.cdr.to_str()
                 break
             result += " "
@@ -558,7 +516,7 @@ class SastPair(SastList):
         pylist = []
         pair = self
         while pair != nil:
-            if not pair.is_list():
+            if not pair.is_a(SastList):
                 raise SastWrongArgType(pair, "list")
             pylist.append(pair.car)
             pair = pair.cdr
@@ -573,9 +531,9 @@ class SastPair(SastList):
         return pair
 
     def is_tagged(self, tag=None):
-        if self.is_pair():
-            if self.car.is_symbol():
-                if self.cdr.is_pair():
+        if self.is_a(SastPair):
+            if self.car.is_a(SastSymbol):
+                if self.cdr.is_a(SastPair):
                     if tag and self.car != tag:
                         return False
                     return True
@@ -627,31 +585,31 @@ class SastDict(SastObject):
     def Get(self, key, default=undefined):
         return self.lookup(key, default)
 
-    def rem(self, key):
+    def Del(self, key):
         return self.remove(key)
 
 emptydict = SastDict()
 
-class SastBlock(SastPair):
-
-    def __init__(self, stmts):
-        assert isinstance(stmts, SastPair)
-        self.car = Block
-        self.cdr = stmts
-
-    def to_str(self):
-        result = self.cdr.to_str()
-        if len(result) > 2:
-            return "{" + result + "}"
-        raise SastBlockLengthError
-
-    def Eval(self, env):
-        exp = cdr(self)
-        while exp.length() > 1:
-            car(exp).Eval(env)
-            exp = cdr(exp)
-        exp = car(exp)
-        raise SastTailCall(env, exp)
+#class SastBlock(SastPair):
+#
+#    def __init__(self, stmts):
+#        assert isinstance(stmts, SastPair)
+#        self.car = Block
+#        self.cdr = stmts
+#
+#    def to_str(self):
+#        result = self.cdr.to_str()
+#        if len(result) > 2:
+#            return "{" + result + "}"
+#        raise SastBlockLengthError
+#
+#    def Eval(self, env):
+#        exp = cdr(self)
+#        while exp.length() > 1:
+#            car(exp).Eval(env)
+#            exp = cdr(exp)
+#        exp = car(exp)
+#        raise SastTailCall(env, exp)
 
 class SastFunc(SastExp):
 
@@ -660,12 +618,12 @@ class SastFunc(SastExp):
         self.formals = formals
         self.idx = 0
 
-    def EvalArgs(self, exp):
-        args = exp.to_pylist()
-        return SastPair.from_pylist(args[:self.idx] + [arg.Eval(self.env) for arg in args[self.idx:]])
-
-    def Eval(self, env):
-        raise NotImplementedError
+#    def EvalArgs(self, exp):
+#        args = exp.to_pylist()
+#        return SastPair.from_pylist(args[:self.idx] + [arg.Eval(self.env) for arg in args[self.idx:]])
+#
+#    def Eval(self, env):
+#        raise NotImplementedError
 
 class SastBuiltin(SastFunc):
 
@@ -687,3 +645,5 @@ class SastLambda(SastFunc):
         super(SastLambda, self).__init__(env, formals)
         self.block = block
 
+    def call(self, *args):
+        pass

@@ -124,4 +124,3 @@ class Lexer(object):
             return None
         self.index += distance
         return token
-
