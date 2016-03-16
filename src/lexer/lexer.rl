@@ -211,9 +211,9 @@ public:
     }
 
     long Scan(CToken **tokens) {
-        Token(0, 0, '{', 0, 0, 0);
+        //Token(0, 0, '{', 0, 0, 0);
         %% write exec;
-        Token(0, 0, '}', eof - p, eof - p, 0);
+        //Token(0, 0, '}', eof - p, eof - p, 0);
         *tokens = (struct CToken *)malloc(this->tokens.size() * sizeof(struct CToken));
         copy(this->tokens.begin(), this->tokens.end(), *tokens);
         return this->tokens.size();

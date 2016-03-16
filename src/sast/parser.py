@@ -91,6 +91,21 @@ class Parser(object):
         if source:
             self.lexer.scan(source)
         token = self.lexer.consume()
+        print 'token =', token.to_str()
+        if token.is_name("sym"):
+            if token.value == "true":
+                return true
+            elif token.value == "false":
+                return false
+#            if token.value in ("'", "quote"):
+#                return SastQuote(self.Read())
+            return SastSymbol(token.value)
+        elif token.is_name("str"):
+            return SastString(token.value)
+        elif token.is_name("num"):
+            return SastFixnum(int(token.value))
+#        elif token.is_name("("):
+#            return self.ReadPair()
         return SastUndefined()
 
     def Eval(self, exp):
@@ -99,5 +114,4 @@ class Parser(object):
 
     def Print(self, exp):
         if exp and isinstance(exp, SastExp):
-            #print exp.to_str()
-            print "Exp"
+            print exp.repr()
