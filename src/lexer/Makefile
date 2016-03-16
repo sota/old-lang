@@ -19,7 +19,7 @@ lib$(NAME).so: $(NAME).o
 $(NAME).o: $(NAME).cpp
 	$(CXX) $(CXXFLAGS) -c $(NAME).cpp -o $(NAME).o
 
-$(NAME).cpp: $(RAGEL)
+$(NAME).cpp: $(RAGEL) $(NAME).rl
 	$(RAGEL) $(RAGELFLAGS) $(NAME).rl -o $(NAME).cpp
 
 clean:
