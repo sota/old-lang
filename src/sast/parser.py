@@ -87,25 +87,46 @@ class Parser(object):
                 break
         return exitcode
 
+    def ReadPair(self, end):
+        token, _, _ = self.lexer.lookahead1()
+        if not token:
+            raise MissingToken
+        if token.is_name(end):
+            self.lexer.consume()
+            return nil
+        car = self.Read()
+        token, _, _ = self.lexer.lookahead1()
+        assert token
+        if end == ")" and token.is_name("."):
+            self.lexer.consume()
+            cdr = self.Read()
+            if not self.lexer.consume(end):
+                raise ImproperListNotFollowedByRightParen
+        else:
+            cdr = self.ReadPair(end)
+        return SastPair(car, cdr)
+
     def Read(self, source=None):
         if source:
             self.lexer.scan(source)
         token = self.lexer.consume()
-        print 'token =', token.to_str()
         if token.is_name("sym"):
             if token.value == "true":
                 return true
             elif token.value == "false":
                 return false
-#            if token.value in ("'", "quote"):
-#                return SastQuote(self.Read())
+            if token.value in ("'", "quote"):
+                return SastPair(Quote, self.Read())
             return SastSymbol(token.value)
         elif token.is_name("str"):
             return SastString(token.value)
         elif token.is_name("num"):
             return SastFixnum(int(token.value))
-#        elif token.is_name("("):
-#            return self.ReadPair()
+        elif token.is_name("("):
+            return self.ReadPair(")")
+        elif token.is_name("{"):
+            stmts = self.ReadPair("}")
+            return SastPair(Block, stmts)
         return SastUndefined()
 
     def Eval(self, exp):
