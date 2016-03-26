@@ -19,5 +19,4 @@ for arg in "$@"; do
     esac
 done
 
-eval LD_LIBRARY_PATH="root/lib:$LD_LIBRARY_PATH" ${program} "$commandline"
-exit $?
+exec env LD_LIBRARY_PATH="root/lib:$LD_LIBRARY_PATH" $program "${commandline[@]}"
