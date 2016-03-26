@@ -16,6 +16,7 @@ version: %s
 exit: ctrl+c | ctrl+d, return
 welcome to the sota repl!
 ''' % SOTA_VERSION
+FAREWELL = "sota tfn!"
 
 class MissingToken(Exception):
     pass
@@ -67,7 +68,6 @@ class Parser(object):
 
     def Repl(self):
         exitcode = 0
-        farewell = "sota tfn!"
         print REPL_USAGE
         prompt = "sota> "
         while True:
@@ -80,13 +80,13 @@ class Parser(object):
                 code = self.Read(source)
                 exp = self.Eval(code)
                 if exp is None:
-                    print farewell
+                    print FAREWELL
                     break
                 self.Print(exp)
             except KeyboardInterrupt:
                 break
             except EOFError:
-                print farewell
+                print FAREWELL
                 break
         return exitcode
 
@@ -120,6 +120,8 @@ class Parser(object):
                 return false
             elif token.value == "quote":
                 return Quote
+            elif token.value == "print":
+                return Print_
             elif token.value == "'":
                 return SastPair(Quote, SastPair(self.Read(), nil))
             return SastSymbol(token.value)
@@ -139,8 +141,12 @@ class Parser(object):
             return exp
         elif exp.is_tagged(Quote):
             return exp.cdr.car
-        raise EvalIllegalStateError
+        elif exp.is_tagged(Print_):
+            return self.Print(exp.cdr.car)
+        else:
+            raise EvalIllegalStateError
 
     def Print(self, exp):
         if exp and isinstance(exp, SastExp):
             print exp.to_repr()
+            return exp

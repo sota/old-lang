@@ -5,6 +5,9 @@ from rpython.rlib.objectmodel import import_from_mixin, r_ordereddict
 
 from sast.exceptions import *
 
+class NonSymbolPassedToIsTaggedError(Exception):
+    pass
+
 def hashfn(exp):
     return exp.hashfn()
 
@@ -90,7 +93,7 @@ AddAssign   = SastSymbol("+=")
 SubAssign   = SastSymbol("-=")
 MulAssign   = SastSymbol("*=")
 DivAssign   = SastSymbol("/=")
-Print       = SastSymbol("print")
+Print_      = SastSymbol("print")
 
 class SastString(SastSelfEvalObject):
 
@@ -164,9 +167,11 @@ class SastPair(SastList):
         return "(" + result + ")"
 
     def is_tagged(self, sym):
-        if self.car != nil:
-            return self.car == sym
-        return False
+        if sym.is_a(SastSymbol):
+            if self.car != nil:
+                return self.car == sym
+            return False
+        raise NonSymbolPassedToIsTaggedError
 
     def to_pylist(self):
         pylist = []

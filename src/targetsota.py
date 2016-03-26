@@ -68,8 +68,9 @@ def entry_point(argv):
     lexer = Lexer()
     parser = Parser(lexer)
 
-    if '<source>' in args:
-        exitcode = parser.Parse(args['<source>'])
+    source = args.get('<source>', None)
+    if source:
+        exitcode = parser.Parse(source)
     else:
         exitcode = parser.Repl()
 
