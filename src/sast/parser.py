@@ -26,6 +26,9 @@ class ImproperListNotFollowedByRightParen(Exception):
 class NestingError(Exception):
     pass
 
+class EvalIllegalStateError(Exception):
+    pass
+
 def get_input():
     text = ""
     nesting = 0
@@ -115,8 +118,10 @@ class Parser(object):
                 return true
             elif token.value == "false":
                 return false
-            if token.value in ("'", "quote"):
-                return SastPair(Quote, self.Read())
+            elif token.value == "quote":
+                return Quote
+            elif token.value == "'":
+                return SastPair(Quote, SastPair(self.Read(), nil))
             return SastSymbol(token.value)
         elif token.is_name("str"):
             return SastString(token.value)
@@ -130,9 +135,12 @@ class Parser(object):
         return SastUndefined()
 
     def Eval(self, exp):
-        return exp
-
+        if exp.is_a(SastSelfEvalObject):
+            return exp
+        elif exp.is_tagged(Quote):
+            return exp.cdr.car
+        raise EvalIllegalStateError
 
     def Print(self, exp):
         if exp and isinstance(exp, SastExp):
-            print exp.repr()
+            print exp.to_repr()

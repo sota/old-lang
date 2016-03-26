@@ -14,21 +14,21 @@ def hasheq(exp1, exp2):
 class SastExp(object):
 
     def __init__(self):
-        pass
+        self.is_self_eval = False
 
     def hashfn(self):
         return compute_identity_hash(self)
 
-    def repr(self):
+    def to_repr(self):
         return 'not-implemented'
 
-    def isa(self, kind, value=None):
+    def is_a(self, kind, value=None):
         result = isinstance(self, kind)
         if value:
             return self == value
         return result
 
-    def istagged(self, sym):
+    def is_tagged(self, sym):
         return False
 
 class SastObject(SastExp):
@@ -36,20 +36,23 @@ class SastObject(SastExp):
     def __init__(self):
         self.slots = r_ordereddict(hasheq, hashfn)
 
-class SastUndefined(SastObject):
+class SastSelfEvalObject(SastObject):
+    pass
+
+class SastUndefined(SastSelfEvalObject):
 
     def __init__(self):
         pass
 
-    def repr(self):
+    def to_repr(self):
         return "<undefined>"
 
-class SastBoolean(SastObject):
+class SastBoolean(SastSelfEvalObject):
 
     def __init__(self, value):
         self.value = bool(value)
 
-    def repr(self):
+    def to_repr(self):
         if self.value:
             return "true"
         return "false"
@@ -62,13 +65,13 @@ class SastSymbol(SastObject):
     def __init__(self, value):
         self.value = str(value)
 
-    def repr(self):
+    def to_repr(self):
         return self.value
 
 Cons        = SastSymbol("cons")
 Assign      = SastSymbol("=")
 Lambda      = SastSymbol("->")
-Quote       = SastSymbol("'")
+Quote       = SastSymbol("quote")
 Block       = SastSymbol("block")
 List        = SastSymbol("list")
 As          = SastSymbol("as")
@@ -89,20 +92,20 @@ MulAssign   = SastSymbol("*=")
 DivAssign   = SastSymbol("/=")
 Print       = SastSymbol("print")
 
-class SastString(SastObject):
+class SastString(SastSelfEvalObject):
 
     def __init__(self, value):
         self.value = str(value)
 
-    def repr(self):
+    def to_repr(self):
         return '"' + self.value + '"'
 
-class SastFixnum(SastObject):
+class SastFixnum(SastSelfEvalObject):
 
     def __init__(self, value):
         self.value = int(value)
 
-    def repr(self):
+    def to_repr(self):
         return str(self.value)
 
 class SastList(SastObject):
@@ -127,7 +130,7 @@ class SastNil(SastList):
     def length(self):
         return 0
 
-    def repr(self):
+    def to_repr(self):
         return self.value
 
 nil = SastNil()
@@ -146,30 +149,30 @@ class SastPair(SastList):
             result += self.cdr.length()
         return result
 
-    def repr(self):
+    def to_repr(self):
         result = ""
         exp = self
         while True:
-            result += exp.car.repr()
-            if exp.cdr.isa(SastNil):
+            result += exp.car.to_repr()
+            if exp.cdr.is_a(SastNil):
                 break
-            elif not exp.cdr.isa(SastPair):
-                result += " . " + exp.cdr.repr()
+            elif not exp.cdr.is_a(SastPair):
+                result += " . " + exp.cdr.to_repr()
                 break
             result += " "
             exp = exp.cdr
         return "(" + result + ")"
 
-    def istagged(self, sym):
+    def is_tagged(self, sym):
         if self.car != nil:
-            return self.cdr == sym
+            return self.car == sym
         return False
 
     def to_pylist(self):
         pylist = []
         pair = self
         while pair != nil:
-            if not pair.isa(SastList):
+            if not pair.is_a(SastList):
                 raise SastWrongArgType(pair, "list")
             pylist.append(pair.car)
             pair = pair.cdr
