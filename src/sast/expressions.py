@@ -122,11 +122,11 @@ def set_cdr(exp, value):
     exp.cdr = value
 
 class SastTailCall(Exception):
-    def __init__(self, env, exp):
-        self.env = env
+    def __init__(self, exp, env):
         self.exp = exp
+        self.env = env
     def payload(self):
-        return self.env, self.exp
+        return self.exp, self.env
 
 class SastExp(object):
 
@@ -202,7 +202,7 @@ class SastExp(object):
     def EvalArgs(self, exp):
         return exp
 
-    def Call(self, env, exp):
+    def Call(self, exp, env):
         return self
 
     def default(self):
@@ -584,7 +584,7 @@ class SastPair(SastList):
     def Eval(self, env):
         func = car(self).Eval(env)
         args = func.EvalArgs(cdr(self))
-        return func.Call(env, args)
+        return func.Call(args, env)
 
 class SastQuote(SastPair):
 
@@ -651,7 +651,7 @@ class SastBlock(SastPair):
             car(exp).Eval(env)
             exp = cdr(exp)
         exp = car(exp)
-        raise SastTailCall(env, exp)
+        raise SastTailCall(exp, env)
 
 class SastFunc(SastExp):
 
@@ -675,11 +675,11 @@ class SastBuiltin(SastFunc):
     def to_str(self):
         return "<builtin " + self.__class__.__name__ + ">"
 
-    def call(self, env, exp):
+    def call(self, exp, env):
         raise NotImplementedError
 
-    def Call(self, env, exp):
-        return self.call(env, exp)
+    def Call(self, exp, env):
+        return self.call(exp, env)
 
 class SastLambda(SastFunc):
 

@@ -16,12 +16,12 @@ def New(name, **kwargs):
     obj.idx = 1 if "Assign" in name else 0
     return obj
 
-def Cons(self, env, exp):
+def Cons(self, exp, env):
     if not isinstance(exp, SastPair):
         raise SastSyntaxError
     return exp
 
-def List(self, env, exp):
+def List(self, exp, env):
     args = exp.to_pylist()
     args.reverse()
     cdr = nil
@@ -29,7 +29,7 @@ def List(self, env, exp):
         cdr = SastPair(car, cdr)
     return cdr
 
-def Print(self, env, exp):
+def Print(self, exp, env):
     print " ".join([arg.to_str() for arg in exp.to_pylist()])
     return exp
 
@@ -39,7 +39,7 @@ class SastApply(SastBuiltin):
 class SastEval(SastBuiltin):
     pass
 
-def op(env, exp, acc, func):
+def op(exp, env, acc, func):
     if exp.length():
         args = exp.to_pylist()
         if acc is undefined:
@@ -50,19 +50,19 @@ def op(env, exp, acc, func):
         return acc
     raise SastSyntaxError
 
-def Add(self, env, exp):
-    return op(env, exp, undefined, lambda acc, arg: acc.add(arg))
+def Add(self, exp, env):
+    return op(exp, env, undefined, lambda acc, arg: acc.add(arg))
 
-def Sub(self, env, exp):
-    return op(env, exp, undefined, lambda acc, arg: acc.sub(arg))
+def Sub(self, exp, env):
+    return op(exp, env, undefined, lambda acc, arg: acc.sub(arg))
 
-def Mul(self, env, exp):
-    return op(env, exp, undefined, lambda acc, arg: acc.mul(arg))
+def Mul(self, exp, env):
+    return op(exp, env, undefined, lambda acc, arg: acc.mul(arg))
 
-def Div(self, env, exp):
-    return op(env, exp, undefined, lambda acc, arg: acc.div(arg))
+def Div(self, exp, env):
+    return op(exp, env, undefined, lambda acc, arg: acc.div(arg))
 
-def Assign(self, env, exp):
+def Assign(self, exp, env):
     if exp.length() != 2:
         raise SastSyntaxError
     if not car(exp).is_symbol():
@@ -70,23 +70,23 @@ def Assign(self, env, exp):
     key, value = exp.to_pylist()
     return env.Set(key, value.Eval(env))
 
-def AddAssign(self, env, exp):
+def AddAssign(self, exp, env):
     symbol = car(exp)
-    result = op(env, cdr(exp), env.Get(symbol), lambda acc, arg: acc.add(arg))
-    return Assign(self, env, _list(symbol, result))
+    result = op(cdr(exp), env, env.Get(symbol), lambda acc, arg: acc.add(arg))
+    return Assign(self, _list(symbol, result), env)
 
-def SubAssign(self, env, exp):
+def SubAssign(self, exp, env):
     symbol = car(exp)
-    result = op(env, cdr(exp), env.Get(symbol), lambda acc, arg: acc.sub(arg))
-    return Assign(self, env, _list(symbol, result))
+    result = op(cdr(exp), env, env.Get(symbol), lambda acc, arg: acc.sub(arg))
+    return Assign(self, _list(symbol, result), env)
 
-def MulAssign(self, env, exp):
+def MulAssign(self, exp, env):
     symbol = car(exp)
-    result = op(env, cdr(exp), env.Get(symbol), lambda acc, arg: acc.mul(arg))
-    return Assign(self, env, _list(symbol, result))
+    result = op(cdr(exp), env, env.Get(symbol), lambda acc, arg: acc.mul(arg))
+    return Assign(self, _list(symbol, result), env)
 
-def DivAssign(self, env, exp):
+def DivAssign(self, exp, env):
     symbol = car(exp)
-    result = op(env, cdr(exp), env.Get(symbol), lambda acc, arg: acc.mul(arg))
-    return Assign(self, env, _list(symbol, result))
+    result = op(cdr(exp), env, env.Get(symbol), lambda acc, arg: acc.mul(arg))
+    return Assign(self, _list(symbol, result), env)
 

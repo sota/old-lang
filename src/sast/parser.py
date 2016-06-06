@@ -147,7 +147,7 @@ class Parser(object):
             try:
                 return exp.Eval(env)
             except SastTailCall, tailcall:
-                env, exp = tailcall.payload()
+                exp, env = tailcall.payload()
 
     def Print(self, exp):
         if exp and isinstance(exp, SastExp):
