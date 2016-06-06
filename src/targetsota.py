@@ -44,7 +44,8 @@ c_parse = rffi.llexternal(
 c_clean = rffi.llexternal(
     'clean',
     [CliTokensPtr],
-    rffi.LONG)
+    rffi.LONG,
+    compilation_info=cli_eci)
 
 #######################################################
 
