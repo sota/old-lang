@@ -172,7 +172,10 @@ class SastExp(object):
     def is_nil(self):
         return isinstance(self, SastNil)
 
-    def is_tagged(self, tag=None):
+    def is_quote(self):
+        return isinstance(self, SastQuote)
+
+    def is_tagged(self, *tags):
         return False
 
     def is_dict(self):
@@ -196,12 +199,12 @@ class SastExp(object):
     def hashfn(self):
         return compute_identity_hash(self)
 
-    def Eval(self, env):
-        return self
-
-    def EvalArgs(self, exp):
-        return exp
-
+#    def Eval(self, env):
+#        return self
+#
+#    def EvalArgs(self, exp):
+#        return exp
+#
     def Call(self, exp, env):
         return self
 
@@ -438,17 +441,20 @@ SastString.empty = SastString("")
 
 class SastSymbol(SastAtom):
 
-    Table = {}
-
-    def __new__(cls, value):
-        symbol = cls.Table.get(value, None)
-        if not symbol:
-            cls.Table[value] = symbol = super(SastSymbol, cls).__new__(cls, value)
-        return symbol
+#    Table = {}
+#
+#    def __new__(cls, value):
+#        symbol = cls.Table.get(value, None)
+#        if not symbol:
+#            cls.Table[value] = symbol = super(SastSymbol, cls).__new__(cls, value)
+#        return symbol
 
     def __init__(self, value):
         assert isinstance(value, str)
         self.symbol = value
+
+    def __eq__(self, s):
+        return self.symbol == s.symbol
 
     def default(self):
         raise NotImplementedError
@@ -462,8 +468,8 @@ class SastSymbol(SastAtom):
     def hashfn(self):
         return _hash_string(self.symbol) or 0
 
-    def Eval(self, env):
-        return env.Get(self)
+#    def Eval(self, env):
+#        return env.Get(self)
 
 Cons        = SastSymbol("cons")
 Assign      = SastSymbol("=")
@@ -572,19 +578,20 @@ class SastPair(SastList):
             pair = SastPair(item, pair)
         return pair
 
-    def is_tagged(self, tag=None):
+    def is_tagged(self, *tags):
+        print 'tags =', [tag.to_str() for tag in tags] if tags else '()'
         if self.is_pair():
             if self.car.is_symbol():
                 if self.cdr.is_pair():
-                    if tag and self.car != tag:
+                    if tags and self.car not in tags:
                         return False
                     return True
         return False
 
-    def Eval(self, env):
-        func = car(self).Eval(env)
-        args = func.EvalArgs(cdr(self))
-        return func.Call(args, env)
+#    def Eval(self, env):
+#        func = car(self).Eval(env)
+#        args = func.EvalArgs(cdr(self))
+#        return func.Call(args, env)
 
 class SastQuote(SastPair):
 
@@ -598,8 +605,8 @@ class SastQuote(SastPair):
     def hashfn(self):
         return 1
 
-    def Eval(self, env):
-        return self.cdr
+#    def Eval(self, env):
+#        return self.cdr
 
 def hashfn(exp):
     return exp.hashfn()
@@ -642,16 +649,19 @@ class SastBlock(SastPair):
     def to_str(self):
         result = self.cdr.to_str()
         if len(result) > 2:
-            return "{" + result + "}"
+            result2 = ''
+            for i in xrange(1, len(result)-1):
+                result2 += result[i]
+            return "{" + result2 + "}"
         raise SastBlockLengthError
 
-    def Eval(self, env):
-        exp = cdr(self)
-        while exp.length() > 1:
-            car(exp).Eval(env)
-            exp = cdr(exp)
-        exp = car(exp)
-        raise SastTailCall(exp, env)
+#    def Eval(self, env):
+#        exp = cdr(self)
+#        while exp.length() > 1:
+#            car(exp).Eval(env)
+#            exp = cdr(exp)
+#        exp = car(exp)
+#        raise SastTailCall(exp, env)
 
 class SastFunc(SastExp):
 
@@ -660,12 +670,12 @@ class SastFunc(SastExp):
         self.formals = formals
         self.idx = 0
 
-    def EvalArgs(self, exp):
-        args = exp.to_pylist()
-        return SastPair.from_pylist(args[:self.idx] + [arg.Eval(self.env) for arg in args[self.idx:]])
-
-    def Eval(self, env):
-        raise NotImplementedError
+#    def EvalArgs(self, exp):
+#        args = exp.to_pylist()
+#        return SastPair.from_pylist(args[:self.idx] + [arg.Eval(self.env) for arg in args[self.idx:]])
+#
+#    def Eval(self, env):
+#        raise NotImplementedError
 
 class SastBuiltin(SastFunc):
 

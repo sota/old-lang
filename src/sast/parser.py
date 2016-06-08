@@ -51,18 +51,21 @@ class Parser(object):
 
     def Parse(self, source):
         exitcode = 0
+        env = Env
         if os.path.isfile(source):
             source = open(source).read()
         else:
             source = "(print " + source + ")"
         try:
-            self.Eval(self.Read(source))
+            code = self.Read(source)
+            self.Eval(code, env)
         except Exception as ex:
             raise
         return exitcode
 
     def Repl(self):
         exitcode = 0
+        env = Env
         farewell = "so, ta-ta for now!"
         print REPL_USAGE
         prompt = "sota> "
@@ -74,7 +77,7 @@ class Parser(object):
                 if source == '\n':
                     continue
                 code = self.Read(source)
-                exp = self.Eval(code)
+                exp = self.Eval(code, env)
                 if exp is None:
                     print farewell
                     break
@@ -141,13 +144,31 @@ class Parser(object):
             return SastBlock(stmts)
         return SastUndefined()
 
-    def Eval(self, exp):
-        env = Env
-        while True:
-            try:
-                return exp.Eval(env)
-            except SastTailCall, tailcall:
-                exp, env = tailcall.payload()
+#    def Eval(self, exp):
+#        while True:
+#            try:
+#                return exp.Eval(env)
+#            except SastTailCall, tailcall:
+#                exp, env = tailcall.payload()
+
+    def Eval(self, exp, env):
+        if exp.is_atom():
+            return exp
+        elif exp.is_symbol():
+            return env.Get(exp)
+        elif exp.is_quote():
+            return exp.cdr
+        elif exp.is_tagged(Assign):
+            print 'is tagged! ', exp.to_str()
+            return env.Set(exp.cdr.car, exp.cdr.cdr)
+#        elif exp.is_tagged(Block):
+#            print 'is tagged! ', exp.to_str()
+        elif exp.is_tagged() and exp.car in (Block,):
+            print 'is tagged! ', exp.to_str()
+        else:
+            print 'didnt match anything'
+            print 'exp =', exp.to_str()
+        return exp
 
     def Print(self, exp):
         if exp and isinstance(exp, SastExp):
