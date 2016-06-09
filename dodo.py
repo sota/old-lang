@@ -3,6 +3,8 @@
 import os
 import sys
 import glob
+import json
+
 SRCPATH = os.path.abspath('src')
 sys.path.insert(0, SRCPATH)
 PYTHONPATH = os.environ.get('PYTHONPATH', '')
@@ -12,7 +14,7 @@ os.environ['PYTHONDONTWRITEBYTECODE'] = '1'
 
 from utils.git import subs2shas
 from utils.shell import call, rglob
-from utils.updater import SotaVersionUpdater
+from utils.writer import SotaVersionWriter
 from utils.globalslocals import gl
 from doit.task import clean_targets
 
@@ -37,8 +39,7 @@ LIBDIR = '%(ROOTDIR)s/lib' % gl()
 PREDIR = 'tests/pre'
 POSTDIR = 'tests/post'
 
-VERSIONH = 'src/version.h'
-VERSIONPY = 'src/version.py'
+VERSION_JSON = 'src/version.json'
 
 CC = os.getenv('CXX', 'g++')
 CXXFLAGS = '-Wall -Werror -fPIC -O2 -std=c++11 -g -I../ -I../docopt'
@@ -69,28 +70,15 @@ def globs(*paths):
 
 def task_version():
     '''
-    replace version strings in files
+    create version files from version.json template
     '''
-    for filename in [VERSIONH, VERSIONPY]:
-        svu = SotaVersionUpdater(filename, SOTA_VERSION)
+    versionfiles = json.load(open(VERSION_JSON))
+    for filename, contents in versionfiles.iteritems():
+        svw = SotaVersionWriter(filename, contents % globals())
         yield {
             'name': filename,
-            'actions': [svu.update],
-            'targets': [filename],
-            'clean': [clean_targets],
-            'uptodate': [svu.uptodate],
-        }
-
-def task_unversion():
-    '''
-    undo version replacement with 'UNKNOWN'
-    '''
-    for filename in [VERSIONH, VERSIONPY]:
-        svu = SotaVersionUpdater(filename, 'UNKNOWN')
-        yield {
-            'name': filename,
-            'actions': [svu.update],
-            'uptodate': [svu.uptodate],
+            'actions': [svw.update],
+            'uptodate': [svw.uptodate],
         }
 
 def task_pyflakes():
@@ -287,7 +275,6 @@ def task_tidy():
     clean submods and sota/lang repo
     '''
     yield {
-        'task_dep': ['unversion'],
         'name': 'sota/lang',
         'actions': ['git clean -xfd'],
     }

@@ -1,0 +1,1 @@
+{"src/version.h": "#ifndef __SOTA_VERSION__\n#define __SOTA_VERSION__\n\n#include <string>\nstatic const std::string SOTA_VERSION = \"%(SOTA_VERSION)s\";\n\n#endif /*__SOTA_VERSION__*/\n", "src/version.py": "SOTA_VERSION = '%(SOTA_VERSION)s'\n"}
