@@ -169,7 +169,7 @@ def task_liblexer():
     '''
     return {
         'file_dep': [DODO] + rglob('src/lexer/*.{h,rl,c}'),
-        'task_dep': ['pre', 'ragel'],
+        'task_dep': ['pre', 'ragel', 'version:src/version.h'],
         'actions': [
             'cd src/lexer && make -j %(J)s RAGEL=%(REPO)s/%(RAGEL)s' % gl(),
             'install -C -D src/lexer/liblexer.so %(LIBDIR)s/liblexer.so' % gl(),
@@ -200,7 +200,7 @@ def task_pycov():
         msgcmd = 'echo "no tests found (%(PREDIR)s/%(pyfile)s to run coverage on %(pyfile)s"'
         yield {
             'name': pyfile,
-            'task_dep': ['submod'],
+            'task_dep': ['submod', 'version:src/version.py'],
             'actions': [(covcmd if hastests(pyfile) else msgcmd) % gl()],
         }
 
@@ -212,7 +212,7 @@ def task_pylint():
     for pyfile in globs('*.py', 'src/*/*.py', '%(PREDIR)s/*/*.py' % gl()) - globs(*excludes):
         yield {
             'name': pyfile,
-            'task_dep': ['submod'],
+            'task_dep': ['submod', 'version:src/version.py'],
             'actions': ['%(ENVS)s pylint -E -j4 --rcfile %(PREDIR)s/pylint.rc %(pyfile)s' % gl()],
         }
 
