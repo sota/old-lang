@@ -37,7 +37,7 @@ LIBDIR = '%(ROOTDIR)s/lib' % gl()
 PREDIR = 'tests/pre'
 POSTDIR = 'tests/post'
 
-VERSIONH = 'src/cli/version.h'
+VERSIONH = 'src/version.h'
 VERSIONPY = 'src/version.py'
 
 CC = os.getenv('CXX', 'g++')

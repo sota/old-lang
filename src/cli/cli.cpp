@@ -5,7 +5,7 @@
 #include <cstring>
 #include <vector>
 
-#include "version.h"
+#include "../version.h"
 #include "docopt.h"
 
 static const char USAGE[] =
