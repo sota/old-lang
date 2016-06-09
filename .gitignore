@@ -62,5 +62,45 @@ docs/_build/
 # py.test
 __pycache__
 
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
 src/version.h
 src/version.py
+src/lexer/lexer.cpp
+
+**/test
+tests/**
+
+bin/
+include/
+root/
+share/
+
