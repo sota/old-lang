@@ -62,5 +62,5 @@ docs/_build/
 # py.test
 __pycache__
 
-src/cli/version.h
+src/version.h
 src/version.py
