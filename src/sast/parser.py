@@ -130,6 +130,8 @@ class Parser(object):
                 return true
             elif token.value == "false":
                 return false
+            elif token.value == "=":
+                return Assign
             if token.value in ("'", "quote"):
                 return SastQuote(self.Read())
             return SastSymbol(token.value)
@@ -144,31 +146,34 @@ class Parser(object):
             return SastBlock(stmts)
         return SastUndefined()
 
-#    def Eval(self, exp):
-#        while True:
-#            try:
-#                return exp.Eval(env)
-#            except SastTailCall, tailcall:
-#                exp, env = tailcall.payload()
-
     def Eval(self, exp, env):
-        if exp.is_atom():
-            return exp
-        elif exp.is_symbol():
-            return env.Get(exp)
-        elif exp.is_quote():
-            return exp.cdr
-        elif exp.is_tagged(Assign):
-            print 'is tagged! ', exp.to_str()
-            return env.Set(exp.cdr.car, exp.cdr.cdr)
-#        elif exp.is_tagged(Block):
-#            print 'is tagged! ', exp.to_str()
-        elif exp.is_tagged() and exp.car in (Block,):
-            print 'is tagged! ', exp.to_str()
-        else:
-            print 'didnt match anything'
-            print 'exp =', exp.to_str()
-        return exp
+        while True:
+            try:
+                if exp.is_symbol():
+                    return env.Get(exp)
+                elif exp.is_atom():
+                    return exp
+                    return env.Get(exp)
+                elif exp.is_quote():
+                    return exp.cdr
+                elif exp.is_tagged(Assign):
+                    if exp.length() != 3:
+                        raise SastSyntaxError
+                    if not exp.car.is_symbol():
+                        raise SastSyntaxError
+                    key, value = exp.to_pylist()[1:]
+                    return env.Set(key, self.Eval(value, env))
+                elif exp.is_tagged(Block):
+                    while exp.length() > 1:
+                        self.Eval(exp.car, env)
+                        exp = exp.cdr
+                    raise SastTailCall(exp.car, env)
+                else:
+                    print 'didnt match anything'
+                    print 'exp =', exp.to_str()
+                return exp
+            except SastTailCall as stc:
+                exp, env = stc.payload()
 
     def Print(self, exp):
         if exp and isinstance(exp, SastExp):
