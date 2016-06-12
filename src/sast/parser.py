@@ -146,6 +146,10 @@ class Parser(object):
             return SastBlock(stmts)
         return SastUndefined()
 
+
+    def EvalArgs(self, exp, env):
+        return SastPair.from_pylist([self.Eval(arg, env) for arg in exp.to_pylist()])
+
     def Eval(self, exp, env):
         while True:
             try:
@@ -163,11 +167,17 @@ class Parser(object):
                         raise SastSyntaxError
                     key, value = exp.to_pylist()[1:]
                     return env.Set(key, self.Eval(value, env))
-                elif exp.is_tagged(Block):
+                elif exp.is_block():
                     while exp.length() > 1:
                         self.Eval(exp.car, env)
                         exp = exp.cdr
                     raise SastTailCall(exp.car, env)
+                elif exp.is_pair():
+                    func = self.Eval(exp.car, env)
+                    args = self.EvalArgs(exp.cdr, env)
+                    if func.is_builtin():
+                        return func.Call(args, env)
+                    return func
                 else:
                     print 'didnt match anything'
                     print 'exp =', exp.to_str()

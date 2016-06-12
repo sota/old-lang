@@ -43,10 +43,10 @@ def op(exp, env, acc, func):
     if exp.length():
         args = exp.to_pylist()
         if acc is undefined:
-            acc = args[0].Eval(env)
+            acc = args[0] #FIXME: this should be a default, or something
             args = args[1:]
         for arg in args:
-            acc = func(acc, arg.Eval(env))
+            acc = func(acc, arg)
         return acc
     raise SastSyntaxError
 
