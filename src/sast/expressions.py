@@ -157,6 +157,9 @@ class SastExp(object):
     def is_symbol(self):
         return isinstance(self, SastSymbol)
 
+    def is_func(self):
+        return isinstance(self, SastFunc)
+
     def is_args(self):
         raise NotImplementedError
 
