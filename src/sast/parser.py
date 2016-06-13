@@ -132,7 +132,7 @@ class Parser(object):
                 return false
             elif token.value == "=":
                 return Assign
-            if token.value in ("'", "quote"):
+            elif token.value in ("'", "quote"):
                 return SastQuote(self.Read())
             return SastSymbol(token.value)
         elif token.is_name("str"):
