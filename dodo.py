@@ -141,7 +141,7 @@ def task_ragel():
         'task_dep': ['pre', 'colm'],
         'actions': [
             'cd src/ragel && ./autogen.sh',
-            'cd src/ragel && ./configure --prefix=%(REPO)s --disable-manual' % gl(),
+            'cd src/ragel && ./configure --prefix=%(REPO)s --with-colm=%(REPO)s --disable-manual' % gl(),
             'cd src/ragel && make && make install',
         ],
         'targets': [RAGEL],
@@ -171,7 +171,7 @@ def task_liblexer():
         'file_dep': [DODO] + rglob('src/lexer/*.{h,rl,c}'),
         'task_dep': ['pre', 'ragel', 'version:src/version.h'],
         'actions': [
-            'cd src/lexer && make -j %(J)s RAGEL=%(REPO)s/%(RAGEL)s' % gl(),
+            'cd src/lexer && LD_LIBRARY_PATH=%(REPO)s/lib make -j %(J)s RAGEL=%(REPO)s/%(RAGEL)s' % gl(),
             'install -C -D src/lexer/liblexer.so %(LIBDIR)s/liblexer.so' % gl(),
         ],
         'targets': ['src/lexer/lexer.cpp', 'src/lexer/test', '%(LIBDIR)s/liblexer.so' % gl()],
