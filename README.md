@@ -1,4 +1,4 @@
-# sota/lang  [![Build Status](https://travis-ci.org/sota/lang.svg?branch=master)](https://travis-ci.org/sota/lang)
+# sota/old-lang  [![Build Status](https://travis-ci.org/sota/old-lang.svg?branch=master)](https://travis-ci.org/sota/old-lang)
 
 This repo contains all the code required for the implementation of the sota programming language.  The documentation in here is aimed at developing, testing and compiling sota.  The documentation on the language, its features, its history, etc should be contained within https://github.com/sota/docs.
 
